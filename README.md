@@ -1,16 +1,9 @@
-![template](https://user-images.githubusercontent.com/35528949/212500045-feb51ec0-e26a-45a6-bc8c-75d01379faf9.png)
-![](https://img.shields.io/badge/version-0.1.3%20-brightgreen)
-![](https://img.shields.io/github/license/MassonNN/masson-aiogram-template)
-![](https://img.shields.io/github/forks/MassonNn/masson-aiogram-template)
-![](https://img.shields.io/github/stars/MassonNn/masson-aiogram-template?style=flat-square)
-[![telegram](https://img.shields.io/badge/Telegram-Join-blue)](https://t.me/massonnn_yt)
 
----
 ## Setup bot
 
 1. Clone this repository
 
-2. Change the name of `.env.dist` to `.env` and set all environment variables as you need
+2. Change the name of `.env.example` to `.env` and set all environment variables as you need
 
 3. Change password for redis in build/redis.conf (`requirepass` and `masterauth`). Set same password in `.env` 
    (`REDIS_PASSWORD`).

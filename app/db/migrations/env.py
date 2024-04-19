@@ -1,4 +1,6 @@
 import alembic_postgresql_enum
+# ### Custom code: enum migration fix ###
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -23,13 +25,15 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
+# ### Custom code: start ###
 target_metadata = BaseModel.metadata
 
-config.set_main_option(
-    'sqlalchemy.url',
-    f"{settings.db.url}?async_fallback=True"
-)
-
+if not config.get_main_option('sqlalchemy.url'):
+    config.set_main_option(
+        'sqlalchemy.url',
+        f"{settings.db.url}?async_fallback=True"
+    )
+# ### Custom code: end ###
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

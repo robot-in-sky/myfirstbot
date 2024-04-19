@@ -9,6 +9,9 @@ from app.db.db import create_async_engine, Database
 from app.db.schemas.user import UserSchema, UserSchemaAdd
 from app.db.schemas.order import OrderSchema, OrderSchemaAdd
 
+print(settings.db.url)
+print(settings.db.url_test)
+
 engine = create_async_engine(url=settings.db.url)
 
 

@@ -4,20 +4,20 @@ from alembic.command import downgrade, upgrade
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
 
-from tests.utils.alembic import alembic_config_from_url
+from tests.utils.alembic import mocked_alembic_config
 
 
 @pytest.fixture()
 def alembic_config():
     """Alembic config fixture."""
-    return alembic_config_from_url()
+    return mocked_alembic_config()
 
 
 def get_revisions():
     """Get revisions for stairway test."""
     # Create Alembic configuration object
     # (we don't need database for getting revisions list)
-    config = alembic_config_from_url()
+    config = mocked_alembic_config()
 
     # Get directory object with Alembic migrations
     revisions_dir = ScriptDirectory.from_config(config)
@@ -37,3 +37,4 @@ def test_migrations_stairway(alembic_config: Config, revision: Script):
     # We need -1 for downgrading first migration (its down_revision is None)
     downgrade(alembic_config, revision.down_revision or '-1')
     upgrade(alembic_config, revision.revision)
+

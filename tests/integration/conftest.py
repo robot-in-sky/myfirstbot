@@ -1,12 +1,19 @@
-"""Configuration for integrational tests."""
+"""Configuration for integration tests."""
 import pytest
 import pytest_asyncio
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from app.tgbot.dispatcher import get_dispatcher
+
 from tests.utils.mocked_bot import MockedBot
-from tests.utils.mocked_database import MockedDatabase
+from tests.utils.mocked_database import MockedDatabase, mocked_async_engine
+
+
+@pytest.fixture()
+def engine() -> AsyncEngine:
+    """Engine fixture."""
+    return mocked_async_engine()
 
 
 @pytest_asyncio.fixture(scope='function')
@@ -23,8 +30,10 @@ async def session(engine: AsyncEngine) -> AsyncSession:
 async def db(session: AsyncSession):
     """Database fixture."""
     database = MockedDatabase(session)
-    yield database
+    # yield database
     await database.teardown()
+    return database
+
 
 
 @pytest.fixture()

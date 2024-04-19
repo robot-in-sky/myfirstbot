@@ -10,26 +10,38 @@ ENVFILE_PATH = Path(__file__).parent.parent.joinpath('.env')
 ENVFILE_ENCODING = 'utf-8'
 ENVFILE_DELIMITER = '_'
 
+DB_SYSTEM = 'postgresql'
+DB_DRIVER = 'asyncpg'
+
 
 class DatabaseSettings(BaseModel):
-    system: str = 'postgresql'
-    driver: str = 'asyncpg'
-
     host: str = 'localhost'
     port: int = 5432
     username: str
     password: str | None = None
     database: str
+    database_test: str | None = None
 
     @property
     def url(self) -> str:
         return URL.create(
-            drivername=f'{self.system}+{self.driver}',
+            drivername=f'{DB_SYSTEM}+{DB_DRIVER}',
             username=self.username,
-            database=self.database,
             password=self.password,
             port=self.port,
             host=self.host,
+            database=self.database
+        ).render_as_string(hide_password=False)
+
+    @property
+    def url_test(self) -> str:
+        return URL.create(
+            drivername=f'{DB_SYSTEM}+{DB_DRIVER}',
+            username=self.username,
+            password=self.password,
+            port=self.port,
+            host=self.host,
+            database=self.database_test or self.database + '_test',
         ).render_as_string(hide_password=False)
 
 

@@ -10,8 +10,9 @@ from alembic.config import Config
 
 from app.config import settings
 
+
 PROJECT_PATH = Path(__file__).parent.parent.parent.resolve()
-DEFAULT_PG_URL = settings.db.url
+DEFAULT_DB_URL = f"{settings.db.url_test}?async_fallback=True"
 
 
 def make_alembic_config(
@@ -32,22 +33,21 @@ def make_alembic_config(
         config.set_main_option(
             'script_location', os.path.join(base_path, alembic_location)
         )
-    if cmd_opts.pg_url:
-        config.set_main_option('sqlalchemy.url', cmd_opts.pg_url)
+    if cmd_opts.db_url:
+        config.set_main_option('sqlalchemy.url', cmd_opts.db_url)
 
     return config
 
 
-def alembic_config_from_url(pg_url: str | None = None) -> Config:
+def mocked_alembic_config(db_url: str | None = DEFAULT_DB_URL) -> Config:
     """Provides Python object, representing alembic.ini file."""
     cmd_options = SimpleNamespace(
         config='alembic.ini',
         name='alembic',
-        pg_url=pg_url,
+        db_url=db_url,
         raiseerr=False,
         x=None,
     )
-
     return make_alembic_config(cmd_options)
 
 
