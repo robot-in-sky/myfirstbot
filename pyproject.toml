@@ -24,59 +24,64 @@ optional=true
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
 pytest-asyncio = "^0.20.3"
-mypy = "^1.0.1"
-ruff = "^0.0.275"
-blue = "^0.9.1"
+mypy = "^1.9.0"
+ruff = "^0.4.1"
+ruff-lsp = "^0.0.53"
 
 [tool.ruff]
-line-length = 88
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-target-version = "py310"
-select = [
-    "E", # pycodestyle
-    "F", # pyflakes
-    "UP", # pyupgrade
-    "D", # pydocstyle
+target-version = "py312"
+line-length = 120
+src = ["myfirstbot"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [# https://docs.astral.sh/ruff/rules
+    "ANN101", "ANN102", # Typing for self and cls is never required.
+    "ANN401", # Using typing with Any is permissible in certain cases.
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", # Documentation in our projects is always optional.
+    "D203", "D213", # Exclude conflicting rules. Use rules D211 and D212.
+    "D407", "D408", "D409", # Do not use the numpy-style docstrings with dashed underline.
+    "F403", # It is acceptable to import everything using * in certain cases.
+    "G004", # It is convenient to use f-strings in logging.
+    "TRY400", # It is acceptable to use logging.error in cases where logging the traceback is unnecessary.
+    "TD001", "TD002", "TD003", "TD004", "FIX002", # Disable rules for to-do in Zephyr project.
 ]
-fixable = [
-    "A", "C", "D", "E", "F", "G",
-    "I", "N", "Q", "S", "T", "W", "ANN",
-    "ARG", "BLE", "COM", "DJ", "DTZ", "EM",
-    "ERA", "EXE", "FBT", "ICN", "INP", "ISC",
-    "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH",
-    "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH",
-    "TID", "TRY", "UP", "YTT"
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = [
+    "F401"
 ]
-unfixable = ["B"]
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
+"*/tests/**/*.py" = [
+    "S101", # Using assert in tests is allowed.
 ]
 
-[tool.ruff.pydocstyle]
-convention = "google"
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
+inline-quotes = "double"
+multiline-quotes = "double"
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+combine-as-imports = true
+known-first-party = ["myfirstbot", "tests"]
+
+[tool.ruff.lint.pep8-naming]
+classmethod-decorators = [
+    "classmethod",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = "tests"
+asyncio_mode = "auto"
+filterwarnings = '''
+  error
+  ignore::DeprecationWarning
+'''
 
 
 [build-system]

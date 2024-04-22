@@ -1,54 +1,56 @@
-"""Configuration for integration tests."""
+from pathlib import Path
+
 import pytest
 import pytest_asyncio
+from aiogram import Dispatcher
+from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from app.tgbot.dispatcher import get_dispatcher
-
+from myfirstbot.base.database import create_async_engine
+from myfirstbot.definitions import ENVFILE_PATH
+from myfirstbot.tgbot.dispatcher import get_dispatcher
+from tests.utils.config import TestSettings
 from tests.utils.mocked_bot import MockedBot
-from tests.utils.mocked_database import MockedDatabase, mocked_async_engine
+from tests.utils.mocked_database import MockedDatabase
+
+TEST_ENVFILE_PATH = Path(ENVFILE_PATH).parent.joinpath(".env.test")
 
 
 @pytest.fixture()
-def engine() -> AsyncEngine:
-    """Engine fixture."""
-    return mocked_async_engine()
+def settings() -> TestSettings:
+    return TestSettings(_env_file=TEST_ENVFILE_PATH)
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest.fixture()
+def engine(settings: TestSettings) -> AsyncEngine:
+    return create_async_engine(settings.db.url)
+
+
+@pytest_asyncio.fixture(scope="function")
 async def session(engine: AsyncEngine) -> AsyncSession:
-    """Async session fixture.
-
-    :param engine: Bind engine for open session
-    """
     async with AsyncSession(bind=engine) as session:
         yield session
 
 
-@pytest_asyncio.fixture(scope='function')
-async def db(session: AsyncSession):
-    """Database fixture."""
+@pytest_asyncio.fixture(scope="function")
+async def db(session: AsyncSession) -> MockedDatabase:
     database = MockedDatabase(session)
-    # yield database
     await database.teardown()
     return database
 
 
-
 @pytest.fixture()
-def bot():
-    """Bot fixture."""
+def bot() -> MockedBot:
     return MockedBot()
 
 
 @pytest.fixture()
-def storage():
-    """Storage fixture."""
+def storage() -> MemoryStorage:
     return MemoryStorage()
 
 
 @pytest.fixture()
-def dp(storage):
-    """Dispatcher fixture."""
+def dp(storage: BaseStorage) -> Dispatcher:
     return get_dispatcher(storage=storage)
+

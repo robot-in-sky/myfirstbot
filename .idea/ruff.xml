@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RuffConfigService">
+    <option name="alwaysUseGlobalRuff" value="true" />
+    <option name="globalRuffExecutablePath" value="C:\Python312\Scripts\ruff.exe" />
+    <option name="globalRuffLspExecutablePath" value="C:\Python312\Scripts\ruff-lsp.exe" />
+    <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff" />
+    <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff-lsp" />
+    <option name="ruffConfigPath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\pyproject.toml" />
+    <option name="useRuffLsp" value="true" />
+  </component>
+</project>
