@@ -1,14 +1,10 @@
 import logging
-from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
-from myfirstbot.definitions import ENVFILE_DELIMITER, ENVFILE_ENCODING, ENVFILE_PATH
-
-DB_SYSTEM = "postgresql"
-DB_DRIVER = "asyncpg"   # psycopg
+from myfirstbot.definitions import DB_DRIVER, DB_SYSTEM, ENVFILE_DELIMITER, ENVFILE_ENCODING, ENVFILE_PATH
 
 
 class DatabaseSettings(BaseModel):

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
@@ -19,9 +17,9 @@ def alembic_config(settings: TestSettings) -> Config:
     )
 
 
+@pytest.fixture()
 def alembic_revisions(alembic_config: Config) -> list[Script]:
     script_dir = ScriptDirectory.from_config(alembic_config)
     revisions = list(script_dir.walk_revisions("base", "heads"))
     revisions.reverse()
     return revisions
-

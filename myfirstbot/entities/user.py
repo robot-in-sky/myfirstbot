@@ -8,7 +8,7 @@ class UserCreate(Base):
     first_name: str | None = None
     last_name: str | None = None
     chat_id: int | None = None
-    access_level: AccessLevel | None = None
+    access_level: AccessLevel | None = AccessLevel.USER
 
 
 class User(Base):

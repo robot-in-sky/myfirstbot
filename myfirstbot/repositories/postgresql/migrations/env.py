@@ -1,12 +1,10 @@
-import alembic_postgresql_enum  # noqa: I001, INP001
-
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from myfirstbot.config import settings
-from myfirstbot.base.repositories.models.base import Base
+from myfirstbot.base.repositories.sqlalchemy.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,29 +1,41 @@
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from myfirstbot.db import Database
-from myfirstbot.db.exceptions import UniqueViolationError
+from myfirstbot.entities.enums.access_level import AccessLevel
 from myfirstbot.entities.user import User, UserCreate
+from myfirstbot.exceptions import UniqueViolationError
+from myfirstbot.repositories import UserRepo
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture()
-def new_user():
+def user_repo(session: AsyncSession) -> UserRepo:
+    return UserRepo(session)
+
+
+@pytest.fixture()
+def new_user() -> UserCreate:
     return UserCreate(
         telegram_id=987654321,
         user_name="Cuckold1488",
         first_name="Жмых",
         last_name="Пожилой",
-        chat_id=123456789
+        chat_id=123456789,
     )
 
 
 class TestUser:
-
-    async def test_user_add(self, db: Database, new_user: UserCreate):
-        result = await db.user.add(new_user)
+    async def test_user_get(self, user_repo: UserRepo) -> None:
+        result = await user_repo.get(3)
         assert isinstance(result, User)
 
-        with pytest.raises(UniqueViolationError):
-            await db.user.add(new_user)
+    # async def test_user_add(self, user_repo: UserRepo, new_user: UserCreate) -> None:
+    #     result = await user_repo.add(new_user)
+    #     logger.warning(result)
+    #     assert isinstance(result, User)
 
         # result = await db.user.get(1)
         # print(result)

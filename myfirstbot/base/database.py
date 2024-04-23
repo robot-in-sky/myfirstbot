@@ -1,16 +1,15 @@
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine as _create_async_engine
 
-from myfirstbot.config import settings
 
 # from myfirstbot.db.order import OrderRepo
 # from myfirstbot.db.user import UserRepo
 
 
-def create_async_engine(url: URL | str) -> AsyncEngine:
+def create_async_engine(url: URL | str, *, debug: bool = False) -> AsyncEngine:
     return _create_async_engine(
         url=url,
-        echo=settings.debug,
+        echo=debug,
         pool_pre_ping=True,
     )
 

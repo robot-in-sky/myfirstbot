@@ -7,6 +7,7 @@ class OrderCreate(Base):
     first_name: str
     last_name: str
     age: int
+    status: OrderStatus = OrderStatus.DRAFT
 
 
 class Order(Base):

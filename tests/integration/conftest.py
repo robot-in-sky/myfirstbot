@@ -1,30 +1,30 @@
-from pathlib import Path
-
 import pytest
 import pytest_asyncio
-from aiogram import Dispatcher
-from aiogram.fsm.storage.base import BaseStorage
-from aiogram.fsm.storage.memory import MemoryStorage
+# from aiogram import Dispatcher
+# from aiogram.fsm.storage.base import BaseStorage
+# from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from myfirstbot.base.database import create_async_engine
-from myfirstbot.definitions import ENVFILE_PATH
-from myfirstbot.tgbot.dispatcher import get_dispatcher
-from tests.utils.config import TestSettings
-from tests.utils.mocked_bot import MockedBot
-from tests.utils.mocked_database import MockedDatabase
 
-TEST_ENVFILE_PATH = Path(ENVFILE_PATH).parent.joinpath(".env.test")
+# from myfirstbot.tgbot.dispatcher import get_dispatcher
+from tests.utils.config import TestSettings
+
+# from tests.utils.mocked_bot import MockedBot
+from tests.utils.mocked_database import MockedDatabase
 
 
 @pytest.fixture()
 def settings() -> TestSettings:
-    return TestSettings(_env_file=TEST_ENVFILE_PATH)
+    return TestSettings()
 
 
 @pytest.fixture()
 def engine(settings: TestSettings) -> AsyncEngine:
-    return create_async_engine(settings.db.url)
+    return create_async_engine(
+        url=settings.db.url,
+        debug=settings.debug,
+    )
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -39,7 +39,7 @@ async def db(session: AsyncSession) -> MockedDatabase:
     await database.teardown()
     return database
 
-
+"""
 @pytest.fixture()
 def bot() -> MockedBot:
     return MockedBot()
@@ -53,4 +53,5 @@ def storage() -> MemoryStorage:
 @pytest.fixture()
 def dp(storage: BaseStorage) -> Dispatcher:
     return get_dispatcher(storage=storage)
+"""
 

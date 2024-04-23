@@ -1,75 +1,79 @@
+from sqlalchemy import delete, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from myfirstbot.db.models.user import UserModel
-from myfirstbot.db.schemas import UserSchema, UserSchemaAdd
-from myfirstbot.entities.enums import AccessLevel
-from myfirstbot.base.repositories.abs_orm_repo import AbstractOrmRepo
-from myfirstbot.base.repositories.abs_repo import AbstractRepo
-from myfirstbot.base.repositories.exc_mapper import exception_mapper
+from myfirstbot.base.repositories.sqlalchemy.abs_repo import AbstractRepo
+from myfirstbot.base.repositories.sqlalchemy.exc_mapper import exception_mapper
+from myfirstbot.entities.enums.access_level import AccessLevel
+from myfirstbot.entities.user import User, UserCreate, UserUpdate
+from myfirstbot.repositories.postgresql.models.user import User as _UserOrm
 
 
-class UserRepo(AbstractRepo[UserSchema]):
+class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
-        self.orm = AbstractOrmRepo[UserModel](session=session, model=UserModel)
 
     @exception_mapper
-    async def add(self, instance: UserSchemaAdd) -> UserSchema:
-        instance = await self.orm.add(**instance.model_dump())
-        return UserSchema.model_validate(instance)
+    async def add(self, instance: UserCreate) -> User:
+        values = instance.model_dump()
+        query = insert(_UserOrm).values(**values).returning(_UserOrm)
+        result = await self.session.execute(query)
+        await self.session.commit()
+        return User.model_validate(result)
 
     @exception_mapper
-    async def get(self, ident: int) -> UserSchema | None:
-        instance = await self.orm.get(ident)
-        return UserSchema.model_validate(instance) if instance else None
+    async def get(self, id_: int) -> User | None:
+        query = select(_UserOrm).where(_UserOrm.id == id_)
+        result = await self.session.scalar(query)
+        return User.model_validate(result) if result else None
 
     @exception_mapper
-    async def get_one(self, **filter_by) -> UserSchema | None:
-        instance = await self.orm.get_one(**filter_by)
-        return UserSchema.model_validate(instance) if instance else None
+    async def update(self, id_: int, instance: UserUpdate) -> User:
+        values = instance.model_dump()
+        query = (update(_UserOrm).where(_UserOrm.id == id_)
+                 .values(**values).returning(_UserOrm))
+        result = await self.session.execute(query)
+        await self.session.commit()
+        return User.model_validate(result)
 
     @exception_mapper
-    async def get_many(
-            self, skip: int = 0, limit: int = 100, order_by=None, **filter_by,
-    ) -> list[UserSchema]:
-        instances = await self.orm.get_many(
-            skip=skip, limit=limit, order_by=order_by, **filter_by,
-        )
-        return list(map(UserSchema.model_validate, instances))
+    async def delete(self, id_: int) -> None:
+        query = delete(_UserOrm).where(_UserOrm.id == id_)
+        await self.session.execute(query)
 
-    @exception_mapper
-    async def update(self, ident: int, **attrs) -> UserSchema | None:
-        for k, v in attrs.items():
-            UserSchema.__pydantic_validator__.validate_assignment(
-                UserSchema.model_construct(), k, v,
-            )
-        instance = await self.orm.update(ident=ident, **attrs)
-        return UserSchema.model_validate(instance) if instance else None
+    async def get_by_telegram_id(self, telegram_id: int) -> User | None:
+        query = select(_UserOrm).where(_UserOrm.telegram_id == telegram_id)
+        result = await self.session.scalar(query)
+        return User.model_validate(result) if result else None
 
-    @exception_mapper
-    async def delete(self, ident: int) -> None:
-        await self.orm.delete(ident)
-
-    async def get_one_by_telegram_id(self, telegram_id: int) -> UserSchema | None:
-        return await self.get_one(telegram_id=telegram_id)
-
-    async def update_info(
-            self, ident: int,
+    async def update_telegram_info(  # noqa: PLR0913
+            self, id_: int,
             user_name: str | None = None,
             first_name: str | None = None,
             last_name: str | None = None,
             chat_id: int | None = None,
-    ) -> UserSchema | None:
-        kwargs = {
-            "user_name": user_name,
-            "first_name": first_name,
-            "last_name": last_name,
-            "chat_id": chat_id,
-        }
-        return await self.update(ident, **kwargs)
+    ) -> User | None:
+        return await self.update(id_, UserUpdate(
+            user_name=user_name,
+            first_name=first_name,
+            last_name=last_name,
+            chat_id=chat_id
+        ))
 
     async def set_access_level(
-            self, ident: int, access_level: AccessLevel,
-    ) -> UserSchema | None:
-        return await self.update(ident, access_level=access_level)
+            self, id_: int, access_level: AccessLevel,
+    ) -> User | None:
+        return await self.update(id_, UserUpdate(access_level=access_level))
+
+
+"""
+    @exception_mapper
+    async def get_many(
+            self, skip: int = 0, limit: int = 100, order_by=None, **filter_by,
+    ) -> list[User]:
+        instances = await self.orm.get_many(
+            skip=skip, limit=limit, order_by=order_by, **filter_by,
+        )
+        return list(map(UserSchema.model_validate, instances)
+"""

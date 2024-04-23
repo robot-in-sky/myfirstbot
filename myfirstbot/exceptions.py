@@ -6,14 +6,19 @@ class RepositoryError(AppError):
     ...
 
 
-class UniqueViolationError(RepositoryError):
+class ForeignKeyViolationError(RepositoryError):
     ...
 
 
-class ForeignKeyViolationError(RepositoryError):
+class NotNullViolationError(RepositoryError):
+    ...
+
+
+class UniqueViolationError(RepositoryError):
     ...
 
 
 class SchemaValidationError(RepositoryError):
     ...
+
 
