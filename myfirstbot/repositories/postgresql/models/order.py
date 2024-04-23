@@ -1,7 +1,7 @@
 from sqlalchemy import Enum, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from myfirstbot.base.repositories.sqlalchemy.models import Base
+from myfirstbot.base.repositories.sqlalchemy.models.base import Base
 from myfirstbot.entities.enums.order_status import OrderStatus
 
 

@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +20,8 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
     async def add(self, instance: OrderCreate) -> Order:
         values = instance.model_dump()
         query = insert(_OrderOrm).values(**values).returning(_OrderOrm)
-        result = await self.session.execute(query)
+        result = await self.session.scalar(query)
+        logging.info(result)
         await self.session.commit()
         return Order.model_validate(result)
 
@@ -33,7 +36,7 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         values = instance.model_dump()
         query = (update(_OrderOrm).where(_OrderOrm.id == id_)
                  .values(**values).returning(_OrderOrm))
-        result = await self.session.execute(query)
+        result = await self.session.scalar(query)
         await self.session.commit()
         return Order.model_validate(result)
 
@@ -41,6 +44,7 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
     async def delete(self, id_: int) -> None:
         query = delete(_OrderOrm).where(_OrderOrm.id == id_)
         await self.session.execute(query)
+        await self.session.commit()
 
     async def set_status(self, id_: int, status: OrderStatus) -> Order | None:
         return await self.update(id_, OrderUpdate(status=status))

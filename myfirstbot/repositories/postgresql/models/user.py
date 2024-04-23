@@ -1,7 +1,7 @@
 from sqlalchemy import BigInteger, Enum, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from myfirstbot.base.repositories.sqlalchemy.models import Base
+from myfirstbot.base.repositories.sqlalchemy.models.base import Base
 from myfirstbot.entities.enums.access_level import AccessLevel
 
 

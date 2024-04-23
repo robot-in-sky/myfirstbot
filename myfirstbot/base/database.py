@@ -1,29 +1,15 @@
 from sqlalchemy.engine.url import URL
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine as _create_async_engine
-
-
-# from myfirstbot.db.order import OrderRepo
-# from myfirstbot.db.user import UserRepo
-
-
-def create_async_engine(url: URL | str, *, debug: bool = False) -> AsyncEngine:
-    return _create_async_engine(
-        url=url,
-        echo=debug,
-        pool_pre_ping=True,
-    )
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 
 class Database:
 
-    engine: AsyncEngine
-    session: AsyncSession
-
     def __init__(
-        self,
-        session: AsyncSession,
+        self, url: URL | str, *, echo: bool = False
     ) -> None:
-        self.session = session
-        # self.user = UserRepo(session=session)
-        # self.order = OrderRepo(session=session)
-
+        self.engine = create_async_engine(
+            url, echo=echo, pool_pre_ping=True
+        )
+        self.session = async_sessionmaker(
+            self.engine, expire_on_commit=False, class_=AsyncSession
+        )

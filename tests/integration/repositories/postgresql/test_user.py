@@ -19,7 +19,7 @@ def user_repo(session: AsyncSession) -> UserRepo:
 @pytest.fixture()
 def new_user() -> UserCreate:
     return UserCreate(
-        telegram_id=987654321,
+        telegram_id=987654324,
         user_name="Cuckold1488",
         first_name="Жмых",
         last_name="Пожилой",
@@ -28,14 +28,14 @@ def new_user() -> UserCreate:
 
 
 class TestUser:
-    async def test_user_get(self, user_repo: UserRepo) -> None:
-        result = await user_repo.get(3)
-        assert isinstance(result, User)
-
-    # async def test_user_add(self, user_repo: UserRepo, new_user: UserCreate) -> None:
-    #     result = await user_repo.add(new_user)
-    #     logger.warning(result)
+    # async def test_user_get(self, user_repo: UserRepo) -> None:
+    #     result = await user_repo.get(3)
     #     assert isinstance(result, User)
+
+    async def test_user_add(self, user_repo: UserRepo, new_user: UserCreate) -> None:
+        result = await user_repo.add(new_user)
+        logger.warning(result)
+        assert isinstance(result, User)
 
         # result = await db.user.get(1)
         # print(result)

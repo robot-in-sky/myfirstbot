@@ -6,17 +6,17 @@ from alembic.script import Script
 
 
 def test_alembic_config_path(alembic_config: Config) -> None:
-    assert Path(alembic_config.config_file_name).is_file()  # noqa: S101
+    assert Path(alembic_config.config_file_name).is_file()
 
 
 def test_alembic_script_location(alembic_config: Config) -> None:
     script_location = alembic_config.get_main_option("script_location")
-    assert Path(script_location).joinpath("env.py").is_file()  # noqa: S101
+    assert Path(script_location).joinpath("env.py").is_file()
 
 
 def test_alembic_sqlalchemy_url(alembic_config: Config) -> None:
     sqlalchemy_url = alembic_config.get_main_option("sqlalchemy.url")
-    assert isinstance(sqlalchemy_url, str)  # noqa: S101
+    assert isinstance(sqlalchemy_url, str)
 
 
 def test_migrations_stairway(

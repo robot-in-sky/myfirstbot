@@ -14,7 +14,7 @@ def order_repo(session: AsyncSession) -> OrderRepo:
 @pytest.fixture()
 def new_order() -> OrderCreate:
     return OrderCreate(
-        user_id=1,
+        user_id=3,
         first_name="John",
         last_name="Doe",
         age=33

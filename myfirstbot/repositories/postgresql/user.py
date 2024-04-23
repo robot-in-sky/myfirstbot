@@ -18,7 +18,7 @@ class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
     async def add(self, instance: UserCreate) -> User:
         values = instance.model_dump()
         query = insert(_UserOrm).values(**values).returning(_UserOrm)
-        result = await self.session.execute(query)
+        result = await self.session.scalar(query)
         await self.session.commit()
         return User.model_validate(result)
 
@@ -33,7 +33,7 @@ class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
         values = instance.model_dump()
         query = (update(_UserOrm).where(_UserOrm.id == id_)
                  .values(**values).returning(_UserOrm))
-        result = await self.session.execute(query)
+        result = await self.session.scalar(query)
         await self.session.commit()
         return User.model_validate(result)
 
@@ -41,6 +41,7 @@ class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
     async def delete(self, id_: int) -> None:
         query = delete(_UserOrm).where(_UserOrm.id == id_)
         await self.session.execute(query)
+        await self.session.commit()
 
     async def get_by_telegram_id(self, telegram_id: int) -> User | None:
         query = select(_UserOrm).where(_UserOrm.telegram_id == telegram_id)
