@@ -53,7 +53,7 @@ fixable = ["ALL"]
 "*/__init__.py" = [
     "F401"
 ]
-"*/tests/**/*.py" = [
+"**/tests/**/*.py" = [
     "S101", # Using assert in tests is allowed.
 ]
 

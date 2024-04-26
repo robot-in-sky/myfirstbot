@@ -18,5 +18,5 @@ async def database(settings: TestSettings) -> Database:
 
 @pytest_asyncio.fixture(scope="function")
 async def session(database: Database) -> AsyncSession:
-    async with database.session() as session:
+    async with database.make_session() as session:
         yield session

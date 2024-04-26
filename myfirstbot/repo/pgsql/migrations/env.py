@@ -4,7 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from myfirstbot.config import settings
-from myfirstbot.base.repositories.sqlalchemy.models import Base
+from myfirstbot.base.repositories.sql.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

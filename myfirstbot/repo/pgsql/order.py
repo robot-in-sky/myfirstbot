@@ -4,8 +4,8 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from myfirstbot.base.repositories.sqlalchemy.abs_repo import AbstractRepo
-from myfirstbot.base.repositories.sqlalchemy.exc_mapper import exception_mapper
+from myfirstbot.base.repositories.sql.abs_repo import AbstractRepo
+from myfirstbot.base.repositories.sql.exc_mapper import exception_mapper
 from myfirstbot.entities.enums.order_status import OrderStatus
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
 from myfirstbot.repositories.postgresql.models.order import Order as _OrderOrm
@@ -46,19 +46,24 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         await self.session.execute(query)
         await self.session.commit()
 
-    async def set_status(self, id_: int, status: OrderStatus) -> Order | None:
-        return await self.update(id_, OrderUpdate(status=status))
-
-
-"""
     @exception_mapper
-    async def get_many(
-            self, skip: int = 0, limit: int = 100, order_by: str | None = None, **filter_by,
+    async def get_all(
+        self,
+        user_id: int | None,
+        status: OrderStatus | None = None,
+        *,
+        skip: int = 0,
+        limit: int = -1,
+        order_by: str | None = None,
     ) -> list[Order]:
-        statement = select(_OrderOrm).filter_by(**filter_by)
-        statement = statement.offset(skip).limit(limit)
+        query = select(_OrderOrm)
+        if user_id:
+            query = query.where(_OrderOrm.user_id == user_id)
+        if status:
+            query = query.where(_OrderOrm.status == status)
+        if limit > 0:
+            query = query.offset(skip).limit(limit)
         if order_by:
-            statement = statement.order_by(order_by)
-        result = (await self.session.scalars(statement)).all()
+            query = query.order_by(order_by)
+        result = (await self.session.scalars(query)).all()
         return list(map(Order.model_validate, result))
-"""

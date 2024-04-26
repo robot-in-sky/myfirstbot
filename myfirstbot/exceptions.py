@@ -18,7 +18,7 @@ class UniqueViolationError(RepositoryError):
     ...
 
 
-class SchemaValidationError(RepositoryError):
+class OutputValidationError(RepositoryError):
     ...
 
 
