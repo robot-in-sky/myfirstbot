@@ -2,13 +2,11 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from pydantic import ValidationError
 from sqlalchemy.exc import DBAPIError
 
 from myfirstbot.exceptions import (
     ForeignKeyViolationError,
     NotNullViolationError,
-    OutputValidationError,
     UniqueViolationError,
 )
 
@@ -27,8 +25,5 @@ def exception_mapper(func: Callable[..., Any]) -> Callable[..., Any]:
                 if error.orig.pgcode == "23505":
                     raise UniqueViolationError from error
             raise
-        except ValidationError as error:
-            raise OutputValidationError from error
-
     return wrapped
 

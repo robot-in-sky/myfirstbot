@@ -1,10 +1,11 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from myfirstbot.base.entities.filters import NumQueryFilter
 from myfirstbot.entities.enums.access_level import AccessLevel
 from myfirstbot.entities.user import User, UserCreate
 from myfirstbot.exceptions import UniqueViolationError
-from myfirstbot.repositories import UserRepo
+from myfirstbot.repo.pgsql.user import UserRepo
 
 import logging
 
@@ -32,10 +33,17 @@ class TestUser:
     #     result = await user_repo.get(3)
     #     assert isinstance(result, User)
 
-    async def test_user_add(self, user_repo: UserRepo, new_user: UserCreate) -> None:
-        result = await user_repo.add(new_user)
-        logger.warning(result)
+    async def test_user_get_one(self, user_repo: UserRepo) -> None:
+        result = await user_repo.get_one(
+            NumQueryFilter(type="eq", field="telegram_id", value=987654324)
+        )
+        logger.info(result)
         assert isinstance(result, User)
+
+    # async def test_user_add(self, user_repo: UserRepo, new_user: UserCreate) -> None:
+    #     result = await user_repo.add(new_user)
+    #     logger.warning(result)
+    #     assert isinstance(result, User)
 
         # result = await db.user.get(1)
         # print(result)

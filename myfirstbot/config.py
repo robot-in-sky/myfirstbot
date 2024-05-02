@@ -1,6 +1,6 @@
 import logging
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
@@ -15,6 +15,7 @@ class DatabaseSettings(BaseModel):
     database: str
     database_test: str | None = None
 
+    @computed_field
     @property
     def url(self) -> str:
         return URL.create(

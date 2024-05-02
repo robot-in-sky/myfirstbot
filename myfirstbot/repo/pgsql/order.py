@@ -4,11 +4,11 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from myfirstbot.base.repositories.sql.abs_repo import AbstractRepo
-from myfirstbot.base.repositories.sql.exc_mapper import exception_mapper
+from myfirstbot.base.repo.sql.abs_repo import AbstractRepo
+from myfirstbot.base.repo.sql.exc_mapper import exception_mapper
 from myfirstbot.entities.enums.order_status import OrderStatus
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
-from myfirstbot.repositories.postgresql.models.order import Order as _OrderOrm
+from myfirstbot.repo.pgsql.models.order import Order as _OrderOrm
 
 
 class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
@@ -45,6 +45,7 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         query = delete(_OrderOrm).where(_OrderOrm.id == id_)
         await self.session.execute(query)
         await self.session.commit()
+
 
     @exception_mapper
     async def get_all(

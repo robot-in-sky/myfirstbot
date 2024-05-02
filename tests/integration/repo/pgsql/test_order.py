@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from myfirstbot.entities.order import Order, OrderCreate
 from myfirstbot.exceptions import UniqueViolationError
-from myfirstbot.repositories import OrderRepo
+from myfirstbot.repo import OrderRepo
 
 
 @pytest.fixture()
