@@ -1,12 +1,13 @@
-import logging
+from collections.abc import Sequence
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from myfirstbot.base.entities.query import FilterGroup, Pagination, QueryFilter, Sorting
 from myfirstbot.base.repo.sql.abs_repo import AbstractRepo
 from myfirstbot.base.repo.sql.exc_mapper import exception_mapper
-from myfirstbot.entities.enums.order_status import OrderStatus
+from myfirstbot.base.repo.sql.query_utils import apply_filter, apply_filters, apply_pagination, apply_sorting
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
 from myfirstbot.repo.pgsql.models.order import Order as _OrderOrm
 
@@ -18,18 +19,33 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
 
     @exception_mapper
     async def add(self, instance: OrderCreate) -> Order:
-        values = instance.model_dump()
-        query = insert(_OrderOrm).values(**values).returning(_OrderOrm)
+        query = (insert(_OrderOrm).values(**instance.model_dump())
+                 .returning(_OrderOrm))
         result = await self.session.scalar(query)
-        logging.info(result)
         await self.session.commit()
         return Order.model_validate(result)
 
-    @exception_mapper
     async def get(self, id_: int) -> Order | None:
         query = select(_OrderOrm).where(_OrderOrm.id == id_)
         result = await self.session.scalar(query)
         return Order.model_validate(result) if result else None
+
+    async def get_many(
+            self,
+            filters: Sequence[QueryFilter] | FilterGroup | None = None,
+            *,
+            sorting: Sorting | None = None,
+            pagination: Pagination | None = None,
+    ) -> list[Order]:
+        query = select(_OrderOrm)
+        if filters:
+            query = apply_filters(query, filters)
+        if sorting:
+            query = apply_sorting(query, sorting)
+        if pagination:
+            query = apply_pagination(query, pagination)
+        result = (await self.session.scalars(query)).all()
+        return list(map(Order.model_validate, result))
 
     @exception_mapper
     async def update(self, id_: int, instance: OrderUpdate) -> Order:
@@ -46,25 +62,7 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         await self.session.execute(query)
         await self.session.commit()
 
-
-    @exception_mapper
-    async def get_all(
-        self,
-        user_id: int | None,
-        status: OrderStatus | None = None,
-        *,
-        skip: int = 0,
-        limit: int = -1,
-        order_by: str | None = None,
-    ) -> list[Order]:
-        query = select(_OrderOrm)
-        if user_id:
-            query = query.where(_OrderOrm.user_id == user_id)
-        if status:
-            query = query.where(_OrderOrm.status == status)
-        if limit > 0:
-            query = query.offset(skip).limit(limit)
-        if order_by:
-            query = query.order_by(order_by)
-        result = (await self.session.scalars(query)).all()
-        return list(map(Order.model_validate, result))
+    async def get_one(self, filter_: QueryFilter) -> Order | None:
+        query = apply_filter(select(_OrderOrm), filter_)
+        result = await self.session.scalar(query)
+        return Order.model_validate(result) if result else None

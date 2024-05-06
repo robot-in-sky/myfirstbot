@@ -4,7 +4,7 @@ from pydantic import BaseModel, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
-from myfirstbot.definitions import DB_DRIVER, DB_SYSTEM, ENVFILE_DELIMITER, ENVFILE_ENCODING, ENVFILE_PATH
+import myfirstbot.definitions as _def
 
 
 class DatabaseSettings(BaseModel):
@@ -13,19 +13,20 @@ class DatabaseSettings(BaseModel):
     username: str
     password: str | None = None
     database: str
-    database_test: str | None = None
 
     @computed_field
     @property
     def url(self) -> str:
         return URL.create(
-            drivername=f"{DB_SYSTEM}+{DB_DRIVER}",
+            drivername=f"{_def.DB_SYSTEM}+{_def.DB_DRIVER}",
             username=self.username,
             password=self.password,
             port=self.port,
             host=self.host,
             database=self.database,
         ).render_as_string(hide_password=False)
+
+    echo: bool = False
 
 
 class RedisSettings(BaseModel):
@@ -45,9 +46,9 @@ class BotSettings(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=ENVFILE_PATH,
-        env_file_encoding=ENVFILE_ENCODING,
-        env_nested_delimiter=ENVFILE_DELIMITER,
+        env_file=_def.ENVFILE_PATH,
+        env_file_encoding=_def.ENVFILE_ENCODING,
+        env_nested_delimiter=_def.ENVFILE_DELIMITER,
     )
 
     debug: bool = False

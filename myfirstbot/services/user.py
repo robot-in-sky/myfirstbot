@@ -1,12 +1,12 @@
-from myfirstbot.base.database import Database
+from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.entities.enums.access_level import AccessLevel
 from myfirstbot.entities.user import User, UserCreate, UserUpdate
-from myfirstbot.repositories import UserRepo
+from myfirstbot.repo.pgsql.user import UserRepo
 
 
 class UserService:
     def __init__(self, database: Database) -> None:
-        session = database.make_session()
+        session = database.get_session()
         self.repo = UserRepo(session)
 
     async def add(

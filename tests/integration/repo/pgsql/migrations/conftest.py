@@ -2,20 +2,17 @@ import pytest
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
 
+from myfirstbot.config import Settings
 from myfirstbot.definitions import APP_DIR
-from tests.utils.alembic import make_alembic_config
-from tests.utils.config import TestSettings
-
-ALEMBIC_CONFIG = APP_DIR.joinpath("repositories/postgresql/alembic.ini")
+from tests.utils.migrations import get_alembic_config
 
 
 @pytest.fixture()
-def alembic_config(settings: TestSettings) -> Config:
-    return make_alembic_config(
+def alembic_config(settings: Settings) -> Config:
+    return get_alembic_config(
+        file_=APP_DIR.joinpath("repo/pgsql/alembic.ini"),
         db_url=f"{settings.db.url}?async_fallback=True",
-        config_file=ALEMBIC_CONFIG,
     )
-
 
 @pytest.fixture()
 def alembic_revisions(alembic_config: Config) -> list[Script]:

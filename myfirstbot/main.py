@@ -12,7 +12,7 @@ from myfirstbot.tgbot.dispatcher import get_dispatcher
 from myfirstbot.tgbot.structures.data_structure import TransferData
 
 
-async def set_commands(bot: Bot):
+async def set_commands(bot: Bot) -> None:
     await bot.set_my_commands(
         commands=[
             BotCommand(command="start", description="Запустить бота"),
@@ -22,7 +22,7 @@ async def set_commands(bot: Bot):
     )
 
 
-async def start_bot():
+async def start_bot() -> None:
     bot = Bot(token=settings.bot.token)
     dp = get_dispatcher(
         storage=RedisStorage(

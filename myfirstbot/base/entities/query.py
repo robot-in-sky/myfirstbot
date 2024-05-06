@@ -1,7 +1,9 @@
-from collections.abc import Iterable
-from typing import Literal, Self
+from __future__ import annotations
 
-from pydantic import BaseModel
+from collections.abc import Sequence  # noqa: TCH003
+from typing import Literal
+
+from pydantic import BaseModel, PositiveInt
 
 """ Filter types """
 EQ = "eq"  # equal
@@ -13,10 +15,16 @@ LE = "le"  # less than or equal
 IN = "in"  # in
 NIN = "nin"  # not in
 LIKE = "like"  # like
+ISN = "isn"  # is null
+ISNN = "isnn"  # is not null
 
-""" Join types """
+""" Filter join types """
 AND = "and"
 OR = "or"
+
+""" Sorting types """
+ASC = "and"
+DESC = "or"
 
 
 class NumQueryFilter(BaseModel):
@@ -31,6 +39,11 @@ class StrQueryFilter(BaseModel):
     value: str
 
 
+class NullQueryFilter(BaseModel):
+    type: Literal["isn", "isnn"] = "isn"
+    field: str
+
+
 class SetQueryFilter(BaseModel):
     type: Literal["in", "nin"] = "in"
     field: str
@@ -43,9 +56,19 @@ class AgeQueryFilter(BaseModel):
     value: int
 
 
-QueryFilter = NumQueryFilter | StrQueryFilter | SetQueryFilter | AgeQueryFilter
+QueryFilter = NumQueryFilter | StrQueryFilter | NullQueryFilter | SetQueryFilter | AgeQueryFilter
 
 
-class QueryFilterGroup(BaseModel):
-    filters: Iterable[QueryFilter | Self]
+class FilterGroup(BaseModel):
+    filters: Sequence[QueryFilter] | FilterGroup
     join_type: Literal["and", "or"] = "and"
+
+
+class Sorting(BaseModel):
+    order_by: str
+    sort: Literal["asc", "desc"] = "asc"
+
+
+class Pagination(BaseModel):
+    page: PositiveInt = 1
+    page_size: PositiveInt = 10

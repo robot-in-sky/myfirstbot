@@ -1,12 +1,12 @@
-from myfirstbot.base.database import Database
+from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.entities.enums.order_status import OrderStatus
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
-from myfirstbot.repositories import OrderRepo
+from myfirstbot.repo.pgsql.order import OrderRepo
 
 
 class UserService:
     def __init__(self, database: Database) -> None:
-        session = database.make_session()
+        session = database.get_session()
         self.repo = OrderRepo(session)
 
     async def add(

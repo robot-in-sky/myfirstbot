@@ -50,11 +50,12 @@ ignore = [# https://docs.astral.sh/ruff/rules
 fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"*/__init__.py" = [
+"__init__.py" = [
     "F401"
 ]
-"**/tests/**/*.py" = [
+"test_*.py" = [
     "S101", # Using assert in tests is allowed.
+    "PLR2004", # Magic value comprison
 ]
 
 [tool.ruff.lint.pycodestyle]

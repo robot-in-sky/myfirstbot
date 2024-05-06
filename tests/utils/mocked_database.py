@@ -1,12 +1,11 @@
-from myfirstbot.base.database import Database
+from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.base.repo.sql.models.base import Base
 
 
 class MockedDatabase(Database):
 
-    async def teardown(self) -> None:
-        """Clear all data in the database."""
-        for table in Base.metadata.sorted_tables:
-            await self.session.execute(table.delete())
-        await self.session.commit()
-
+    async def clear(self) -> None:
+        async with self.engine.connect() as connection:
+            for table in reversed(Base.metadata.sorted_tables):
+                await connection.execute(table.delete())
+                await connection.commit()
