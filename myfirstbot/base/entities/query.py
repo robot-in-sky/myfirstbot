@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence  # noqa: TCH003
 from typing import Literal
 
 from pydantic import BaseModel, PositiveInt
@@ -18,13 +17,9 @@ LIKE = "like"  # like
 ISN = "isn"  # is null
 ISNN = "isnn"  # is not null
 
-""" Filter join types """
-AND = "and"
-OR = "or"
-
 """ Sorting types """
-ASC = "and"
-DESC = "or"
+ASC = "asc"
+DESC = "desc"
 
 
 class NumQueryFilter(BaseModel):
@@ -57,11 +52,6 @@ class AgeQueryFilter(BaseModel):
 
 
 QueryFilter = NumQueryFilter | StrQueryFilter | NullQueryFilter | SetQueryFilter | AgeQueryFilter
-
-
-class FilterGroup(BaseModel):
-    filters: Sequence[QueryFilter] | FilterGroup
-    join_type: Literal["and", "or"] = "and"
 
 
 class Sorting(BaseModel):

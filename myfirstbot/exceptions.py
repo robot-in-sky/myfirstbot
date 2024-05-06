@@ -14,10 +14,6 @@ class ForeignKeyViolationError(RepositoryError):
     ...
 
 
-class NotNullViolationError(RepositoryError):
-    ...
-
-
 class UniqueViolationError(RepositoryError):
     ...
 

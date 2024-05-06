@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import ColumnElement, Select, and_, desc, null, or_
+from sqlalchemy import ColumnElement, Select, and_, desc, null, or_ as _or_
 
 import myfirstbot.base.entities.query as _query
 
@@ -10,7 +10,7 @@ def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str
     return "".join([f"\\{c}" if c in spec_chars else c for c in string])
 
 
-def single_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElement[bool]:
+def get_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElement[bool]:
     column: ColumnElement = query.selected_columns.get(filter_.field)
     match filter_.type:
         case _query.EQ:
@@ -41,34 +41,23 @@ def single_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElem
     return clause
 
 
-def group_clause(query: Select[Any], filter_group: _query.FilterGroup) -> ColumnElement[bool]:
-    clause = None
-    for item in filter_group.filters:
-        if isinstance(item, _query.QueryFilter):
-            if clause is None:
-                clause = single_clause(query, item)
-            elif filter_group.join_type == _query.OR:
-                clause = or_(clause, single_clause(query, item))
-            else:
-                clause = and_(clause, single_clause(query, item))
-
-        if isinstance(item, _query.FilterGroup):
-            clause = group_clause(query, item)
-
-    return clause
+def get_joined_clause(
+        query: Select[Any], filters: Sequence[_query.QueryFilter], *, or_: bool = False,
+) -> ColumnElement[bool]:
+    clauses = [get_clause(query, f) for f in filters]
+    if or_:
+        return _or_(*clauses)
+    return and_(*clauses)
 
 
 def apply_filter(query: Select[Any], filter_: _query.QueryFilter) -> Select[Any]:
-    return query.where(single_clause(query, filter_))
+    return query.where(get_clause(query, filter_))
 
 
 def apply_filters(
-        query: Select[Any],
-        filters: Sequence[_query.QueryFilter] | _query.FilterGroup,
+        query: Select[Any], filters: Sequence[_query.QueryFilter], *, or_: bool = False,
 ) -> Select[Any]:
-    if not isinstance(filters, _query.FilterGroup):
-        filters = _query.FilterGroup(filters=filters)
-    return query.where(group_clause(query, filters))
+    return query.where(get_joined_clause(query, filters, or_=or_))
 
 
 def apply_sorting(query: Select[Any], sorting: _query.Sorting) -> Select[Any]:

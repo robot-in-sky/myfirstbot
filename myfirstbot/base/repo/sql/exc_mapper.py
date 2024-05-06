@@ -6,7 +6,6 @@ from sqlalchemy.exc import DBAPIError
 
 from myfirstbot.exceptions import (
     ForeignKeyViolationError,
-    NotNullViolationError,
     UniqueViolationError,
 )
 
@@ -18,8 +17,6 @@ def exception_mapper(func: Callable[..., Any]) -> Callable[..., Any]:
             return await func(*args, **kwargs)
         except DBAPIError as error:
             if hasattr(error.orig, "pgcode"):
-                if error.orig.pgcode == "23502":
-                    raise NotNullViolationError from error
                 if error.orig.pgcode == "23503":
                     raise ForeignKeyViolationError from error
                 if error.orig.pgcode == "23505":

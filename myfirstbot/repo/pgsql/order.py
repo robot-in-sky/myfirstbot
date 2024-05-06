@@ -4,10 +4,10 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from myfirstbot.base.entities.query import FilterGroup, Pagination, QueryFilter, Sorting
+from myfirstbot.base.entities.query import Pagination, QueryFilter, Sorting
 from myfirstbot.base.repo.sql.abs_repo import AbstractRepo
 from myfirstbot.base.repo.sql.exc_mapper import exception_mapper
-from myfirstbot.base.repo.sql.query_utils import apply_filter, apply_filters, apply_pagination, apply_sorting
+from myfirstbot.base.repo.sql.query_utils import apply_filters, apply_pagination, apply_sorting
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
 from myfirstbot.repo.pgsql.models.order import Order as _OrderOrm
 
@@ -32,14 +32,15 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
 
     async def get_many(
             self,
-            filters: Sequence[QueryFilter] | FilterGroup | None = None,
+            filters: Sequence[QueryFilter] | None = None,
             *,
+            or_: bool = False,
             sorting: Sorting | None = None,
             pagination: Pagination | None = None,
     ) -> list[Order]:
         query = select(_OrderOrm)
         if filters:
-            query = apply_filters(query, filters)
+            query = apply_filters(query, filters, or_=or_)
         if sorting:
             query = apply_sorting(query, sorting)
         if pagination:
@@ -47,22 +48,19 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         result = (await self.session.scalars(query)).all()
         return list(map(Order.model_validate, result))
 
-    @exception_mapper
-    async def update(self, id_: int, instance: OrderUpdate) -> Order:
-        values = instance.model_dump()
+    async def update(self, id_: int, instance: OrderUpdate) -> Order | None:
         query = (update(_OrderOrm).where(_OrderOrm.id == id_)
-                 .values(**values).returning(_OrderOrm))
+                 .values(**instance.model_dump()).returning(_OrderOrm))
         result = await self.session.scalar(query)
-        await self.session.commit()
-        return Order.model_validate(result)
+        if result:
+            await self.session.commit()
+            return Order.model_validate(result)
+        return None
 
-    @exception_mapper
-    async def delete(self, id_: int) -> None:
-        query = delete(_OrderOrm).where(_OrderOrm.id == id_)
-        await self.session.execute(query)
-        await self.session.commit()
-
-    async def get_one(self, filter_: QueryFilter) -> Order | None:
-        query = apply_filter(select(_OrderOrm), filter_)
+    async def delete(self, id_: int) -> int | None:
+        query = delete(_OrderOrm).where(_OrderOrm.id == id_).returning(_OrderOrm.id)
         result = await self.session.scalar(query)
-        return Order.model_validate(result) if result else None
+        if result:
+            await self.session.commit()
+            return result
+        return None

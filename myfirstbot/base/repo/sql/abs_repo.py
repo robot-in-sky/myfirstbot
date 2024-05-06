@@ -5,7 +5,7 @@ from typing import Generic, TypeVar
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from myfirstbot.base.entities.base import Base as _EntityBase
-from myfirstbot.base.entities.query import FilterGroup, Pagination, QueryFilter, Sorting
+from myfirstbot.base.entities.query import Pagination, QueryFilter, Sorting
 
 _TEntity = TypeVar("_TEntity", bound=_EntityBase)
 _TEntityCreate = TypeVar("_TEntityCreate", bound=_EntityBase)
@@ -28,8 +28,9 @@ class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
     @abstractmethod
     async def get_many(
             self,
-            filters: Sequence[QueryFilter] | FilterGroup | None = None,
+            filters: Sequence[QueryFilter] | None = None,
             *,
+            or_: bool = False,
             sorting: Sorting | None = None,
             pagination: Pagination | None = None,
     ) -> list[_TEntity]:
