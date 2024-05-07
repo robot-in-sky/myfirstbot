@@ -4,8 +4,11 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from myfirstbot.repo.pgsql.models import Base
 from myfirstbot.config import settings
-from myfirstbot.base.repo.sql.models.base import Base
+
+# This line is needed to IDE doesn't delete first import line.
+ENUM_FIX = alembic_postgresql_enum
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -79,3 +82,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+

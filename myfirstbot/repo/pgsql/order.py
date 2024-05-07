@@ -30,6 +30,11 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
         result = await self.session.scalar(query)
         return Order.model_validate(result) if result else None
 
+    async def get_by_user_id(self, user_id: int) -> Order | None:
+        query = select(_OrderOrm).where(_OrderOrm.user_id == user_id)
+        result = await self.session.scalar(query)
+        return Order.model_validate(result) if result else None
+
     async def get_many(
             self,
             filters: Sequence[QueryFilter] | None = None,

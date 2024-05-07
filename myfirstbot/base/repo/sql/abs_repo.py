@@ -37,9 +37,9 @@ class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
         ...
 
     @abstractmethod
-    async def update(self, id_: int, instance: _TEntityUpdate) -> _TEntity:
+    async def update(self, id_: int, instance: _TEntityUpdate) -> _TEntity | None:
         ...
 
     @abstractmethod
-    async def delete(self, id_: int) -> None:
+    async def delete(self, id_: int) -> int | None:
         ...

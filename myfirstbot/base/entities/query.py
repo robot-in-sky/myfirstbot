@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, PositiveInt
@@ -34,6 +35,12 @@ class StrQueryFilter(BaseModel):
     value: str
 
 
+class DateTimeQueryFilter(BaseModel):
+    type: Literal["gt", "lt", "ge", "le"]
+    field: str
+    value: datetime
+
+
 class NullQueryFilter(BaseModel):
     type: Literal["isn", "isnn"] = "isn"
     field: str
@@ -45,13 +52,7 @@ class SetQueryFilter(BaseModel):
     value: set[str | int]
 
 
-class AgeQueryFilter(BaseModel):
-    type: Literal["gt", "lt", "ge", "le"]
-    field: str
-    value: int
-
-
-QueryFilter = NumQueryFilter | StrQueryFilter | NullQueryFilter | SetQueryFilter | AgeQueryFilter
+QueryFilter = NumQueryFilter | StrQueryFilter | DateTimeQueryFilter | NullQueryFilter | SetQueryFilter
 
 
 class Sorting(BaseModel):

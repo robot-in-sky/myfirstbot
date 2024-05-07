@@ -1,5 +1,7 @@
-from sqlalchemy import Enum, ForeignKey, Integer, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, func
+from sqlalchemy.orm import Mapped, mapped_column as _col
 
 from myfirstbot.base.repo.sql.models.base import Base
 from myfirstbot.entities.enums.order_status import OrderStatus
@@ -9,12 +11,11 @@ class Order(Base):
 
     __tablename__ = "orders"
 
-    id: Mapped[int] = mapped_column(Integer, autoincrement=True, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    first_name: Mapped[str] = mapped_column(Text, nullable=False)
-    last_name: Mapped[str] = mapped_column(Text, nullable=False)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
-    status: Mapped["OrderStatus"] = mapped_column(
-        Enum(OrderStatus), default=OrderStatus.DRAFT
-    )
-
+    id: Mapped[int] = _col(Integer, autoincrement=True, primary_key=True)
+    user_id: Mapped[int] = _col(Integer, ForeignKey("users.id"))
+    label: Mapped[str] = _col(Text)
+    size: Mapped[int] = _col(Integer)
+    qty: Mapped[int] = _col(Integer)
+    status: Mapped["OrderStatus"] = _col(Enum(OrderStatus), default=OrderStatus.DRAFT)
+    created: Mapped[datetime] = _col(DateTime(timezone=True), default=func.now())
+    updated: Mapped[datetime] = _col(DateTime(timezone=True), default=func.now())

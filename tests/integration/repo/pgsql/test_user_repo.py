@@ -1,4 +1,5 @@
 import logging
+from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
@@ -100,12 +101,19 @@ class TestUserRepo:
         ({"filters": [_query.NumQueryFilter(type="ge", field="telegram_id", value=123456003)]}, 3),
         ({"filters": [_query.NumQueryFilter(type="le", field="telegram_id", value=123456003)]}, 3),
 
-        ({"filters": [_query.NullQueryFilter(type="isn", field="chat_id")]}, 1),
-        ({"filters": [_query.NullQueryFilter(type="isnn", field="chat_id")]}, 4),
-
         ({"filters": [_query.StrQueryFilter(type="eq", field="first_name", value="Ivan")]}, 2),
         ({"filters": [_query.StrQueryFilter(type="ne", field="first_name", value="Ivan")]}, 3),
         ({"filters": [_query.StrQueryFilter(type="like", field="user_name", value="Ivan")]}, 2),
+
+        ({"filters": [
+            _query.DateTimeQueryFilter(type="lt", field="created", value=datetime.now(UTC)),
+        ]}, 5),
+        ({"filters": [
+            _query.DateTimeQueryFilter(type="gt", field="created", value=datetime.now(UTC)),
+        ]}, 0),
+
+        ({"filters": [_query.NullQueryFilter(type="isn", field="chat_id")]}, 1),
+        ({"filters": [_query.NullQueryFilter(type="isnn", field="chat_id")]}, 4),
 
         ({"filters": [
             _query.SetQueryFilter(type="in", field="first_name", value={"Ivan", "Sasha", "John"}),
@@ -161,12 +169,13 @@ class TestUserRepo:
         assert getattr(result[0], field) == expecting[0]
         assert getattr(result[-1], field) == expecting[1]
 
+
     async def test_update(self, repo: UserRepo) -> None:
         id_ = (await repo.get_many())[0].id
         update = UserUpdate(
-            user_name="Agent Smith",
-            first_name="Agent",
-            last_name="Smith",
+            user_name="Foo Bar",
+            first_name="Foo",
+            last_name="Bar",
             chat_id=888888888,
             access_level=AccessLevel.AGENT,
         )

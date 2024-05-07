@@ -53,7 +53,6 @@ class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
         result = (await self.session.scalars(query)).all()
         return list(map(User.model_validate, result))
 
-
     async def update(self, id_: int, instance: UserUpdate) -> User | None:
         query = (update(_UserOrm).where(_UserOrm.id == id_)
                  .values(**instance.model_dump()).returning(_UserOrm))
@@ -62,7 +61,6 @@ class UserRepo(AbstractRepo[User, UserCreate, UserUpdate]):
             await self.session.commit()
             return User.model_validate(result)
         return None
-
 
     async def delete(self, id_: int) -> int | None:
         query = delete(_UserOrm).where(_UserOrm.id == id_).returning(_UserOrm.id)
