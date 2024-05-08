@@ -90,7 +90,7 @@ celerybeat.pid
 tests.env
 .venv
 *.env
-!.env.example
+!env/.env.example
 env/
 venv/
 ENV/

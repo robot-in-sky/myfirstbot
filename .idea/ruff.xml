@@ -8,7 +8,6 @@
     <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff" />
     <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff-lsp" />
     <option name="ruffConfigPath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\pyproject.toml" />
-    <option name="runRuffOnSave" value="true" />
     <option name="useRuffLsp" value="true" />
   </component>
 </project>

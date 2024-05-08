@@ -1,5 +1,5 @@
 from myfirstbot.base.repo.sql.database import Database
-from myfirstbot.entities.enums.order_status import OrderStatus
+from myfirstbot.entities.choices.order_status import OrderStatus
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
 from myfirstbot.repo.pgsql.order import OrderRepo
 

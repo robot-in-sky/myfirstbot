@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 
 import myfirstbot.base.entities.query as _query
-from myfirstbot.entities.enums.access_level import AccessLevel
+from myfirstbot.entities.choices.access_level import AccessLevel
 from myfirstbot.entities.user import User, UserCreate, UserUpdate
 from myfirstbot.exceptions import UniqueViolationError
 from myfirstbot.repo.pgsql.user import UserRepo
@@ -94,43 +94,52 @@ class TestUserRepo:
         ({}, 5),
         ({"filters": []}, 5),
 
-        ({"filters": [_query.NumQueryFilter(type="eq", field="telegram_id", value=123456003)]}, 1),
-        ({"filters": [_query.NumQueryFilter(type="ne", field="telegram_id", value=123456003)]}, 4),
-        ({"filters": [_query.NumQueryFilter(type="gt", field="telegram_id", value=123456003)]}, 2),
-        ({"filters": [_query.NumQueryFilter(type="lt", field="telegram_id", value=123456003)]}, 2),
-        ({"filters": [_query.NumQueryFilter(type="ge", field="telegram_id", value=123456003)]}, 3),
-        ({"filters": [_query.NumQueryFilter(type="le", field="telegram_id", value=123456003)]}, 3),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="eq", value=123456003)]}, 1),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="ne", value=123456003)]}, 4),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="gt", value=123456003)]}, 2),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="lt", value=123456003)]}, 2),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="ge", value=123456003)]}, 3),
+        ({"filters": [_query.NumQueryFilter(field="telegram_id", type="le", value=123456003)]}, 3),
 
-        ({"filters": [_query.StrQueryFilter(type="eq", field="first_name", value="Ivan")]}, 2),
-        ({"filters": [_query.StrQueryFilter(type="ne", field="first_name", value="Ivan")]}, 3),
-        ({"filters": [_query.StrQueryFilter(type="like", field="user_name", value="Ivan")]}, 2),
+        ({"filters": [_query.StrQueryFilter(field="first_name", type="eq", value="Ivan")]}, 2),
+        ({"filters": [_query.StrQueryFilter(field="first_name", type="ne", value="Ivan")]}, 3),
+        ({"filters": [_query.StrQueryFilter(field="user_name", type="like", value="Ivan")]}, 2),
+
+        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="eq", value=AccessLevel.USER)]}, 4),
+        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="eq", value=AccessLevel.AGENT)]}, 1),
+        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="ne", value=AccessLevel.AGENT)]}, 4),
 
         ({"filters": [
-            _query.DateTimeQueryFilter(type="lt", field="created", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC)),
         ]}, 5),
         ({"filters": [
-            _query.DateTimeQueryFilter(type="gt", field="created", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC)),
         ]}, 0),
 
-        ({"filters": [_query.NullQueryFilter(type="isn", field="chat_id")]}, 1),
-        ({"filters": [_query.NullQueryFilter(type="isnn", field="chat_id")]}, 4),
+        ({"filters": [_query.IsNullQueryFilter(field="chat_id", type="is")]}, 1),
+        ({"filters": [_query.IsNullQueryFilter(field="chat_id", type="isn")]}, 4),
 
         ({"filters": [
-            _query.SetQueryFilter(type="in", field="first_name", value={"Ivan", "Sasha", "John"}),
+            _query.InSetQueryFilter(field="first_name", type="in", value={"Ivan", "Sasha", "John"}),
         ]}, 3),
         ({"filters": [
-            _query.SetQueryFilter(type="nin", field="first_name", value={"Ivan", "Sasha", "John"}),
+            _query.InSetQueryFilter(field="first_name", type="nin", value={"Ivan", "Sasha", "John"}),
         ]}, 2),
+        ({"filters": [
+            _query.InSetQueryFilter(
+                field="access_level", type="in", value={AccessLevel.USER, AccessLevel.ADMINISTRATOR},
+            ),
+        ]}, 4),
 
         ({"filters": [
-             _query.StrQueryFilter(type="eq", field="first_name", value="Ivan"),
-             _query.StrQueryFilter(type="eq", field="last_name", value="Ivanov"),
+             _query.StrQueryFilter(field="first_name", type="eq", value="Ivan"),
+             _query.StrQueryFilter(field="last_name", type="eq", value="Ivanov"),
         ]}, 1),
 
         ({"filters": [
-             _query.NumQueryFilter(type="eq", field="telegram_id", value=123456003),
-             _query.StrQueryFilter(type="eq", field="first_name", value="Ivan"),
-             _query.StrQueryFilter(type="eq", field="last_name", value="Koothrappali"),
+             _query.NumQueryFilter(field="telegram_id", type="eq", value=123456003),
+             _query.StrQueryFilter(field="first_name", type="eq", value="Ivan"),
+             _query.StrQueryFilter(field="last_name", type="eq", value="Koothrappali"),
         ], "or_": True}, 4),
 
         ({"pagination": _query.Pagination(page=1, page_size=2)}, 2),

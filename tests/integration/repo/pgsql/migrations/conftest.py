@@ -11,7 +11,7 @@ from tests.utils.migrations import get_alembic_config
 def alembic_config(settings: Settings) -> Config:
     return get_alembic_config(
         file_=APP_DIR.joinpath("repo/pgsql/alembic.ini"),
-        db_url=f"{settings.db.url}?async_fallback=True",
+        db_url=settings.db.url,
     )
 
 @pytest.fixture()

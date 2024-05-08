@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from myfirstbot.base.entities.base import Base
-from myfirstbot.entities.enums.access_level import AccessLevel
+from myfirstbot.entities.choices.access_level import AccessLevel
 
 
 class UserCreate(Base):

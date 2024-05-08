@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from myfirstbot.base.entities.base import Base
-from myfirstbot.entities.enums.order_status import OrderStatus
+from myfirstbot.entities.choices.order_status import OrderStatus
 
 
 class OrderCreate(Base):

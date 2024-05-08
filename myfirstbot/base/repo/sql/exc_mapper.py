@@ -2,7 +2,8 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from sqlalchemy.exc import DBAPIError
+from psycopg.errors import ForeignKeyViolation, UniqueViolation
+from sqlalchemy.exc import IntegrityError
 
 from myfirstbot.exceptions import (
     ForeignKeyViolationError,
@@ -15,12 +16,11 @@ def exception_mapper(func: Callable[..., Any]) -> Callable[..., Any]:
     async def wrapped(*args: Any, **kwargs: Any) -> None:
         try:
             return await func(*args, **kwargs)
-        except DBAPIError as error:
-            if hasattr(error.orig, "pgcode"):
-                if error.orig.pgcode == "23503":
-                    raise ForeignKeyViolationError from error
-                if error.orig.pgcode == "23505":
-                    raise UniqueViolationError from error
+        except IntegrityError as error:
+            if isinstance(error.orig, ForeignKeyViolation):
+                raise ForeignKeyViolationError from error
+            if isinstance(error.orig, UniqueViolation):
+                raise UniqueViolationError from error
             raise
     return wrapped
 

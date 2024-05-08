@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 
 import myfirstbot.base.entities.query as _query
-from myfirstbot.entities.enums.order_status import OrderStatus
+from myfirstbot.entities.choices.order_status import OrderStatus
 from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
 from myfirstbot.entities.user import User, UserCreate
 from myfirstbot.exceptions import ForeignKeyViolationError
@@ -107,29 +107,29 @@ class TestOrderRepo:
         ({}, 5),
         ({"filters": []}, 5),
 
-        ({"filters": [_query.NumQueryFilter(type="eq", field="qty", value=10)]}, 1),
-        ({"filters": [_query.NumQueryFilter(type="ne", field="qty", value=10)]}, 4),
-        ({"filters": [_query.NumQueryFilter(type="gt", field="qty", value=10)]}, 2),
-        ({"filters": [_query.NumQueryFilter(type="lt", field="qty", value=10)]}, 2),
-        ({"filters": [_query.NumQueryFilter(type="ge", field="qty", value=10)]}, 3),
-        ({"filters": [_query.NumQueryFilter(type="le", field="qty", value=10)]}, 3),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="eq", value=10)]}, 1),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="ne", value=10)]}, 4),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="gt", value=10)]}, 2),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="lt", value=10)]}, 2),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="ge", value=10)]}, 3),
+        ({"filters": [_query.NumQueryFilter(field="qty", type="le", value=10)]}, 3),
 
-        ({"filters": [_query.StrQueryFilter(type="eq", field="label", value="Metallica")]}, 2),
-        ({"filters": [_query.StrQueryFilter(type="ne", field="label", value="Metallica")]}, 3),
-        ({"filters": [_query.StrQueryFilter(type="like", field="label", value="Metal")]}, 2),
+        ({"filters": [_query.StrQueryFilter(field="label", type="eq", value="Metallica")]}, 2),
+        ({"filters": [_query.StrQueryFilter(field="label", type="ne", value="Metallica")]}, 3),
+        ({"filters": [_query.StrQueryFilter(field="label", type="like", value="Metal")]}, 2),
 
         ({"filters": [
-            _query.DateTimeQueryFilter(type="lt", field="created", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC)),
         ]}, 5),
         ({"filters": [
-            _query.DateTimeQueryFilter(type="gt", field="created", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC)),
         ]}, 0),
 
         ({"filters": [
-            _query.SetQueryFilter(type="in", field="label", value={"Metallica", "Bharat", "Nirvana"}),
+            _query.InSetQueryFilter(field="label", type="in", value={"Metallica", "Bharat", "Nirvana"}),
         ]}, 3),
         ({"filters": [
-            _query.SetQueryFilter(type="nin", field="label", value={"Metallica", "Bharat", "Nirvana"}),
+            _query.InSetQueryFilter(field="label", type="nin", value={"Metallica", "Bharat", "Nirvana"}),
         ]}, 2),
 
         ({"pagination": _query.Pagination(page=1, page_size=2)}, 2),

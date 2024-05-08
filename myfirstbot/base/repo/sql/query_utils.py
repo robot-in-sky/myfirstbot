@@ -10,8 +10,9 @@ def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str
     return "".join([f"\\{c}" if c in spec_chars else c for c in string])
 
 
-def get_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElement[bool]:
+def single_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElement[bool]:
     column: ColumnElement = query.selected_columns.get(filter_.field)
+    error_msg = "Unknown filter type"
     match filter_.type:
         case _query.EQ:
             clause = (column == filter_.value)
@@ -31,33 +32,32 @@ def get_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElement
             clause = (column.notin_(list(map(column.type.python_type, filter_.value))))
         case _query.LIKE:
             clause = (column.ilike(f"%{esc_spec_chars(filter_.value)}%"))
-        case _query.ISN:
+        case _query.IS:
             clause = (column == null())
-        case _query.ISNN:
+        case _query.ISN:
             clause = (column != null())
         case _:
-            message = "Unknown filter type"
-            raise TypeError(message)
+            raise TypeError(error_msg)
     return clause
 
 
-def get_joined_clause(
+def multiple_clause(
         query: Select[Any], filters: Sequence[_query.QueryFilter], *, or_: bool = False,
 ) -> ColumnElement[bool]:
-    clauses = [get_clause(query, f) for f in filters]
+    clauses = [single_clause(query, f) for f in filters]
     if or_:
         return _or_(*clauses)
     return and_(*clauses)
 
 
 def apply_filter(query: Select[Any], filter_: _query.QueryFilter) -> Select[Any]:
-    return query.where(get_clause(query, filter_))
+    return query.where(single_clause(query, filter_))
 
 
 def apply_filters(
         query: Select[Any], filters: Sequence[_query.QueryFilter], *, or_: bool = False,
 ) -> Select[Any]:
-    return query.where(get_joined_clause(query, filters, or_=or_))
+    return query.where(multiple_clause(query, filters, or_=or_))
 
 
 def apply_sorting(query: Select[Any], sorting: _query.Sorting) -> Select[Any]:

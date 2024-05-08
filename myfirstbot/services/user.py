@@ -1,5 +1,5 @@
 from myfirstbot.base.repo.sql.database import Database
-from myfirstbot.entities.enums.access_level import AccessLevel
+from myfirstbot.entities.choices.access_level import AccessLevel
 from myfirstbot.entities.user import User, UserCreate, UserUpdate
 from myfirstbot.repo.pgsql.user import UserRepo
 

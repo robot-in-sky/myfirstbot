@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 if not config.get_main_option("sqlalchemy.url"):
     config.set_main_option(
         "sqlalchemy.url",
-        f"{settings.db.url}?async_fallback=True",
+        settings.db.url
     )
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime  # noqa: TCH003
+from enum import Enum  # noqa: TCH003
 from typing import Literal
 
 from pydantic import BaseModel, PositiveInt
@@ -12,11 +13,11 @@ GT = "gt"  # greater than
 LT = "lt"  # less than
 GE = "ge"  # greater than or equal
 LE = "le"  # less than or equal
+LIKE = "like"  # like
+IS = "is"  # is
+ISN = "isn"  # is not
 IN = "in"  # in
 NIN = "nin"  # not in
-LIKE = "like"  # like
-ISN = "isn"  # is null
-ISNN = "isnn"  # is not null
 
 """ Sorting types """
 ASC = "asc"
@@ -24,35 +25,42 @@ DESC = "desc"
 
 
 class NumQueryFilter(BaseModel):
-    type: Literal["eq", "ne", "gt", "lt", "ge", "le"] = "eq"
     field: str
+    type: Literal["eq", "ne", "gt", "lt", "ge", "le"] = "eq"
     value: int | float
 
 
 class StrQueryFilter(BaseModel):
-    type: Literal["eq", "ne", "like"] = "eq"
     field: str
+    type: Literal["eq", "ne", "like"] = "eq"
     value: str
 
 
-class DateTimeQueryFilter(BaseModel):
-    type: Literal["gt", "lt", "ge", "le"]
+class ChoiceQueryFilter(BaseModel):
     field: str
+    type: Literal["eq", "ne"] = "eq"
+    value: Enum
+
+
+class DateTimeQueryFilter(BaseModel):
+    field: str
+    type: Literal["gt", "lt"]
     value: datetime
 
 
-class NullQueryFilter(BaseModel):
-    type: Literal["isn", "isnn"] = "isn"
+class IsNullQueryFilter(BaseModel):
     field: str
+    type: Literal["is", "isn"] = "isn"
 
 
-class SetQueryFilter(BaseModel):
+class InSetQueryFilter(BaseModel):
+    field: str
     type: Literal["in", "nin"] = "in"
-    field: str
-    value: set[str | int]
+    value: set[str | int | Enum]
 
 
-QueryFilter = NumQueryFilter | StrQueryFilter | DateTimeQueryFilter | NullQueryFilter | SetQueryFilter
+QueryFilter = (NumQueryFilter | StrQueryFilter | ChoiceQueryFilter
+               | DateTimeQueryFilter | IsNullQueryFilter | InSetQueryFilter)
 
 
 class Sorting(BaseModel):
