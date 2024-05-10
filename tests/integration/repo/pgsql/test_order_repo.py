@@ -1,8 +1,9 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
+import pytz
 
 import myfirstbot.base.entities.query as _query
 from myfirstbot.entities.choices.order_status import OrderStatus
@@ -23,16 +24,14 @@ async def _module_setup(database: MockedDatabase) -> None:
 
 @pytest_asyncio.fixture(scope="module")
 async def user(database: MockedDatabase) -> User:
-    async with database.get_session() as _session:
-        yield await UserRepo(_session).add(
-            UserCreate(telegram_id=123456001, user_name="john_doe"),
-        )
+    return await UserRepo(database).add(
+        UserCreate(telegram_id=123456001, user_name="john_doe"),
+    )
 
 
 @pytest_asyncio.fixture()
 async def repo(database: MockedDatabase) -> OrderRepo:
-    async with database.get_session() as _session:
-        yield OrderRepo(_session)
+    return OrderRepo(database)
 
 
 
@@ -96,11 +95,11 @@ class TestOrderRepo:
         assert await repo.get(id_) is None
 
 
-    async def test_get_by_user_id(self, repo: OrderRepo, user: User) -> None:
-        result = await repo.get_by_user_id(user.id)
-        assert isinstance(result, Order)
-        result = await repo.get_by_user_id(-1)
-        assert result is None
+    async def test_order_status(self, repo: OrderRepo) -> None:
+        id_ = (await repo.get_many())[0].id
+        await repo.set_status(id_, OrderStatus.PENDING)
+        status = await repo.get_status(id_)
+        assert status == OrderStatus.PENDING
 
 
     @pytest.mark.parametrize(("args", "expecting"), [
@@ -119,11 +118,21 @@ class TestOrderRepo:
         ({"filters": [_query.StrQueryFilter(field="label", type="like", value="Metal")]}, 2),
 
         ({"filters": [
-            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC) + timedelta(minutes=1)),
         ]}, 5),
         ({"filters": [
-            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC) + timedelta(minutes=1)),
         ]}, 0),
+        ({"filters": [
+            _query.DateTimeQueryFilter(
+                field="created", type="lt", value=datetime.now(pytz.timezone("Asia/Kolkata")) + timedelta(minutes=1),
+            ),
+        ]}, 5),
+        ({"filters": [
+            _query.DateTimeQueryFilter(
+                field="created", type="lt", value=datetime.now(pytz.timezone("US/Eastern")) + timedelta(minutes=1),
+            ),
+        ]}, 5),
 
         ({"filters": [
             _query.InSetQueryFilter(field="label", type="in", value={"Metallica", "Bharat", "Nirvana"}),
@@ -171,7 +180,6 @@ class TestOrderRepo:
             label="Foo",
             size=123,
             qty=123,
-            status=OrderStatus.PENDING,
         )
         result = await repo.update(id_, update)
         for field in update.model_fields:
@@ -183,10 +191,11 @@ class TestOrderRepo:
 
 
     async def test_delete(self, repo: OrderRepo) -> None:
-        initial_data = await repo.get_many()
-        id_ = initial_data[0].id
+        initial = await repo.get_many()
+        id_ = initial[0].id
         result = await repo.delete(id_)
         assert result == id_
-        final_data = await repo.get_many()
-        assert len(initial_data) - len(final_data) == 1
+        final = await repo.get_many()
+        assert len(initial) - len(final) == 1
         assert await repo.delete(-1) is None
+

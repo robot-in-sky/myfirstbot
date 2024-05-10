@@ -6,6 +6,18 @@ class ValidationError(AppError):
     ...
 
 
+class ServiceError(AppError):
+    ...
+
+
+class AccessDeniedError(ServiceError):
+    ...
+
+
+class InvalidStateError(ServiceError):
+    ...
+
+
 class RepositoryError(AppError):
     ...
 

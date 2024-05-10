@@ -33,9 +33,11 @@ def single_clause(query: Select[Any], filter_: _query.QueryFilter) -> ColumnElem
         case _query.LIKE:
             clause = (column.ilike(f"%{esc_spec_chars(filter_.value)}%"))
         case _query.IS:
-            clause = (column == null())
+            value = filter_.value if hasattr(filter_, "value") else null()
+            clause = (column == value)
         case _query.ISN:
-            clause = (column != null())
+            value = filter_.value if hasattr(filter_, "value") else null()
+            clause = (column != value)
         case _:
             raise TypeError(error_msg)
     return clause

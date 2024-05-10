@@ -38,7 +38,7 @@ class StrQueryFilter(BaseModel):
 
 class ChoiceQueryFilter(BaseModel):
     field: str
-    type: Literal["eq", "ne"] = "eq"
+    type: Literal["is", "isn"] = "is"
     value: Enum
 
 

@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 
-class AccessLevel(IntEnum):
+class UserRole(IntEnum):
     BLOCKED = -1
     USER = 0
     AGENT = 1

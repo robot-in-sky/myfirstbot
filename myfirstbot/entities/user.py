@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from myfirstbot.base.entities.base import Base
-from myfirstbot.entities.choices.access_level import AccessLevel
+from myfirstbot.entities.choices.user_role import UserRole
 
 
 class UserCreate(Base):
@@ -10,9 +10,6 @@ class UserCreate(Base):
     first_name: str | None = None
     last_name: str | None = None
     chat_id: int | None = None
-    access_level: AccessLevel | None = AccessLevel.USER
-    created: datetime = datetime.now(UTC)
-    updated: datetime = datetime.now(UTC)
 
 
 class User(Base):
@@ -22,7 +19,7 @@ class User(Base):
     first_name: str | None = None
     last_name: str | None = None
     chat_id: int | None = None
-    access_level: AccessLevel
+    role: UserRole
     created: datetime
     updated: datetime
 
@@ -32,5 +29,3 @@ class UserUpdate(Base):
     first_name: str | None = None
     last_name: str | None = None
     chat_id: int | None = None
-    access_level: AccessLevel | None = None
-    updated: datetime = datetime.now(UTC)

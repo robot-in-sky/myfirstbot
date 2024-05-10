@@ -14,9 +14,6 @@ _TEntityUpdate = TypeVar("_TEntityUpdate", bound=_EntityBase)
 
 class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
 
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
     @abstractmethod
     async def add(self, instance: _TEntityCreate) -> _TEntity:
         ...

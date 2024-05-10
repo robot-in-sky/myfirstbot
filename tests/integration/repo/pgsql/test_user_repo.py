@@ -1,11 +1,12 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
+import pytz
 
 import myfirstbot.base.entities.query as _query
-from myfirstbot.entities.choices.access_level import AccessLevel
+from myfirstbot.entities.choices.user_role import UserRole
 from myfirstbot.entities.user import User, UserCreate, UserUpdate
 from myfirstbot.exceptions import UniqueViolationError
 from myfirstbot.repo.pgsql.user import UserRepo
@@ -21,8 +22,7 @@ async def _module_setup(database: MockedDatabase) -> None:
 
 @pytest_asyncio.fixture()
 async def repo(database: MockedDatabase) -> UserRepo:
-    async with database.get_session() as _session:
-        yield UserRepo(_session)
+    return UserRepo(database)
 
 
 class TestUserRepo:
@@ -59,7 +59,6 @@ class TestUserRepo:
             user_name="raj3456.bangalore",
             first_name="Rajesh",
             last_name="Koothrappali",
-            access_level=AccessLevel.AGENT,
         ),
     ])
     async def test_add_and_get(self, repo: UserRepo, user: UserCreate) -> None:
@@ -90,6 +89,13 @@ class TestUserRepo:
         assert result is None
 
 
+    async def test_order_status(self, repo: UserRepo) -> None:
+        id_ = (await repo.get_many())[0].id
+        await repo.set_role(id_, UserRole.AGENT)
+        status = await repo.get_role(id_)
+        assert status == UserRole.AGENT
+
+
     @pytest.mark.parametrize(("args", "expecting"), [
         ({}, 5),
         ({"filters": []}, 5),
@@ -105,16 +111,26 @@ class TestUserRepo:
         ({"filters": [_query.StrQueryFilter(field="first_name", type="ne", value="Ivan")]}, 3),
         ({"filters": [_query.StrQueryFilter(field="user_name", type="like", value="Ivan")]}, 2),
 
-        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="eq", value=AccessLevel.USER)]}, 4),
-        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="eq", value=AccessLevel.AGENT)]}, 1),
-        ({"filters": [_query.ChoiceQueryFilter(field="access_level", type="ne", value=AccessLevel.AGENT)]}, 4),
+        ({"filters": [_query.ChoiceQueryFilter(field="role", type="is", value=UserRole.USER)]}, 4),
+        ({"filters": [_query.ChoiceQueryFilter(field="role", type="is", value=UserRole.AGENT)]}, 1),
+        ({"filters": [_query.ChoiceQueryFilter(field="role", type="isn", value=UserRole.AGENT)]}, 4),
 
         ({"filters": [
-            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC) + timedelta(minutes=1)),
         ]}, 5),
         ({"filters": [
-            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC)),
+            _query.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC) + timedelta(minutes=1)),
         ]}, 0),
+        ({"filters": [
+            _query.DateTimeQueryFilter(
+                field="created", type="lt", value=datetime.now(pytz.timezone("Asia/Kolkata")) + timedelta(minutes=1),
+            ),
+        ]}, 5),
+        ({"filters": [
+            _query.DateTimeQueryFilter(
+                field="created", type="lt", value=datetime.now(pytz.timezone("US/Eastern")) + timedelta(minutes=1),
+            ),
+        ]}, 5),
 
         ({"filters": [_query.IsNullQueryFilter(field="chat_id", type="is")]}, 1),
         ({"filters": [_query.IsNullQueryFilter(field="chat_id", type="isn")]}, 4),
@@ -127,7 +143,7 @@ class TestUserRepo:
         ]}, 2),
         ({"filters": [
             _query.InSetQueryFilter(
-                field="access_level", type="in", value={AccessLevel.USER, AccessLevel.ADMINISTRATOR},
+                field="role", type="in", value={UserRole.USER, UserRole.ADMINISTRATOR},
             ),
         ]}, 4),
 
@@ -186,7 +202,6 @@ class TestUserRepo:
             first_name="Foo",
             last_name="Bar",
             chat_id=888888888,
-            access_level=AccessLevel.AGENT,
         )
         result = await repo.update(id_, update)
         for field in update.model_fields:

@@ -17,5 +17,5 @@ class Order(Base):
     size: Mapped[int] = mapped_column(Integer)
     qty: Mapped[int] = mapped_column(Integer)
     status: Mapped["OrderStatus"] = mapped_column(Enum(OrderStatus), default=OrderStatus.DRAFT)
-    created: Mapped[datetime] = mapped_column(DateTime(timezone=False), default=func.now())
-    updated: Mapped[datetime] = mapped_column(DateTime(timezone=False), default=func.now())
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+    updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
