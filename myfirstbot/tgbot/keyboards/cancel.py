@@ -1,8 +1,16 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
-CANCEL_BOARD = ReplyKeyboardMarkup(
+CANCEL = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Отмена") ],
+        [KeyboardButton(text="❌ Отмена") ],
+    ],
+    resize_keyboard=True,
+)
+
+CONFIRM_CANCEL = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="✅ Подтвердить") ],
+        [KeyboardButton(text="❌ Отмена") ],
     ],
     resize_keyboard=True,
 )

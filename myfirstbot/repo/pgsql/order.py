@@ -10,17 +10,17 @@ from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.base.repo.sql.exc_mapper import exception_mapper
 from myfirstbot.base.repo.sql.query_utils import apply_filters, apply_pagination, apply_sorting
 from myfirstbot.entities.choices.order_status import OrderStatus
-from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
+from myfirstbot.entities.order import Order, OrderAdd, OrderUpdate
 from myfirstbot.repo.pgsql.models.order import Order as _OrderOrm
 
 
-class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
+class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
     def __init__(self, database: Database) -> None:
         self.db = database
 
     @exception_mapper
-    async def add(self, instance: OrderCreate) -> Order:
+    async def add(self, instance: OrderAdd) -> Order:
         query = (insert(_OrderOrm).values(**instance.model_dump())
                  .returning(_OrderOrm))
         async with self.db.get_session() as session:
@@ -31,8 +31,9 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
     async def get(self, id_: int) -> Order | None:
         query = select(_OrderOrm).where(_OrderOrm.id == id_)
         async with self.db.get_session() as session:
-            result = await session.scalar(query)
-            return Order.model_validate(result) if result else None
+            if result := await session.scalar(query):
+                return Order.model_validate(result)
+            return None
 
     async def get_many(
             self,
@@ -58,8 +59,7 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
                  .values(**instance.model_dump(), updated=datetime.now(UTC))
                  .returning(_OrderOrm))
         async with self.db.get_session() as session:
-            result = await session.scalar(query)
-            if result:
+            if result := await session.scalar(query):
                 await session.commit()
                 return Order.model_validate(result)
             return None
@@ -67,24 +67,17 @@ class OrderRepo(AbstractRepo[Order, OrderCreate, OrderUpdate]):
     async def delete(self, id_: int) -> int | None:
         query = delete(_OrderOrm).where(_OrderOrm.id == id_).returning(_OrderOrm.id)
         async with self.db.get_session() as session:
-            result = await session.scalar(query)
-            if result:
+            if result := await session.scalar(query):
                 await session.commit()
                 return result
             return None
-
-    async def get_status(self, id_: int) -> OrderStatus | None:
-        query = select(_OrderOrm.status).where(_OrderOrm.id == id_)
-        async with self.db.get_session() as session:
-            return await session.scalar(query)
 
     async def set_status(self, id_: int, status: OrderStatus) -> int | None:
         query = (update(_OrderOrm).where(_OrderOrm.id == id_)
                  .values(status=status, updated=datetime.now(UTC))
                  .returning(_OrderOrm.id))
         async with self.db.get_session() as session:
-            result = await session.scalar(query)
-            if result:
+            if result := await session.scalar(query):
                 await session.commit()
                 return result
             return None

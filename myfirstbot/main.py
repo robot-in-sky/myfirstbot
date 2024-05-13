@@ -6,10 +6,9 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from redis.asyncio.client import Redis
 
+from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.config import settings
-from myfirstbot.db.database import create_async_engine
 from myfirstbot.tgbot.dispatcher import get_dispatcher
-from myfirstbot.tgbot.structures.data_structure import TransferData
 
 
 async def set_commands(bot: Bot) -> None:
@@ -23,6 +22,7 @@ async def set_commands(bot: Bot) -> None:
 
 
 async def start_bot() -> None:
+    db = Database(settings.db)
     bot = Bot(token=settings.bot.token)
     dp = get_dispatcher(
         storage=RedisStorage(
@@ -43,11 +43,7 @@ async def start_bot() -> None:
     await dp.start_polling(
         bot,
         allowed_updates=dp.resolve_used_update_types(),
-        **TransferData(
-            engine=create_async_engine(
-                url=settings.db.url,
-            ),
-        ),
+        db=db,
     )
 
 

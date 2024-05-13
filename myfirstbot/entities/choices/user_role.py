@@ -1,8 +1,8 @@
-from enum import IntEnum
+from enum import IntEnum, auto
 
 
 class UserRole(IntEnum):
-    BLOCKED = -1
-    USER = 0
-    AGENT = 1
-    ADMINISTRATOR = 2
+    BLOCKED = auto()
+    USER = auto()
+    AGENT = auto()
+    ADMINISTRATOR = auto()

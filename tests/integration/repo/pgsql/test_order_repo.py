@@ -7,8 +7,8 @@ import pytz
 
 import myfirstbot.base.entities.query as _query
 from myfirstbot.entities.choices.order_status import OrderStatus
-from myfirstbot.entities.order import Order, OrderCreate, OrderUpdate
-from myfirstbot.entities.user import User, UserCreate
+from myfirstbot.entities.order import Order, OrderAdd, OrderUpdate
+from myfirstbot.entities.user import User, UserAdd
 from myfirstbot.exceptions import ForeignKeyViolationError
 from myfirstbot.repo.pgsql.order import OrderRepo
 from myfirstbot.repo.pgsql.user import UserRepo
@@ -25,7 +25,7 @@ async def _module_setup(database: MockedDatabase) -> None:
 @pytest_asyncio.fixture(scope="module")
 async def user(database: MockedDatabase) -> User:
     return await UserRepo(database).add(
-        UserCreate(telegram_id=123456001, user_name="john_doe"),
+        UserAdd(telegram_id=123456001, user_name="john_doe"),
     )
 
 
@@ -38,31 +38,31 @@ async def repo(database: MockedDatabase) -> OrderRepo:
 class TestOrderRepo:
 
     @pytest.mark.parametrize("order", [
-        OrderCreate(
+        OrderAdd(
             user_id=-1,
             label="Metallica",
             size=36,
             qty=5,
         ),
-        OrderCreate(
+        OrderAdd(
             user_id=-1,
             label="Metallica",
             size=38,
             qty=10,
         ),
-        OrderCreate(
+        OrderAdd(
             user_id=-1,
             label="FSociety",
             size=46,
             qty=1,
         ),
-        OrderCreate(
+        OrderAdd(
             user_id=-1,
             label="Bharat",
             size=42,
             qty=200,
         ),
-        OrderCreate(
+        OrderAdd(
             user_id=-1,
             label="Tiger",
             size=48,
@@ -70,7 +70,7 @@ class TestOrderRepo:
         ),
     ])
     async def test_add_and_get(
-            self, repo: OrderRepo, order: OrderCreate, user: User,
+            self, repo: OrderRepo, order: OrderAdd, user: User,
     ) -> None:
         order.user_id = user.id
         result = await repo.add(order)
@@ -80,7 +80,7 @@ class TestOrderRepo:
 
     async def test_foreign_key_violation(self, repo: OrderRepo) -> None:
         with pytest.raises(ForeignKeyViolationError):
-            await repo.add(OrderCreate(
+            await repo.add(OrderAdd(
                 user_id=-1,
                 label="Bharat",
                 size=32,
@@ -95,10 +95,10 @@ class TestOrderRepo:
         assert await repo.get(id_) is None
 
 
-    async def test_order_status(self, repo: OrderRepo) -> None:
+    async def test_set_status(self, repo: OrderRepo) -> None:
         id_ = (await repo.get_many())[0].id
         await repo.set_status(id_, OrderStatus.PENDING)
-        status = await repo.get_status(id_)
+        status = (await repo.get(id_)).status
         assert status == OrderStatus.PENDING
 
 

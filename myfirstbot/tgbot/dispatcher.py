@@ -1,18 +1,16 @@
 from aiogram import Dispatcher
 from aiogram.fsm.storage.base import BaseEventIsolation, BaseStorage
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
 
 from .handlers import routers
-from .middlewares import DatabaseMiddleware, UserMiddleware
+from .middlewares.current_user import CurrentUserMiddleware
 
 
 def get_dispatcher(
     storage: BaseStorage,
     fsm_strategy: FSMStrategy | None = FSMStrategy.CHAT,
     event_isolation: BaseEventIsolation | None = None,
-):
-    """This function set up dispatcher with routers, filters and middlewares."""
+) -> Dispatcher:
     dp = Dispatcher(
         storage=storage,
         fsm_strategy=fsm_strategy,
@@ -22,8 +20,6 @@ def get_dispatcher(
     for router in routers:
         dp.include_router(router)
 
-    # Register middlewares
-    dp.update.outer_middleware(DatabaseMiddleware())
-    dp.update.outer_middleware(UserMiddleware())
+    dp.update.outer_middleware(CurrentUserMiddleware())
 
     return dp

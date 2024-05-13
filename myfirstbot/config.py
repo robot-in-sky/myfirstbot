@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     redis: RedisSettings
     bot: BotSettings
 
+    default_admins: set[int] | None = None
+
 
 settings = Settings()
-

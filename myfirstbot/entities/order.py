@@ -4,7 +4,7 @@ from myfirstbot.base.entities.base import Base
 from myfirstbot.entities.choices.order_status import OrderStatus
 
 
-class OrderCreate(Base):
+class OrderAdd(Base):
     user_id: int
     label: str
     size: int

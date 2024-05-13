@@ -7,7 +7,7 @@ import pytz
 
 import myfirstbot.base.entities.query as _query
 from myfirstbot.entities.choices.user_role import UserRole
-from myfirstbot.entities.user import User, UserCreate, UserUpdate
+from myfirstbot.entities.user import User, UserAdd, UserUpdate
 from myfirstbot.exceptions import UniqueViolationError
 from myfirstbot.repo.pgsql.user import UserRepo
 from tests.utils.mocked_database import MockedDatabase
@@ -28,40 +28,40 @@ async def repo(database: MockedDatabase) -> UserRepo:
 class TestUserRepo:
 
     @pytest.mark.parametrize("user", [
-        UserCreate(
+        UserAdd(
             telegram_id=123456001,
             user_name="Ivan Ivanov",
             first_name="Ivan",
             last_name="Ivanov",
             chat_id=123456789,
         ),
-        UserCreate(
+        UserAdd(
             telegram_id=123456002,
             user_name="Ivan Petrov",
             first_name="Ivan",
             last_name="Petrov",
             chat_id=123456788,
         ),
-        UserCreate(
+        UserAdd(
             telegram_id=123456003,
             user_name="racer777",
             first_name="Georgio",
             chat_id=123456787,
         ),
-        UserCreate(
+        UserAdd(
             telegram_id=123456004,
             user_name="jess69",
             first_name="Sasha",
             chat_id=123456786,
         ),
-        UserCreate(
+        UserAdd(
             telegram_id=123456005,
             user_name="raj3456.bangalore",
             first_name="Rajesh",
             last_name="Koothrappali",
         ),
     ])
-    async def test_add_and_get(self, repo: UserRepo, user: UserCreate) -> None:
+    async def test_add_and_get(self, repo: UserRepo, user: UserAdd) -> None:
         result = await repo.add(user)
         assert isinstance(result, User)
         assert isinstance(await repo.get(result.id), User)
@@ -69,7 +69,7 @@ class TestUserRepo:
 
     async def test_unique_violation(self, repo: UserRepo) -> None:
         with pytest.raises(UniqueViolationError):
-            await repo.add(UserCreate(
+            await repo.add(UserAdd(
                 telegram_id=123456001,
                 user_name="Non-unique User",
             ))
@@ -89,11 +89,11 @@ class TestUserRepo:
         assert result is None
 
 
-    async def test_order_status(self, repo: UserRepo) -> None:
+    async def test_set_role(self, repo: UserRepo) -> None:
         id_ = (await repo.get_many())[0].id
         await repo.set_role(id_, UserRole.AGENT)
-        status = await repo.get_role(id_)
-        assert status == UserRole.AGENT
+        role = (await repo.get(id_)).role
+        assert role == UserRole.AGENT
 
 
     @pytest.mark.parametrize(("args", "expecting"), [

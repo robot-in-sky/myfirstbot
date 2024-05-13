@@ -1,10 +1,10 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from myfirstbot.base.entities.base import Base
 from myfirstbot.entities.choices.user_role import UserRole
 
 
-class UserCreate(Base):
+class UserAdd(Base):
     telegram_id: int
     user_name: str
     first_name: str | None = None

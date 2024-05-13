@@ -14,6 +14,10 @@ class AccessDeniedError(ServiceError):
     ...
 
 
+class NotFoundError(ServiceError):
+    ...
+
+
 class InvalidStateError(ServiceError):
     ...
 

@@ -11,23 +11,22 @@ from aiogram.types import (
 )
 
 from myfirstbot.tgbot.keyboards import MENU_BOARD
-from myfirstbot.tgbot.structures.states.form import Form
 
 form_router = Router(name="forms")
 
 
-@form_router.message(Command(commands="forms"))
+@form_router.message(Command(commands="orders"))
 async def command_forms(message: Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer(
-        "Мои анкеты",
+        "Мои заявки",
         reply_markup=MENU_BOARD,
     )
 
 
 @form_router.message(F.text.casefold() == "заполнить анкету")
 async def command_fill_form(message: Message, state: FSMContext) -> None:
-    await state.set_state(Form.name)
+    await state.set_state(Order.name)
     await message.answer(
         "Hi there! What's your name?",
         reply_markup=ReplyKeyboardRemove(),
@@ -37,8 +36,6 @@ async def command_fill_form(message: Message, state: FSMContext) -> None:
 @form_router.message(Command(commands="Отмена"))
 @form_router.message(F.text.casefold() == "Отмена")
 async def cancel_handler(message: Message, state: FSMContext) -> None:
-    """Allow user to cancel any action
-    """
     current_state = await state.get_state()
     if current_state is None:
         return
