@@ -6,8 +6,8 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from redis.asyncio.client import Redis
 
-from myfirstbot.base.repo.sql.database import Database
 from myfirstbot.config import settings
+from myfirstbot.repo.utils.database import Database
 from myfirstbot.tgbot.dispatcher import get_dispatcher
 
 

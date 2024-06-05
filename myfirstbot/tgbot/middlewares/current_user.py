@@ -8,7 +8,7 @@ from myfirstbot.entities.user import UserAdd
 from myfirstbot.services.auth import AuthService
 
 if TYPE_CHECKING:
-    from myfirstbot.base.repo.sql.database import Database
+    from myfirstbot.repo.utils.database import Database
 
 
 class CurrentUserMiddleware(BaseMiddleware):

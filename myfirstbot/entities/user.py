@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from myfirstbot.base.entities.base import Base
-from myfirstbot.entities.choices.user_role import UserRole
+from myfirstbot.entities.base import Base
+from myfirstbot.entities.choices import UserRole
 
 
 class UserAdd(Base):

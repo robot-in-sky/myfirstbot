@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from myfirstbot.base.entities.base import Base
-from myfirstbot.entities.choices.order_status import OrderStatus
+from myfirstbot.entities.base import Base
+from myfirstbot.entities.choices import OrderStatus
 
 
 class OrderAdd(Base):

@@ -1,8 +1,9 @@
-from myfirstbot.base.repo.sql.database import Database
+
 from myfirstbot.config import settings
 from myfirstbot.entities.choices.user_role import UserRole
 from myfirstbot.entities.user import User, UserAdd, UserUpdate
-from myfirstbot.repo.pgsql.user import UserRepo
+from myfirstbot.repo import UserRepo
+from myfirstbot.repo.utils import Database
 
 
 class AuthService:
@@ -13,14 +14,17 @@ class AuthService:
 
     async def synchronize_user(self, data: UserAdd) -> User:
         if user := await self.user_repo.get_by_telegram_id(data.telegram_id):
-            if ((data.user_name,
+            if (
+                (data.user_name,
                  data.first_name,
                  data.last_name) !=
 
                 (user.user_name,
                  user.first_name,
-                 user.last_name)):
+                 user.last_name) or
 
+                (data.chat_id and data.chat_id != user.chat_id)
+            ):
                 user = await self.user_repo.update(user.id, UserUpdate(
                     user_name=data.user_name,
                     first_name=data.first_name,

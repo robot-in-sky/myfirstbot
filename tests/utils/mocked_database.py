@@ -1,5 +1,5 @@
-from myfirstbot.base.repo.sql.database import Database
-from myfirstbot.base.repo.sql.models.base import Base
+from myfirstbot.repo.models import Base
+from myfirstbot.repo.utils import Database
 
 
 class MockedDatabase(Database):
