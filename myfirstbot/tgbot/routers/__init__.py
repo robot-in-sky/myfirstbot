@@ -1,9 +1,9 @@
-from myfirstbot.tgbot.handlers.common.commands import router as _commands_router
-from myfirstbot.tgbot.handlers.common.edit_order import router as _edit_order_router
-from myfirstbot.tgbot.handlers.common.my_orders import router as _my_orders_router
+from .commands import router as _commands
+from .orders import router as _orders
+from .users import router as _users
 
 routers = (
-    _commands_router,
-    _edit_order_router,
-    _my_orders_router,
+    _commands,
+    _orders,
+    _users
 )

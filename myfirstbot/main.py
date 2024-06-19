@@ -2,8 +2,9 @@ import asyncio
 import logging
 
 from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.types import BotCommand
 from redis.asyncio.client import Redis
 
 from myfirstbot.config import settings
@@ -11,19 +12,15 @@ from myfirstbot.repo.utils.database import Database
 from myfirstbot.tgbot.dispatcher import get_dispatcher
 
 
-async def set_commands(bot: Bot) -> None:
-    await bot.set_my_commands(
-        commands=[
-            BotCommand(command="start", description="Запустить бота"),
-            BotCommand(command="forms", description="Мои анкеты"),
-            BotCommand(command="help", description="Помощь"),
-        ],
-    )
-
-
 async def start_bot() -> None:
-    db = Database(settings.db)
-    bot = Bot(token=settings.bot.token)
+    bot = Bot(
+        token=settings.bot.token,
+        default=DefaultBotProperties(
+            parse_mode=ParseMode.HTML,
+        )
+    )
+    await bot.delete_webhook(drop_pending_updates=True)
+
     dp = get_dispatcher(
         storage=RedisStorage(
             redis=Redis(
@@ -37,13 +34,10 @@ async def start_bot() -> None:
             data_ttl=settings.redis.ttl_data,
         ),
     )
-    dp.startup.register(set_commands)
-
-    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(
         bot,
         allowed_updates=dp.resolve_used_update_types(),
-        db=db,
+        db=Database(settings.db),
     )
 
 

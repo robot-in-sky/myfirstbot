@@ -1,3 +1,3 @@
-from .admin.manage_orders import ManageOrdersService
-from .admin.manage_users import ManageUsersService
-from .common.my_orders import MyOrdersService
+from .auth import AuthService
+from .order import OrderService
+from .user import UserService

@@ -2,7 +2,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 from myfirstbot.entities.choices import UserRole
 from myfirstbot.entities.user import User
-from myfirstbot.tgbot.views.common import buttons
+from myfirstbot.tgbot import buttons
 
 
 def main_menu_kb(user: User) -> ReplyKeyboardMarkup:
