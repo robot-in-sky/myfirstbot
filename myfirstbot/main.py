@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio.client import Redis
 
@@ -32,6 +33,7 @@ async def start_bot() -> None:
             ),
             state_ttl=settings.redis.ttl_state,
             data_ttl=settings.redis.ttl_data,
+            key_builder=DefaultKeyBuilder(with_destiny=True)
         ),
     )
     await dp.start_polling(

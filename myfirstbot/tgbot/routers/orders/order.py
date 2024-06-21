@@ -1,14 +1,30 @@
 from aiogram import F, Router
+from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery
 
 from myfirstbot.entities.user import User
 from myfirstbot.repo.utils import Database
 from myfirstbot.services import OrderService
+from myfirstbot.tgbot import buttons
+from myfirstbot.tgbot.scenes import EditOrderScene, NewOrderScene
 from myfirstbot.tgbot.views.menu import main_menu_kb
 from myfirstbot.tgbot.views.ok_cancel import ok_cancel_kb
 from myfirstbot.tgbot.views.orders.order import order_actions_kb, order_summary
 
 router = Router()
+scene_registry = SceneRegistry(router)
+
+scene_registry.add(NewOrderScene)
+router.message.register(
+    NewOrderScene.as_handler(),
+    F.text == buttons.NEW_ORDER,
+)
+
+scene_registry.add(EditOrderScene)
+router.callback_query.register(
+    EditOrderScene.as_handler(),
+    F.data.startswith("edit_order:start:"),
+)
 
 
 @router.callback_query(F.data.startswith("order:get:"))

@@ -9,22 +9,22 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 
-from myfirstbot.tgbot.buttons import CANCEL, SAVE
-from myfirstbot.tgbot.editors.base.field import Field
+from myfirstbot.tgbot.buttons import CANCEL, EDITOR_DOWN, EDITOR_EDIT, EDITOR_UP, SAVE
+from myfirstbot.tgbot.utils.field_manager.field import Field
 
 
-def editor_kb(target: str) -> InlineKeyboardMarkup:
+def editor_kb() -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton(text="▲", callback_data="field:prev"),
-            InlineKeyboardButton(text="▼", callback_data="field:next"),
-            InlineKeyboardButton(text="✏️", callback_data="field:edit")
+            InlineKeyboardButton(text=EDITOR_UP, callback_data="editor_up"),
+            InlineKeyboardButton(text=EDITOR_DOWN, callback_data="editor_down"),
+            InlineKeyboardButton(text=EDITOR_EDIT, callback_data="editor_edit")
         ],
         [
-            InlineKeyboardButton(text=SAVE, callback_data=f"{target}:save")
+            InlineKeyboardButton(text=SAVE, callback_data="editor_save")
         ],
         [
-            InlineKeyboardButton(text=CANCEL, callback_data=f"{target}:cancel")
+            InlineKeyboardButton(text=CANCEL, callback_data="editor_cancel")
         ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

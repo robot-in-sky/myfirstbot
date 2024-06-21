@@ -20,6 +20,5 @@ def get_dispatcher(
     dp.startup.register(set_commands)
     dp.update.outer_middleware(CurrentUserMiddleware())
     dp.include_routers(*routers)
-
     return dp
 

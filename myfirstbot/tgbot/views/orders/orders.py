@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from myfirstbot.entities.order import Order
 from myfirstbot.entities.query import QueryResult
 from myfirstbot.entities.user import User
-from myfirstbot.tgbot.buttons import BTN_TEXT_MAX_LEN, COLUMN_DELIMITER, NEXT_PAGE, PAGE_INFO_TEMPLATE, PREV_PAGE
+from myfirstbot.tgbot.buttons import BTN_TEXT_MAX_LEN, COLUMN_DELIMITER, PAGE_NEXT, PAGE_INFO_TEMPLATE, PAGE_PREV
 from myfirstbot.tgbot.views.orders.order import order_status
 from myfirstbot.tgbot.views.users.user import is_admin
 from myfirstbot.tgbot.utils.helpers import cut_string
@@ -32,8 +32,8 @@ def order_items_kb(result: QueryResult[Order], user: User, target: str) -> Inlin
     prev_page = result.page - 1 if result.page > 1 else result.total_pages
     next_page = result.page + 1 if result.page < result.total_pages else 1
     keyboard.append([
-        InlineKeyboardButton(text=PREV_PAGE, callback_data=f"{target}:page_prev:{prev_page}"),
+        InlineKeyboardButton(text=PAGE_PREV, callback_data=f"{target}:page_prev:{prev_page}"),
         InlineKeyboardButton(text=page_info, callback_data="_"),
-        InlineKeyboardButton(text=NEXT_PAGE, callback_data=f"{target}:page_next:{next_page}"),
+        InlineKeyboardButton(text=PAGE_NEXT, callback_data=f"{target}:page_next:{next_page}"),
     ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -1,9 +1,9 @@
 from typing import Any
 
-from .base import Editor, Field
+from myfirstbot.tgbot.utils.field_manager import Field, FieldManager
 
 
-class OrderEditor(Editor):
+class OrderFieldManager(FieldManager):
     def __init__(self) -> None:
         super().__init__(
             fields=[
@@ -33,7 +33,6 @@ class OrderEditor(Editor):
                     validators={"min": 1, "max": 10},
                 ),
             ],
-            save_cancel_target="edit_order"
         )
 
     def summary(self, data: dict[str, Any], selected: str | None = None) -> str:
@@ -44,4 +43,4 @@ class OrderEditor(Editor):
         return output
 
 
-order_editor = OrderEditor()
+order_fields = OrderFieldManager()

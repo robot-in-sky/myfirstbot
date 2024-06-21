@@ -1,6 +1,7 @@
 from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart, ExceptionTypeFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.scene import ScenesManager
 from aiogram.types import CallbackQuery, Message, ErrorEvent
 
 from myfirstbot.entities.user import User

@@ -24,10 +24,14 @@ BACK = "« Назад"
 OK = "OK"
 CANCEL = "Отмена"
 PROCEED = "Продолжить"
-MENU = "В главное меню"
+TO_MENU = "В главное меню"
 
 BTN_TEXT_MAX_LEN = 46
 COLUMN_DELIMITER = " | "
-NEXT_PAGE = "❯"  # noqa: RUF001
-PREV_PAGE = "❮"  # noqa: RUF001
+PAGE_NEXT = "❯"  # noqa: RUF001
+PAGE_PREV = "❮"  # noqa: RUF001
 PAGE_INFO_TEMPLATE = "%s/%s"
+
+EDITOR_UP = "▲"
+EDITOR_DOWN = "▼"
+EDITOR_EDIT = "✏️"

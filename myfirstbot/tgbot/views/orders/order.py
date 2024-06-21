@@ -76,6 +76,6 @@ def order_actions_kb(order: Order, user: User) -> InlineKeyboardMarkup:
                 ])
 
     keyboard.append([InlineKeyboardButton(
-        text=buttons.MENU, callback_data="order:menu")])
+        text=buttons.TO_MENU, callback_data="order:menu")])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
