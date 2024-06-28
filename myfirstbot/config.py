@@ -15,7 +15,6 @@ class DatabaseSettings(BaseModel):
     database: str
 
     @computed_field
-    @property
     def url(self) -> str:
         return URL.create(
             drivername=f"{_def.DB_SYSTEM}+{_def.DB_DRIVER}",
@@ -52,11 +51,11 @@ class Settings(BaseSettings):
     )
 
     debug: bool = False
-    log_level: str = logging.INFO
+    log_level: str = "INFO"
 
-    db: DatabaseSettings
-    redis: RedisSettings
-    bot: BotSettings
+    db: DatabaseSettings | None = None
+    redis: RedisSettings | None = None
+    bot: BotSettings | None = None
 
     default_admins: set[int] | None = None
 

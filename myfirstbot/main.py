@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
@@ -12,30 +13,30 @@ from myfirstbot.config import settings
 from myfirstbot.repo.utils.database import Database
 from myfirstbot.tgbot.dispatcher import get_dispatcher
 
-
-async def start_bot() -> None:
-    bot = Bot(
+bot = Bot(
         token=settings.bot.token,
         default=DefaultBotProperties(
             parse_mode=ParseMode.HTML,
         )
     )
-    await bot.delete_webhook(drop_pending_updates=True)
 
-    dp = get_dispatcher(
-        storage=RedisStorage(
-            redis=Redis(
-                port=settings.redis.port,
-                host=settings.redis.host,
-                db=settings.redis.database,
-                username=settings.redis.username,
-                password=settings.redis.password,
-            ),
-            state_ttl=settings.redis.ttl_state,
-            data_ttl=settings.redis.ttl_data,
-            key_builder=DefaultKeyBuilder(with_destiny=True)
-        ),
-    )
+storage = RedisStorage(
+    redis=Redis(
+        port=settings.redis.port,
+        host=settings.redis.host,
+        db=settings.redis.database,
+        username=settings.redis.username,
+        password=settings.redis.password,
+    ),
+    state_ttl=settings.redis.ttl_state,
+    data_ttl=settings.redis.ttl_data,
+    key_builder=DefaultKeyBuilder(with_destiny=True)
+)
+
+dp = get_dispatcher(storage=storage)
+
+async def start_bot() -> None:
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(
         bot,
         allowed_updates=dp.resolve_used_update_types(),

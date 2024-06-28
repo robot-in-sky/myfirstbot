@@ -12,7 +12,7 @@ python = "^3.10"
 aiogram = "^3.0b6"
 sqlalchemy = "^2.0.17"
 alembic = "^1.9.2"
-redis = "^4.4.2"
+redis = "^5.0.1"
 jinja2 = "^3.1.2"
 pydantic-settings = "^2.2.1"
 alembic-postgresql-enum = "^1.2.0"
@@ -46,12 +46,13 @@ ignore = [# https://docs.astral.sh/ruff/rules
     "G004", # It is convenient to use f-strings in logging.
     "TRY400", # It is acceptable to use logging.error in cases where logging the traceback is unnecessary.
     "TD001", "TD002", "TD003", "TD004", "FIX002", # Disable rules for to-do in Zephyr project.
+    "RUF001", # Embedded Cyrillic characters are allowed.
 ]
 fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
-    "F401"
+    "F401", # Imported module in init files may be unused
 ]
 "test_*.py" = [
     "S101", # Using assert in tests is allowed.

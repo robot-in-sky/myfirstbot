@@ -30,7 +30,7 @@ class CurrentUserMiddleware(BaseMiddleware):
             from_user = event.callback_query.from_user
 
         if from_user:
-            data["user"] = await AuthService(db).synchronize_user(
+            data["current_user"] = await AuthService(db).synchronize_user(
                 UserAdd(
                     telegram_id=from_user.id,
                     user_name=from_user.username,

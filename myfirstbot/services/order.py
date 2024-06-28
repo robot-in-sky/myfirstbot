@@ -22,12 +22,11 @@ class OrderService:
             page: int = 1,
             per_page: int = 10
     ) -> QueryResult[Order]:
-        filters = []
+        filters = [NumQueryFilter(field="user_id", type="eq", value=self.current_user.id)]
         if status:
             filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
         else:
             filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        filters.append(NumQueryFilter(field="user_id", type="eq", value=self.current_user.id))
         return await self.order_repo.get_many(
             filters=filters,
             pagination=Pagination(page=page, per_page=per_page),
@@ -43,12 +42,12 @@ class OrderService:
             per_page: int = 10
     ) -> QueryResult[Order]:
         filters = []
+        if user_id:
+            filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
         if status:
             filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
         else:
             filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        if user_id:
-            filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
         return await self.order_repo.get_many(
             filters=filters,
             pagination=Pagination(page=page, per_page=per_page),

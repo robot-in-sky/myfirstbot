@@ -14,7 +14,7 @@ def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str
 
 
 def single_clause(query: Select[Any], filter_: _filters.QueryFilter) -> ColumnElement[bool]:
-    column: ColumnElement = query.selected_columns.get(filter_.field)
+    column: ColumnElement = query.selected_columns[filter_.field]
     error_msg = "Unknown filter type"
     match filter_.type:
         case _filters.EQ:
