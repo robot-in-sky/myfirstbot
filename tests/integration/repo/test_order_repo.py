@@ -97,7 +97,7 @@ class TestOrderRepo:
 
 
     async def test_set_status(self, repo: OrderRepo) -> None:
-        id_ = (await repo.get_many()).items[0].id
+        id_ = (await repo.get_all()).items[0].id
         await repo.set_status(id_, OrderStatus.PENDING)
         status = (await repo.get(id_)).status
         assert status == OrderStatus.PENDING
@@ -145,7 +145,7 @@ class TestOrderRepo:
     async def test_filters(
             self, repo: OrderRepo, args: dict, expecting: int,
     ) -> None:
-        items = (await repo.get_many(**args)).items
+        items = (await repo.get_all(**args)).items
         assert isinstance(items, list)
         if len(items) > 0:
             for item in items:
@@ -164,7 +164,7 @@ class TestOrderRepo:
     async def test_pagination(
             self, repo: OrderRepo, args: dict, expecting: tuple,
     ) -> None:
-        result = await repo.get_many(**args)
+        result = await repo.get_all(**args)
         assert result.page == expecting[0]
         assert result.per_page == expecting[1]
         assert result.total_pages == expecting[2]
@@ -183,7 +183,7 @@ class TestOrderRepo:
             ("Tiger", "Bharat")),
     ])
     async def test_sorting(self, repo: OrderRepo, args: dict, expecting: tuple) -> None:
-        items = (await repo.get_many(**args)).items
+        items = (await repo.get_all(**args)).items
         sorting: Sorting = args["sorting"]
         field = sorting.order_by
         assert getattr(items[0], field) == expecting[0]
@@ -191,7 +191,7 @@ class TestOrderRepo:
 
 
     async def test_update(self, repo: OrderRepo) -> None:
-        id_ = (await repo.get_many()).items[0].id
+        id_ = (await repo.get_all()).items[0].id
         update = OrderUpdate(
             label="Foo",
             size=123,
@@ -207,11 +207,11 @@ class TestOrderRepo:
 
 
     async def test_delete(self, repo: OrderRepo) -> None:
-        initial = await repo.get_many()
+        initial = await repo.get_all()
         id_ = initial.items[0].id
         result = await repo.delete(id_)
         assert result == id_
-        final = await repo.get_many()
+        final = await repo.get_all()
         assert len(initial.items) - len(final.items) == 1
         assert await repo.delete(-1) is None
 

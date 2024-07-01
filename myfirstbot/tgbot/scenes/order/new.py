@@ -47,8 +47,9 @@ class NewOrderScene(Scene, state="new_order"):
         data = await state.get_data()
         step = data.get("step", 0)
         order_data = data.get("order", {})
-        field = ORDER_FIELDS[step]
-        await validate_field_input(field, message.text)
-        order_data[field.id] = message.text
-        await state.update_data(order=order_data, step=step + 1)
-        await self.wizard.retake()
+        if message.text:
+            field = ORDER_FIELDS[step]
+            await validate_field_input(field, message.text)
+            order_data[field.id] = message.text
+            await state.update_data(order=order_data, step=step + 1)
+            await self.wizard.retake()

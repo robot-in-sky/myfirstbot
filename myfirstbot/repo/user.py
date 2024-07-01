@@ -12,7 +12,7 @@ from myfirstbot.entities.user import User, UserAdd, UserUpdate
 from myfirstbot.repo.base import AbstractRepo
 from myfirstbot.repo.models import User as _UserOrm
 from myfirstbot.repo.utils import Database, exception_mapper
-from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_sorting, row_count
+from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_sorting, get_count
 
 
 class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
@@ -42,42 +42,6 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             result = await session.scalar(query)
             return User.model_validate(result) if result else None
 
-    async def get_many(
-            self,
-            filters: Sequence[QueryFilter] | None = None,
-            *,
-            or_: bool = False,
-            sorting: Sorting | None = None,
-            pagination: Pagination | None = None,
-    ) -> QueryResult[User]:
-        query = select(_UserOrm)
-        if filters:
-            query = apply_filters(query, filters, or_=or_)
-        if sorting:
-            query = apply_sorting(query, sorting)
-
-        async with self.db.get_session() as session:
-            total_items = await row_count(session, query)
-
-            page, per_page, total_pages = None, None, None
-
-            if pagination and total_items > 0:
-                query = apply_pagination(query, pagination)
-                page = pagination.page
-                per_page = pagination.per_page
-                total_pages = ceil(total_items / pagination.per_page)
-
-            orm_items = (await session.scalars(query)).all()
-            items = TypeAdapter(list[User]).validate_python(orm_items)
-
-            return QueryResult[User](
-                items=items,
-                page=page,
-                per_page=per_page,
-                total_pages=total_pages,
-                total_items=total_items,
-            )
-
     async def update(self, id_: int, instance: UserUpdate) -> User | None:
         query = (update(_UserOrm).where(_UserOrm.id == id_)
                  .values(**instance.model_dump(), updated=datetime.now(UTC))
@@ -105,3 +69,40 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 await session.commit()
                 return result
             return None
+
+    async def get_all(
+            self,
+            filters: Sequence[QueryFilter] | None = None,
+            *,
+            or_: bool = False,
+            sorting: Sorting | None = None,
+            pagination: Pagination | None = None,
+    ) -> QueryResult[User]:
+        query = select(_UserOrm)
+        if filters:
+            query = apply_filters(query, filters, or_=or_)
+
+        async with self.db.get_session() as session:
+            total_items = await get_count(session, query)
+
+            if sorting:
+                query = apply_sorting(query, sorting)
+
+            page, per_page, total_pages = None, None, None
+
+            if pagination and total_items > 0:
+                query = apply_pagination(query, pagination)
+                page = pagination.page
+                per_page = pagination.per_page
+                total_pages = ceil(total_items / pagination.per_page)
+
+            orm_items = (await session.scalars(query)).all()
+            items = TypeAdapter(list[User]).validate_python(orm_items)
+
+            return QueryResult[User](
+                items=items,
+                page=page,
+                per_page=per_page,
+                total_pages=total_pages,
+                total_items=total_items,
+            )

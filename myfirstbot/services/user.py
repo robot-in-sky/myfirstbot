@@ -1,6 +1,6 @@
 from myfirstbot.entities.choices import UserRole
 from myfirstbot.entities.query import Pagination, QueryResult, Sorting
-from myfirstbot.entities.query.filters import ChoiceQueryFilter
+from myfirstbot.entities.query.filters import ChoiceQueryFilter, QueryFilter
 from myfirstbot.entities.user import User
 from myfirstbot.exceptions import NotFoundError
 from myfirstbot.repo import UserRepo
@@ -21,12 +21,12 @@ class UserService:
             page: int = 1,
             per_page: int = 10,
     ) -> QueryResult[User]:
-        filters = []
+        filters: list[QueryFilter] = []
         if role:
             filters.append(
                 ChoiceQueryFilter(field="role", type="is", value=role),
             )
-        return await self.user_repo.get_many(
+        return await self.user_repo.get_all(
             filters=filters,
             pagination=Pagination(page=page, per_page=per_page),
             sorting=Sorting(order_by="created", sort="desc"),

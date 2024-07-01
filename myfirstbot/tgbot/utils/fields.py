@@ -18,6 +18,7 @@ class Field(BaseModel):
 
 async def validate_field_input(f: Field, text: str) -> None:
     if f.validators:
+        value: str | int
         match f.type:
             case "text":
                 value = text

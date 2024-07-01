@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.fsm.scene import SceneRegistry
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from myfirstbot.entities.user import User
 from myfirstbot.repo.utils import Database
@@ -22,7 +22,7 @@ router.message.register(
 
 
 @router.callback_query(OrderCallbackData.filter(~F.action))
-async def order_get_callback(
+async def order_callback(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
         db: Database,
@@ -30,9 +30,10 @@ async def order_get_callback(
 ) -> None:
     order = await OrderService(db, current_user).get(callback_data.id)
     await query.answer()
-    await show_order(order,
-                     current_user=current_user,
-                     message=query.message)
+    if isinstance(query.message, Message):
+        await show_order(order,
+                         current_user=current_user,
+                         message=query.message)
 
 
 scene_registry.add(EditOrderScene)
@@ -41,13 +42,25 @@ router.callback_query.register(
 
 
 @router.callback_query(OrderCallbackData.filter(F.action == "trash_ask"))
-async def order_action_trash_callback(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+async def order_trash_ask_callback(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
     await query.answer()
-    await query.message.edit_text(
-        "Вы уверены что хотите удалить заказ?",
-        reply_markup=ok_cancel_kb(
-            ok_cb=OrderCallbackData(id=callback_data.id, action="trash"),
-            cancel_cb=OrderCallbackData(id=callback_data.id)))
+    if isinstance(query.message, Message):
+        await query.message.edit_text(
+            "Вы уверены что хотите удалить заказ?",
+            reply_markup=ok_cancel_kb(
+                ok_cb=OrderCallbackData(id=callback_data.id, action="trash"),
+                cancel_cb=OrderCallbackData(id=callback_data.id)))
+
+
+@router.callback_query(OrderCallbackData.filter(F.action == "delete_ask"))
+async def order_delete_ask_callback(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+    await query.answer()
+    if isinstance(query.message, Message):
+        await query.message.edit_text(
+            "Вы уверены что хотите удалить заказ окончательно?",
+            reply_markup=ok_cancel_kb(
+                ok_cb=OrderCallbackData(id=callback_data.id, action="delete"),
+                cancel_cb=OrderCallbackData(id=callback_data.id)))
 
 
 @router.callback_query(OrderCallbackData.filter(F.action))
@@ -57,7 +70,6 @@ async def order_actions_callback(
         db: Database,
         current_user: User,
 ) -> None:
-    await query.answer()
     service = OrderService(db, current_user)
     order_id = callback_data.id
     notice, to_menu = None, False
@@ -90,11 +102,13 @@ async def order_actions_callback(
             notice, to_menu = "Главное меню", True
         case _:
             return
-    if to_menu:
-        await query.message.answer(notice, reply_markup=main_menu_kb(current_user))
-    else:
-        await show_order(await service.get(order_id),
-                         notice,
-                         current_user=current_user,
-                         message=query.message,
-                         replace_text=True)
+    await query.answer()
+    if isinstance(query.message, Message):
+        if to_menu:
+            await query.message.answer(notice, reply_markup=main_menu_kb(current_user))
+        else:
+            await show_order(await service.get(order_id),
+                             notice,
+                             current_user=current_user,
+                             message=query.message,
+                             replace_text=True)

@@ -13,7 +13,8 @@ class AuthService:
 
 
     async def synchronize_user(self, data: UserAdd) -> User:
-        if user := await self.user_repo.get_by_telegram_id(data.telegram_id):
+        user = await self.user_repo.get_by_telegram_id(data.telegram_id)
+        if user is not None:
             if (
                 (data.user_name,
                  data.first_name,
@@ -30,7 +31,7 @@ class AuthService:
                     first_name=data.first_name,
                     last_name=data.last_name,
                     chat_id=data.chat_id,
-                ))
+                )) or user
         else:
             user = await self.user_repo.add(data)
 
@@ -38,6 +39,6 @@ class AuthService:
                 and user.telegram_id in settings.default_admins
                 and user.role != UserRole.ADMINISTRATOR):
             await self.user_repo.set_role(user.id, UserRole.ADMINISTRATOR)
-            user = await self.user_repo.get(user.id)
+            user = await self.user_repo.get(user.id) or user
 
         return user

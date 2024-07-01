@@ -14,7 +14,7 @@ class DatabaseSettings(BaseModel):
     password: str | None = None
     database: str
 
-    @computed_field
+    @property
     def url(self) -> str:
         return URL.create(
             drivername=f"{_def.DB_SYSTEM}+{_def.DB_DRIVER}",

@@ -6,7 +6,7 @@ from myfirstbot.repo.utils import Database
 from myfirstbot.services import UserService
 from myfirstbot.tgbot.buttons import USERS
 from myfirstbot.tgbot.callbacks import UsersCallbackData
-from myfirstbot.tgbot.views.user.users import show_users
+from myfirstbot.tgbot.views.user.users import show_users, users_result_kb
 
 router = Router()
 
@@ -17,21 +17,28 @@ async def users_button_handler(
     callback_data = UsersCallbackData()
     params = callback_data.model_dump(exclude_none=True)
     result = await UserService(db, current_user).get_all(**params)
-    await show_users(result, callback_data,
+    await show_users(result,
+                     callback_data,
                      current_user=current_user,
                      message=message)
 
 
 @router.callback_query(UsersCallbackData.filter())
-async def users_query_callback(
+async def users_callback(
         query: CallbackQuery,
         callback_data: UsersCallbackData,
         db: Database,
         current_user: User,
 ) -> None:
-    await query.answer()
     params = callback_data.model_dump(exclude_none=True)
     result = await UserService(db, current_user).get_all(**params)
-    await show_users(result, callback_data,
-                     current_user=current_user,
-                     message=query.message)
+    await query.answer()
+    if isinstance(query.message, Message):
+        if callback_data.page:
+                await query.message.edit_reply_markup(
+                    reply_markup=users_result_kb(result, callback_data))
+        else:
+            await show_users(result,
+                             callback_data,
+                             current_user=current_user,
+                             message=query.message)

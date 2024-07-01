@@ -45,6 +45,7 @@ class DateTimeQueryFilter(BaseModel):
 class IsNullQueryFilter(BaseModel):
     field: str
     type: Literal["is", "isn"] = "isn"
+    value: None = None
 
 
 class InSetQueryFilter(BaseModel):

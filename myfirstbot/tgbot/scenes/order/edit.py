@@ -28,7 +28,8 @@ async def show_order_editor(
     text += editor_summary(ORDER_FIELDS, data, selected)
     keyboard = editor_kb()
     if replace_text:
-        return await message.edit_text(text, reply_markup=keyboard)
+        await message.edit_text(text, reply_markup=keyboard)
+        return message
     return await message.answer(text, reply_markup=keyboard)
 
 
@@ -42,21 +43,25 @@ class EditOrderScene(Scene, state="edit_order"):
             db: Database,
             current_user: User,
     ) -> None:
-        await query.answer()
+        if query.data is None:
+            return
         order_id = OrderCallbackData.unpack(query.data).id
         order_data = (await OrderService(db, current_user).get(order_id)).model_dump()
         field_ids = ["id"] + [f.id for f in ORDER_FIELDS]
         order_data = {id_: order_data[id_] for id_ in field_ids}
         idx = 0
-        message = await show_order_editor(order_data,
-                                          ORDER_FIELDS[idx].id,
-                                          message=query.message,
-                                          replace_text=True)
+        await query.answer()
+        if isinstance(query.message, Message):
+            message = await show_order_editor(order_data,
+                                              ORDER_FIELDS[idx].id,
+                                              message=query.message,
+                                              replace_text=True)
 
-        await state.set_data({"order": order_data,
-                              "field_idx": idx,
-                              "expect_input": False,
-                              "message_id": message.message_id})
+            await state.set_data({"order_original": order_data,
+                                  "order_updated": order_data,
+                                  "selector_idx": idx,
+                                  "expect_input": False,
+                                  "message_id": message.message_id})
 
     @on.callback_query(EditorCallbackData.filter())
     async def editor_actions_callback(  # noqa: PLR0913
@@ -67,54 +72,58 @@ class EditOrderScene(Scene, state="edit_order"):
             db: Database,
             current_user: User,
     ) -> None:
-        await query.answer()
         data = await state.get_data()
-        order_data, idx = data["order"], data["field_idx"]
+        order_data, idx = data["order_updated"], data["selector_idx"]
+        await query.answer()
+        if isinstance(query.message, Message):
+            match callback_data.action:
+                case "up" | "down" as action:
+                    last_idx = len(ORDER_FIELDS) - 1
+                    prev_idx = idx - 1 if idx > 0 else last_idx
+                    next_idx = idx + 1 if idx < last_idx else 0
+                    idx = prev_idx if action == "up" else next_idx
+                    field = ORDER_FIELDS[idx]
+                    await show_order_editor(order_data, field.id,
+                                            message=query.message,
+                                            replace_text=True)
+                    await state.update_data(selector_idx=idx)
 
-        match callback_data.action:
-            case "up" | "down" as action:
-                last_idx = len(ORDER_FIELDS) - 1
-                prev_idx = idx - 1 if idx > 0 else last_idx
-                next_idx = idx + 1 if idx < last_idx else 0
-                idx = prev_idx if action == "up" else next_idx
-                field = ORDER_FIELDS[idx]
-                await show_order_editor(order_data, field.id,
-                                        message=query.message,
-                                        replace_text=True)
-                await state.update_data(field_idx=idx)
+                case "edit":
+                    field = ORDER_FIELDS[idx]
+                    value = order_data.get(field.id)
+                    await show_field_input(field, value, message=query.message)
+                    await state.update_data(expect_input=True)
 
-            case "edit":
-                field = ORDER_FIELDS[idx]
-                value = order_data.get(field.id)
-                await show_field_input(field, value, message=query.message)
-                await state.update_data(expect_input=True)
-
-            case "save" | "cancel" | _ as action:
-                service = OrderService(db, current_user)
-                if action == "save":
-                    update = {f.id: order_data[f.id] for f in ORDER_FIELDS}
-                    order = await service.update(order_data["id"], OrderUpdate(**update))
-                    notice = "Заказ успешно обновлён"
-                else:
-                    order = await service.get(order_data["id"])
-                    notice = ""
-                await show_order(order, notice,
-                                 current_user=current_user,
-                                 message=query.message,
-                                 replace_text=True)
-                await self.wizard.exit()
+                case "save" | "cancel" | _ as action:
+                    service = OrderService(db, current_user)
+                    if action == "save":
+                        if order_data != data["order_original"]:
+                            update = {f.id: order_data[f.id] for f in ORDER_FIELDS}
+                            order = await service.update(order_data["id"], OrderUpdate(**update))
+                            notice = "Заказ успешно обновлён"
+                        else:
+                            order = await service.get(order_data["id"])
+                            notice = "Данные заказа не изменились"
+                    else:
+                        order = await service.get(order_data["id"])
+                        notice = None
+                    await show_order(order, notice,
+                                     current_user=current_user,
+                                     message=query.message,
+                                     replace_text=True)
+                    await self.wizard.exit()
 
     @on.message(F.text)
     async def process_input(self, message: Message, state: FSMContext) -> None:
         data = await state.get_data()
-        if data["expect_input"]:
-            order_data, idx = data["order"], data["field_idx"]
+        if data["expect_input"] and message.text:
+            order_data, idx = data["order_updated"], data["selector_idx"]
             field = ORDER_FIELDS[idx]
             await validate_field_input(field, message.text)
             order_data[field.id] = message.text
             await message.answer("Значение изменено", reply_markup=ReplyKeyboardRemove())
             await message.chat.delete_message(data["message_id"])
             message = await show_order_editor(order_data, field.id, message=message)
-            await state.update_data(order=order_data,
+            await state.update_data(order_updated=order_data,
                                     expect_input=False,
                                     message_id=message.message_id)

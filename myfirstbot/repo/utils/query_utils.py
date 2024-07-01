@@ -13,37 +13,46 @@ def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str
     return "".join([f"\\{c}" if c in spec_chars else c for c in string])
 
 
-def single_clause(query: Select[Any], filter_: _filters.QueryFilter) -> ColumnElement[bool]:
-    column: ColumnElement = query.selected_columns[filter_.field]
-    error_msg = "Unknown filter type"
+def single_clause(query: Select[Any], filter_: _filters.QueryFilter) -> ColumnElement[bool]:  # noqa: PLR0911
+    columns: dict[str, ColumnElement] = {}
+    from_clauses = query.get_final_froms()
+    for from_clause in from_clauses:
+        columns |= from_clause.columns
+    column = columns[filter_.field]
+
+    value = filter_.value if filter_.value is not None else null()
+
     match filter_.type:
         case _filters.EQ:
-            clause = (column == filter_.value)
+            return column == value
         case _filters.NE:
-            clause = (column != filter_.value)
+            return column != value
         case _filters.GT:
-            clause = (column > filter_.value)
+            return column > value
         case _filters.LT:
-            clause = (column < filter_.value)
+            return column < value
         case _filters.GE:
-            clause = (column >= filter_.value)
+            return column >= value
         case _filters.LE:
-            clause = (column <= filter_.value)
+            return column <= value
         case _filters.IN:
-            clause = (column.in_(list(map(column.type.python_type, filter_.value))))
+            if hasattr(value, "__iter__"):
+                return column.in_(list(map(column.type.python_type, value)))
         case _filters.NIN:
-            clause = (column.notin_(list(map(column.type.python_type, filter_.value))))
+            if hasattr(value, "__iter__"):
+                return column.notin_(list(map(column.type.python_type, value)))
         case _filters.LIKE:
-            clause = (column.ilike(f"%{esc_spec_chars(filter_.value)}%"))
+            if isinstance(value, str):
+                return column.ilike(f"%{esc_spec_chars(value)}%")
         case _filters.IS:
-            value = filter_.value if hasattr(filter_, "value") else null()
-            clause = (column == value)
+            value = null() if value is None else value
+            return column == value
         case _filters.ISN:
-            value = filter_.value if hasattr(filter_, "value") else null()
-            clause = (column != value)
-        case _:
-            raise TypeError(error_msg)
-    return clause
+            value = null() if value is None else value
+            return column != value
+
+    error_msg = "Unknown filter type"
+    raise TypeError(error_msg)
 
 
 def multiple_clause(
@@ -66,7 +75,7 @@ def apply_filters(
 
 
 def apply_sorting(query: Select[Any], sorting: _sorting.Sorting) -> Select[Any]:
-    column: ColumnElement = query.selected_columns.get(sorting.order_by)
+    column: ColumnElement = query.selected_columns[sorting.order_by]
     if sorting.sort == _sorting.DESC:
         return query.order_by(desc(column))
     return query.order_by(column)
@@ -77,6 +86,7 @@ def apply_pagination(query: Select[Any], pagination: Pagination) -> Select[Any]:
     return query.offset(skip).limit(pagination.per_page)
 
 
-async def row_count(session: AsyncSession, query: Select[Any]) -> int:
+async def get_count(session: AsyncSession, query: Select[Any]) -> int:
     count_query = select(func.count()).select_from(query.subquery())
     return (await session.execute(count_query)).scalar_one()
+

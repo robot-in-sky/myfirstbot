@@ -15,14 +15,8 @@ class UserCallbackData(CallbackData, prefix="user"):
     action: str | None = None
 
 
-class MyOrdersCallbackData(CallbackData, prefix="my_orders"):
-    status: OrderStatus | None = None
-    page: int | None = None
-    per_page: int = PER_PAGE_DEFAULT
-
-
-class AllOrdersCallbackData(CallbackData, prefix="all_orders"):
-    user_id: str | None = None
+class OrdersCallbackData(CallbackData, prefix="orders"):
+    user_id: int | None = None
     status: OrderStatus | None = None
     page: int | None = None
     per_page: int = PER_PAGE_DEFAULT

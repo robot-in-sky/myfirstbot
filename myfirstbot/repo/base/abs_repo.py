@@ -21,7 +21,15 @@ class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
         ...
 
     @abstractmethod
-    async def get_many(
+    async def update(self, id_: int, instance: _TEntityUpdate) -> _TEntity | None:
+        ...
+
+    @abstractmethod
+    async def delete(self, id_: int) -> int | None:
+        ...
+
+    @abstractmethod
+    async def get_all(
             self,
             filters: Sequence[QueryFilter] | None = None,
             *,
@@ -29,12 +37,4 @@ class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
             sorting: Sorting | None = None,
             pagination: Pagination | None = None,
     ) -> QueryResult[_TEntity]:
-        ...
-
-    @abstractmethod
-    async def update(self, id_: int, instance: _TEntityUpdate) -> _TEntity | None:
-        ...
-
-    @abstractmethod
-    async def delete(self, id_: int) -> int | None:
         ...

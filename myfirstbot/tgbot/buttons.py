@@ -6,7 +6,7 @@ ALL_ORDERS = "📦 Все заказы"
 EDIT = "✏️ Изменить"
 SAVE = "💾 Сохранить"
 
-TRASH = "🗑️ Удалить"
+TRASH = "🗑️ Корзина"
 DELETE = "✖️ Удалить"
 RESTORE = "✨ Восстановить"
 
@@ -19,6 +19,11 @@ DONE = "🏁 Завершить"
 AGENT = "👤 Связь с агентом"
 CLIENT = "👤 Связь с клиентом"
 
+USER_ORDERS = "📦 Заказы"
+BLOCK = "🚫 Заблокировать"
+UNBLOCK ="🔓 Разблокировать"
+SET_ROLE = "🎭 Назначить роль"
+
 OK = "OK"
 CANCEL = "Отмена"
 TO_MENU = "В главное меню"
@@ -26,8 +31,8 @@ NEXT = "Далее »"
 BACK = "« Назад"
 CONTINUE = "Продолжить"
 
-PAGE_NEXT = "❯"  # noqa: RUF001
-PAGE_PREV = "❮"  # noqa: RUF001
+PAGE_NEXT = "❯"
+PAGE_PREV = "❮"
 
 EDITOR_UP = "▲"
 EDITOR_DOWN = "▼"

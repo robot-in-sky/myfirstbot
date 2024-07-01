@@ -5,6 +5,7 @@ from myfirstbot.entities.order import Order
 from myfirstbot.entities.user import User
 from myfirstbot.tgbot import buttons
 from myfirstbot.tgbot.callbacks import OrderCallbackData
+from myfirstbot.tgbot.definitions import DATE_TIME_FORMAT
 from myfirstbot.tgbot.views.user.user import is_admin
 
 
@@ -46,8 +47,8 @@ def order_summary(order: Order) -> str:
         f"<b>Количество:</b> {order.qty}",
         "",
         f"<b>Статус:</b> {order_status(order.status)}",
-        f"<b>Создан:</b> {order.created.strftime("%m.%d.%Y %H:%M")}",
-        f"<b>Изменен:</b> {order.updated.strftime("%m.%d.%Y %H:%M")}",
+        f"<b>Создан:</b> {order.created.strftime(DATE_TIME_FORMAT)}",
+        f"<b>Изменен:</b> {order.updated.strftime(DATE_TIME_FORMAT)}",
     ]
     return "\n".join(lines)
 
@@ -70,7 +71,7 @@ def order_actions_kb(order: Order, current_user: User) -> InlineKeyboardMarkup:
             case OrderStatus.ACCEPTED:
                 rows.append([(buttons.DONE, "done")])
             case OrderStatus.TRASH:
-                rows.append([(buttons.RESTORE, "restore"), (buttons.DELETE, "delete")])
+                rows.append([(buttons.RESTORE, "restore"), (buttons.DELETE, "delete_ask")])
 
     rows.append([(buttons.TO_MENU, "to_menu")])
 

@@ -1,6 +1,6 @@
 from .filters import QueryFilter
 from .pagination import Pagination
-from .result import QueryResult
+from .result import CountedResultItem, QueryResult
 from .sorting import Sorting
 
 __all__ = [
@@ -8,4 +8,5 @@ __all__ = [
     "Sorting",
     "Pagination",
     "QueryResult",
+    "CountedResultItem"
 ]
