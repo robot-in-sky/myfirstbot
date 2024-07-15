@@ -35,10 +35,12 @@ class AuthService:
         else:
             user = await self.user_repo.add(data)
 
+        """
         if (settings.default_admins
                 and user.telegram_id in settings.default_admins
                 and user.role != UserRole.ADMINISTRATOR):
             await self.user_repo.set_role(user.id, UserRole.ADMINISTRATOR)
             user = await self.user_repo.get(user.id) or user
+        """
 
         return user

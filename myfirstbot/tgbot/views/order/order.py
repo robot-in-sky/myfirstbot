@@ -19,13 +19,13 @@ async def show_order(
 ) -> Message:
     text = ""
     if notice:
-        text += f"<i>{notice}</i>\n\n"
+        text += f"ℹ <i>{notice}</i>\n\n"
     text += order_summary(order)
-    keyboard = order_actions_kb(order, current_user)
+    reply_markup = order_actions_kb(order, current_user)
     if replace_text:
-        await message.edit_text(text, reply_markup=keyboard)
+        await message.edit_text(text, reply_markup=reply_markup)
         return message
-    return await message.answer(text, reply_markup=keyboard)
+    return await message.answer(text, reply_markup=reply_markup)
 
 
 def order_status(status: OrderStatus) -> str:
@@ -40,46 +40,52 @@ def order_status(status: OrderStatus) -> str:
 
 def order_summary(order: Order) -> str:
     lines = [
-        f"<b>Заказ #{order.id}</b>",
+        f"<b>Заказ #{order.id}</b> — {order_status(order.status)}",
         "",
-        f"<b>Надпись:</b> {order.label}",
-        f"<b>Размер:</b> {order.size}",
-        f"<b>Количество:</b> {order.qty}",
+        "<b>Страница 1/1</b>",
         "",
-        f"<b>Статус:</b> {order_status(order.status)}",
-        f"<b>Создан:</b> {order.created.strftime(DATE_TIME_FORMAT)}",
-        f"<b>Изменен:</b> {order.updated.strftime(DATE_TIME_FORMAT)}",
+        f"    <b>Надпись:</b> {order.label}    ",
+        f"    <b>Размер:</b> {order.size}    ",
+        f"    <b>Количество:</b> {order.qty}    ",
+        "",
+        f"Создан: {order.created.strftime(DATE_TIME_FORMAT)}",
+        f"Изменен: {order.updated.strftime(DATE_TIME_FORMAT)}",
     ]
     return "\n".join(lines)
 
 
 def order_actions_kb(order: Order, current_user: User) -> InlineKeyboardMarkup:
-    rows = []
+    keyboard = [[InlineKeyboardButton(
+                    text=buttons.DUPLICATE,
+                    callback_data=OrderCallbackData(id=order.id, action="duplicate_ask").pack()),
+                 InlineKeyboardButton(text=buttons.PAGE_PREV, callback_data="_"),
+                 InlineKeyboardButton(text=buttons.PAGE_NEXT, callback_data="_")]]
 
+    rows = []
     if order.status == OrderStatus.DRAFT:
-        rows.append([(buttons.EDIT, "edit"), (buttons.DELETE, "trash_ask")])
-        rows.append([(buttons.SUBMIT, "submit")])
+        rows.append([(buttons.TRASH, "trash_ask"),
+                     (buttons.EDIT, "edit"),
+                     (buttons.SUBMIT, "submit")])
 
     if not is_admin(current_user) and order.status == OrderStatus.PENDING:
-        rows.append([(buttons.RETURN, "return"), (buttons.AGENT, "agent")])
+        rows.append([(buttons.RETURN, "return")])
 
     if is_admin(current_user):
         match order.status:
             case OrderStatus.PENDING:
-                rows.append([(buttons.ACCEPT, "accept")])
-                rows.append([(buttons.REJECT, "reject")])
+                rows.append([(buttons.ACCEPT, "accept"), (buttons.REJECT, "reject")])
             case OrderStatus.ACCEPTED:
                 rows.append([(buttons.DONE, "done")])
             case OrderStatus.TRASH:
-                rows.append([(buttons.RESTORE, "restore"), (buttons.DELETE, "delete_ask")])
+                rows.append([(buttons.RESTORE, "restore"), (buttons.TRASH, "delete_ask")])
 
-    rows.append([(buttons.TO_MENU, "to_menu")])
+    rows.append([(buttons.BACK, "back")])
 
-    keyboard = []
     for row in rows:
         keyboard_row = [InlineKeyboardButton(
             text=t[0],
             callback_data=OrderCallbackData(id=order.id, action=t[1]).pack(),
         ) for t in row]
         keyboard.append(keyboard_row)
+
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -1,4 +1,4 @@
 PER_PAGE_DEFAULT = 6
 BUTTON_TEXT_MAX_LEN = 45
 COLUMN_DELIMITER = " | "
-DATE_TIME_FORMAT = "%m.%d.%Y %H:%M %Z"
+DATE_TIME_FORMAT = "%d.%m.%Y" #"%d/%m/%Y %H:%M %Z"

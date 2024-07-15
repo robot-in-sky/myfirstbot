@@ -1,14 +1,17 @@
 from aiogram import F, Router
+from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from myfirstbot.entities.user import User
 from myfirstbot.repo.utils import Database
 from myfirstbot.services import UserService
 from myfirstbot.tgbot.buttons import USERS
-from myfirstbot.tgbot.callbacks import UsersCallbackData
-from myfirstbot.tgbot.views.user.users import show_users, users_result_kb
+from myfirstbot.tgbot.callbacks import UserFilterCallbackData, UserSearchCallbackData, UsersCallbackData
+from myfirstbot.tgbot.scenes import SearchUserScene
+from myfirstbot.tgbot.views.user.users import show_user_filter, show_users, users_result_kb
 
 router = Router()
+scene_registry = SceneRegistry(router)
 
 
 @router.message(F.text == USERS)
@@ -19,12 +22,11 @@ async def users_button_handler(
     result = await UserService(db, current_user).get_all(**params)
     await show_users(result,
                      callback_data,
-                     current_user=current_user,
                      message=message)
 
 
 @router.callback_query(UsersCallbackData.filter())
-async def users_callback(
+async def users_callback_handler(
         query: CallbackQuery,
         callback_data: UsersCallbackData,
         db: Database,
@@ -40,5 +42,33 @@ async def users_callback(
         else:
             await show_users(result,
                              callback_data,
-                             current_user=current_user,
-                             message=query.message)
+                             message=query.message,
+                             replace_text=True)
+
+
+scene_registry.add(SearchUserScene)
+router.callback_query.register(
+    SearchUserScene.as_handler(), UserSearchCallbackData.filter())
+
+
+@router.callback_query(UserFilterCallbackData.filter())
+async def user_filter_callback_handler(
+        query: CallbackQuery,
+        callback_data: UserFilterCallbackData,
+        db: Database,
+        current_user: User,
+) -> None:
+    await query.answer()
+    if isinstance(query.message, Message):
+        service = UserService(db, current_user)
+        params = callback_data.model_dump(
+            exclude_none=True,
+            exclude={"role", "page", "per_page"},
+        )
+        count_by_status = await service.get_count_by_role(**params)
+        total_count = await service.get_count(**params)
+        await show_user_filter(count_by_status,
+                               total_count,
+                               callback_data,
+                               message=query.message,
+                               replace_text=True)

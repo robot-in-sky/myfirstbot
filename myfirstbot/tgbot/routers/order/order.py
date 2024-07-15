@@ -2,15 +2,17 @@ from aiogram import F, Router
 from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
+from myfirstbot.entities.choices import UserRole
+from myfirstbot.entities.order import OrderAdd
 from myfirstbot.entities.user import User
 from myfirstbot.repo.utils import Database
 from myfirstbot.services import OrderService
 from myfirstbot.tgbot import buttons
-from myfirstbot.tgbot.callbacks import OrderCallbackData
+from myfirstbot.tgbot.callbacks import OrderCallbackData, OrdersCallbackData
 from myfirstbot.tgbot.scenes import EditOrderScene, NewOrderScene
 from myfirstbot.tgbot.views.common.ok_cancel import ok_cancel_kb
-from myfirstbot.tgbot.views.menu import main_menu_kb
 from myfirstbot.tgbot.views.order.order import show_order
+from myfirstbot.tgbot.views.order.orders import show_orders
 
 router = Router()
 scene_registry = SceneRegistry(router)
@@ -19,10 +21,12 @@ scene_registry = SceneRegistry(router)
 scene_registry.add(NewOrderScene)
 router.message.register(
     NewOrderScene.as_handler(), F.text == buttons.NEW_ORDER)
+router.callback_query.register(
+    NewOrderScene.as_handler(), F.data == "new_order")
 
 
 @router.callback_query(OrderCallbackData.filter(~F.action))
-async def order_callback(
+async def order_callback_handler(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
         db: Database,
@@ -33,7 +37,8 @@ async def order_callback(
     if isinstance(query.message, Message):
         await show_order(order,
                          current_user=current_user,
-                         message=query.message)
+                         message=query.message,
+                         replace_text=True)
 
 
 scene_registry.add(EditOrderScene)
@@ -41,30 +46,49 @@ router.callback_query.register(
     EditOrderScene.as_handler(), OrderCallbackData.filter(F.action == "edit"))
 
 
-@router.callback_query(OrderCallbackData.filter(F.action == "trash_ask"))
-async def order_trash_ask_callback(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+@router.callback_query(OrderCallbackData.filter(
+    F.action.in_({"trash_ask", "delete_ask", "duplicate_ask"})))
+async def order_trash_ask_callback_handler(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+    match callback_data.action:
+        case "trash_ask":
+            action, text = "trash", "Вы уверены что хотите удалить заказ?"
+        case "delete_ask":
+            action, text = "delete", "Заказ будет удалён окончательно. Вы уверены?"
+        case "duplicate_ask":
+            action, text = "duplicate", "Будет создана копия заказа. Вы уверены?"
+        case _:
+            return
     await query.answer()
     if isinstance(query.message, Message):
         await query.message.edit_text(
-            "Вы уверены что хотите удалить заказ?",
-            reply_markup=ok_cancel_kb(
-                ok_cb=OrderCallbackData(id=callback_data.id, action="trash"),
-                cancel_cb=OrderCallbackData(id=callback_data.id)))
+            text, reply_markup=ok_cancel_kb(
+                        ok_cb=OrderCallbackData(id=callback_data.id, action=action),
+                        cancel_cb=OrderCallbackData(id=callback_data.id)))
 
 
-@router.callback_query(OrderCallbackData.filter(F.action == "delete_ask"))
-async def order_delete_ask_callback(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+@router.callback_query(OrderCallbackData.filter(F.action == "duplicate"))
+async def order_duplicate_callback_handler(
+        query: CallbackQuery,
+        callback_data: OrderCallbackData,
+        db: Database,
+        current_user: User,
+) -> None:
+    service = OrderService(db, current_user)
+    order = await service.get(callback_data.id)
+    new_order = await service.new(OrderAdd(user_id=current_user.id,
+                                           label=order.label,
+                                           size=order.size,
+                                           qty=order.qty))
     await query.answer()
     if isinstance(query.message, Message):
-        await query.message.edit_text(
-            "Вы уверены что хотите удалить заказ окончательно?",
-            reply_markup=ok_cancel_kb(
-                ok_cb=OrderCallbackData(id=callback_data.id, action="delete"),
-                cancel_cb=OrderCallbackData(id=callback_data.id)))
+        await show_order(new_order, "Создана копия заказа",
+                         current_user=current_user,
+                         message=query.message,
+                         replace_text=True)
 
 
 @router.callback_query(OrderCallbackData.filter(F.action))
-async def order_actions_callback(
+async def order_actions_callback_handler(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
         db: Database,
@@ -72,7 +96,7 @@ async def order_actions_callback(
 ) -> None:
     service = OrderService(db, current_user)
     order_id = callback_data.id
-    notice, to_menu = None, False
+    notice, back = None, False
     match callback_data.action:
         case "submit":
             await service.submit(order_id)
@@ -91,21 +115,29 @@ async def order_actions_callback(
             notice = "Заказ завершён"
         case "trash":
             await service.trash(order_id)
-            notice, to_menu = f"Заказ #{order_id} удалён", True
+            notice, back = f"Заказ #{order_id} удалён", True
         case "restore":
             await service.restore(order_id)
             notice = "Заказ восстановлен"
         case "delete":
             await service.delete(order_id)
-            notice, to_menu = f"Заказ #{order_id} удален окончательно", True
-        case "to_menu":
-            notice, to_menu = "Главное меню", True
-        case _:
-            return
+            notice, back = f"Заказ #{order_id} удален окончательно", True
+        case "back" | _:
+            back = True
     await query.answer()
     if isinstance(query.message, Message):
-        if to_menu:
-            await query.message.answer(notice, reply_markup=main_menu_kb(current_user))
+        if back:
+            callback_data = OrdersCallbackData()
+            params = callback_data.model_dump(exclude_none=True)
+            if current_user.role < UserRole.AGENT:
+                params["user_id"] = current_user.id
+            result = await OrderService(db, current_user).get_all(**params)
+            await show_orders(result,
+                              callback_data,
+                              notice,
+                              current_user=current_user,
+                              message=query.message,
+                              replace_text=True)
         else:
             await show_order(await service.get(order_id),
                              notice,

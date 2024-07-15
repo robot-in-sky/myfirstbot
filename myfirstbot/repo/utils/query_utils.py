@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import myfirstbot.entities.query.filters as _filters
 import myfirstbot.entities.query.sorting as _sorting
-from myfirstbot.entities.query.pagination import Pagination
+from myfirstbot.entities.query import Pagination, Search
 
 
 def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str:
@@ -56,7 +56,10 @@ def single_clause(query: Select[Any], filter_: _filters.QueryFilter) -> ColumnEl
 
 
 def multiple_clause(
-        query: Select[Any], filters: Sequence[_filters.QueryFilter], *, or_: bool = False,
+        query: Select[Any],
+        filters: Sequence[_filters.QueryFilter],
+        *,
+        or_: bool = False,
 ) -> ColumnElement[bool]:
     clauses = [single_clause(query, f) for f in filters]
     if or_:
@@ -69,9 +72,21 @@ def apply_filter(query: Select[Any], filter_: _filters.QueryFilter) -> Select[An
 
 
 def apply_filters(
-        query: Select[Any], filters: Sequence[_filters.QueryFilter], *, or_: bool = False,
+        query: Select[Any],
+        filters: Sequence[_filters.QueryFilter],
+        *,
+        or_: bool = False,
 ) -> Select[Any]:
     return query.where(multiple_clause(query, filters, or_=or_))
+
+
+def apply_search(
+        query: Select[Any],
+        search: Search,
+) -> Select[Any]:
+    filters = [_filters.StrQueryFilter(field=field, type="like", value=search.s)
+              for field in search.fields]
+    return query.where(multiple_clause(query, filters, or_=True))
 
 
 def apply_sorting(query: Select[Any], sorting: _sorting.Sorting) -> Select[Any]:

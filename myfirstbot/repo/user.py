@@ -3,16 +3,16 @@ from datetime import UTC, datetime
 from math import ceil
 
 from pydantic import TypeAdapter
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from myfirstbot.entities.choices import UserRole
-from myfirstbot.entities.query import Pagination, QueryFilter, QueryResult, Sorting
+from myfirstbot.entities.query import CountResultItem, Pagination, QueryFilter, QueryResult, Search, Sorting
 from myfirstbot.entities.user import User, UserAdd, UserUpdate
 from myfirstbot.repo.base import AbstractRepo
 from myfirstbot.repo.models import User as _UserOrm
 from myfirstbot.repo.utils import Database, exception_mapper
-from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_sorting, get_count
+from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_search, apply_sorting, get_count
 
 
 class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
@@ -70,9 +70,10 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 return result
             return None
 
-    async def get_all(
+    async def get_all(  # noqa: PLR0913
             self,
             filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
             *,
             or_: bool = False,
             sorting: Sorting | None = None,
@@ -81,6 +82,8 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         query = select(_UserOrm)
         if filters:
             query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
 
         async with self.db.get_session() as session:
             total_items = await get_count(session, query)
@@ -106,3 +109,40 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 total_pages=total_pages,
                 total_items=total_items,
             )
+
+    async def get_count(
+            self,
+            filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
+            *,
+            or_: bool = False,
+    ) -> int:
+        query = select(_UserOrm)
+        if filters:
+            query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
+
+        async with self.db.get_session() as session:
+            return await get_count(session, query)
+
+    async def get_count_by_role(
+            self,
+            filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
+            *,
+            or_: bool = False,
+    ) -> list[CountResultItem[UserRole]]:
+        column = _UserOrm.role
+        query = select(column, func.count(column))
+        if filters:
+            query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
+        query = query.group_by(column).order_by(column)
+
+        async with self.db.get_session() as session:
+            result = (await session.execute(query)).all()
+            return [CountResultItem[UserRole](
+                value=item[0], count=item[1],
+            ) for item in result]

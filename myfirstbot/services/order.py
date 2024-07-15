@@ -1,6 +1,6 @@
 from myfirstbot.entities.choices import OrderStatus, UserRole
 from myfirstbot.entities.order import Order, OrderAdd, OrderUpdate
-from myfirstbot.entities.query import CountedResultItem, Pagination, QueryResult, Sorting
+from myfirstbot.entities.query import CountResultItem, Pagination, QueryResult, Search, Sorting
 from myfirstbot.entities.query.filters import ChoiceQueryFilter, NumQueryFilter, QueryFilter
 from myfirstbot.entities.user import User
 from myfirstbot.exceptions import AccessDeniedError, InvalidStateError, NotFoundError
@@ -13,13 +13,15 @@ class OrderService:
 
     def __init__(self, database: Database, current_user: User) -> None:
         self.order_repo = OrderRepo(database)
+        self.search_fields = {"label"}
         self.current_user = current_user
 
     @access_level(required=UserRole.USER)
-    async def get_all(
+    async def get_all(  # noqa: PLR0913
             self,
             user_id: int | None = None,
             status: OrderStatus | None = None,
+            s: str | None = None,
             page: int = 1,
             per_page: int = 10
     ) -> QueryResult[Order]:
@@ -29,13 +31,14 @@ class OrderService:
                 raise AccessDeniedError
             filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
         if status:
-            filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
-        else:
             if self.current_user.role < UserRole.AGENT and status == OrderStatus.TRASH:
                 raise AccessDeniedError
+            filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
+        else:
             filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
         return await self.order_repo.get_all(
             filters=filters,
+            search=Search(s=s, fields=self.search_fields) if s else None,
             pagination=Pagination(page=page, per_page=per_page),
             sorting=Sorting(order_by="created", sort="desc"),
         )
@@ -45,6 +48,7 @@ class OrderService:
             self,
             user_id: int | None = None,
             status: OrderStatus | None = None,
+            s: str | None = None,
     ) -> int:
         filters: list[QueryFilter] = []
         if user_id:
@@ -57,13 +61,17 @@ class OrderService:
             filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
         else:
             filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        return await self.order_repo.get_count(filters=filters)
+        return await self.order_repo.get_count(
+            filters=filters,
+            search=Search(s=s, fields=self.search_fields) if s else None,
+        )
 
     @access_level(required=UserRole.USER)
     async def get_count_by_status(
             self,
             user_id: int | None = None,
-    ) -> list[CountedResultItem[OrderStatus]]:
+            s: str | None = None,
+    ) -> list[CountResultItem[OrderStatus]]:
         filters: list[QueryFilter] = []
         if user_id:
             if self.current_user.role < UserRole.AGENT and user_id != self.current_user.id:
@@ -71,7 +79,10 @@ class OrderService:
             filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
         if self.current_user.role < UserRole.AGENT:
             filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        return await self.order_repo.get_count_by_status(filters=filters)
+        return await self.order_repo.get_count_by_status(
+            filters=filters,
+            search=Search(s=s, fields=self.search_fields) if s else None,
+        )
 
     @access_level(required=UserRole.USER)
     async def new(self, instance: OrderAdd) -> Order:

@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from myfirstbot.entities.choices import UserRole
 from myfirstbot.entities.user import User
 from myfirstbot.tgbot.buttons import BLOCK, SET_ROLE, UNBLOCK, USER_ORDERS
-from myfirstbot.tgbot.callbacks import UserCallbackData
+from myfirstbot.tgbot.callbacks import OrdersCallbackData, UserCallbackData
 from myfirstbot.tgbot.definitions import DATE_TIME_FORMAT
 
 
@@ -24,11 +24,11 @@ async def show_user(  # noqa: PLR0913
     if notice:
         text += f"<i>{notice}</i>\n\n"
     text += user_summary(user)
-    keyboard = user_actions_kb(user, order_count, current_user=current_user)
+    reply_markup = user_actions_kb(user, order_count, current_user=current_user)
     if replace_text:
-        await message.edit_text(text, reply_markup=keyboard)
+        await message.edit_text(text, reply_markup=reply_markup)
         return message
-    return await message.answer(text, reply_markup=keyboard)
+    return await message.answer(text, reply_markup=reply_markup)
 
 
 def user_role(role: UserRole) -> str:
@@ -43,13 +43,13 @@ def user_role(role: UserRole) -> str:
 def user_summary(user: User) -> str:
     lines = [
         f"<b>Пользователь</b> @{user.user_name}",
+        f"<b>Роль:</b> {user_role(user.role)}",
         "",
         f"<b>Имя:</b> {user.first_name} {user.last_name or ''}",
         f"<b>ID:</b> #{user.id}",
         f"<b>Telegram ID:</b> {user.telegram_id}",
         f"<b>Chat ID:</b> {user.chat_id or '-'}",
         "",
-        f"<b>Роль:</b> {user_role(user.role)}",
         f"<b>Первый вход:</b> {user.created.strftime(DATE_TIME_FORMAT)}",
         f"<b>Изменён:</b> {user.updated.strftime(DATE_TIME_FORMAT)}",
     ]
@@ -59,7 +59,7 @@ def user_summary(user: User) -> str:
 def user_actions_kb(user: User, order_count: int, *, current_user: User) -> InlineKeyboardMarkup:
     keyboard = [[InlineKeyboardButton(
         text=f"{USER_ORDERS} ({order_count})",
-        callback_data=UserCallbackData(id=user.id, action="get_orders").pack()),
+        callback_data=OrdersCallbackData(user_id=user.id).pack()),
     ]]
     if current_user.role == UserRole.ADMINISTRATOR:
         if user.id != current_user.id:

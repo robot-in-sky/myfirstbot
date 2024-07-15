@@ -8,11 +8,12 @@ from sqlalchemy.dialects.postgresql import insert
 
 from myfirstbot.entities.choices import OrderStatus
 from myfirstbot.entities.order import Order, OrderAdd, OrderUpdate
-from myfirstbot.entities.query import CountedResultItem, Pagination, QueryFilter, QueryResult, Sorting
+from myfirstbot.entities.query import CountResultItem, Pagination, QueryFilter, QueryResult, Sorting
+from myfirstbot.entities.query.search import Search
 from myfirstbot.repo.base import AbstractRepo
 from myfirstbot.repo.models import Order as _OrderOrm
 from myfirstbot.repo.utils import Database, exception_mapper
-from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_sorting, get_count
+from myfirstbot.repo.utils.query_utils import apply_filters, apply_pagination, apply_search, apply_sorting, get_count
 
 
 class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
@@ -64,9 +65,10 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
                 return result
             return None
 
-    async def get_all(
+    async def get_all(  # noqa: PLR0913
             self,
             filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
             *,
             or_: bool = False,
             sorting: Sorting | None = None,
@@ -75,6 +77,8 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
         query = select(_OrderOrm)
         if filters:
             query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
 
         async with self.db.get_session() as session:
             total_items = await get_count(session, query)
@@ -104,12 +108,15 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
     async def get_count(
             self,
             filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
             *,
             or_: bool = False,
     ) -> int:
         query = select(_OrderOrm)
         if filters:
             query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
 
         async with self.db.get_session() as session:
             return await get_count(session, query)
@@ -117,17 +124,20 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
     async def get_count_by_status(
             self,
             filters: Sequence[QueryFilter] | None = None,
+            search: Search | None = None,
             *,
             or_: bool = False,
-    ) -> list[CountedResultItem[OrderStatus]]:
+    ) -> list[CountResultItem[OrderStatus]]:
         column = _OrderOrm.status
         query = select(column, func.count(column))
         if filters:
             query = apply_filters(query, filters, or_=or_)
+        if search:
+            query = apply_search(query, search)
         query = query.group_by(column).order_by(column)
 
         async with self.db.get_session() as session:
             result = (await session.execute(query)).all()
-            return [CountedResultItem[OrderStatus](
+            return [CountResultItem[OrderStatus](
                 value=item[0], count=item[1],
             ) for item in result]

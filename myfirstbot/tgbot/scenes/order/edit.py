@@ -24,7 +24,7 @@ async def show_order_editor(
         message: Message,
         replace_text: bool = False,
 ) -> Message:
-    text = f"<b>Заказ #{data["id"]}</b>\n\n"
+    text = f"<b>Заказ #{data["id"]}</b> — Редактирование\n\n"
     text += editor_summary(ORDER_FIELDS, data, selected)
     keyboard = editor_kb()
     if replace_text:

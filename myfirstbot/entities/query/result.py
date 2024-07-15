@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from myfirstbot.entities.base import Base as _EntityBase
 
 _TResultItem = TypeVar("_TResultItem", bound=_EntityBase)
-_TCountedResultBase = TypeVar("_TCountedResultBase")
+_TCountResultBase = TypeVar("_TCountResultBase")
 
 
 class QueryResult(BaseModel, Generic[_TResultItem]):
@@ -16,6 +16,6 @@ class QueryResult(BaseModel, Generic[_TResultItem]):
     total_items: int
 
 
-class CountedResultItem(BaseModel, Generic[_TCountedResultBase]):
-    value: _TCountedResultBase
+class CountResultItem(BaseModel, Generic[_TCountResultBase]):
+    value: _TCountResultBase
     count: int
