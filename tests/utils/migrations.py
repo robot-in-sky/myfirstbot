@@ -3,9 +3,8 @@ from os import PathLike
 from pathlib import Path
 
 from alembic.config import Config
+from app.definitions import ROOT_DIR
 from sqlalchemy import URL, MetaData, engine_from_config, pool, text
-
-from myfirstbot.definitions import ROOT_DIR
 
 
 def get_alembic_config(

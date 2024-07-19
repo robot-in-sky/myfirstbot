@@ -1,18 +1,18 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
+import app.entities.query.filters as _filters
 import pytest
 import pytest_asyncio
 import pytz
+from app.entities.choices.order_status import OrderStatus
+from app.entities.order import Order, OrderAdd, OrderUpdate
+from app.entities.query.pagination import Pagination
+from app.entities.query.sorting import Sorting
+from app.entities.user import User, UserAdd
+from app.exceptions import ForeignKeyViolationError
+from app.repo import OrderRepo, UserRepo
 
-import myfirstbot.entities.query.filters as _filters
-from myfirstbot.entities.choices.order_status import OrderStatus
-from myfirstbot.entities.order import Order, OrderAdd, OrderUpdate
-from myfirstbot.entities.query.pagination import Pagination
-from myfirstbot.entities.query.sorting import Sorting
-from myfirstbot.entities.user import User, UserAdd
-from myfirstbot.exceptions import ForeignKeyViolationError
-from myfirstbot.repo import OrderRepo, UserRepo
 from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)

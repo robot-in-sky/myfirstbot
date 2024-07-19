@@ -1,16 +1,16 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
+import app.entities.query.filters as _filters
 import pytest
 import pytest_asyncio
 import pytz
+from app.entities.choices.user_role import UserRole
+from app.entities.query import Pagination, Sorting
+from app.entities.user import User, UserAdd, UserUpdate
+from app.exceptions import UniqueViolationError
+from app.repo import UserRepo
 
-import myfirstbot.entities.query.filters as _filters
-from myfirstbot.entities.choices.user_role import UserRole
-from myfirstbot.entities.query import Pagination, Sorting
-from myfirstbot.entities.user import User, UserAdd, UserUpdate
-from myfirstbot.exceptions import UniqueViolationError
-from myfirstbot.repo import UserRepo
 from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)
