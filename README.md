@@ -3,7 +3,7 @@
 
 1. Clone this repository
 
-2. Change the name of `.env.example` to `.env` and set all environment variables as you need
+2. Change the name of `env/.env.example` to `.env` and set all environment variables as you need
 
 3. Change password for redis in build/redis.conf (`requirepass` and `masterauth`). Set same password in `.env` 
    (`REDIS_PASSWORD`).

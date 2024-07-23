@@ -3,8 +3,9 @@ from os import PathLike
 from pathlib import Path
 
 from alembic.config import Config
-from app.definitions import ROOT_DIR
 from sqlalchemy import URL, MetaData, engine_from_config, pool, text
+
+from app.definitions import ROOT_DIR
 
 
 def get_alembic_config(
@@ -29,12 +30,13 @@ def get_alembic_config(
     )
 
     script_location = config.get_main_option("script_location")
-    if not Path(script_location).is_absolute():
+    if script_location and not Path(script_location).is_absolute():
         config_dir = Path(file_).parent
         script_location = config_dir.joinpath(script_location).resolve()
         config.set_main_option("script_location", str(script_location))
 
-    config.set_main_option("sqlalchemy.url", db_url)
+    if db_url:
+        config.set_main_option("sqlalchemy.url", str(db_url))
 
     return config
 

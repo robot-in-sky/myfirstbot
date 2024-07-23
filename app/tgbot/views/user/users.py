@@ -64,7 +64,7 @@ async def show_user_filter(
 
 
 async def show_users(
-        result: QueryResult,
+        result: QueryResult[User],
         callback_data: UsersCallbackData,
         *,
         message: Message,
@@ -111,10 +111,11 @@ def user_item_text(user: User) -> str:
 
 
 def pagination_buttons(
-        result: QueryResult,
+        result: QueryResult[User],
         callback_data: UsersCallbackData,
 ) -> list[InlineKeyboardButton]:
-    if result.page is not None and result.total_pages > 1:
+    if (result.page is not None and
+            result.total_pages is not None and result.total_pages > 1):
         params = callback_data.model_dump(exclude={"page"})
         prev_page = result.page - 1 if result.page > 1 else result.total_pages
         next_page =result.page + 1 if result.page < result.total_pages else 1

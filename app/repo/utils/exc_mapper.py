@@ -13,7 +13,7 @@ from app.exceptions import (
 
 def exception_mapper(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    async def wrapped(*args: Any, **kwargs: Any) -> None:
+    async def wrapped(*args: Any, **kwargs: Any) -> Any:
         try:
             return await func(*args, **kwargs)
         except IntegrityError as error:

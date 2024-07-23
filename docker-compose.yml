@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.8"
 services:
   redis:
     build:
@@ -6,7 +6,7 @@ services:
       dockerfile: redis.dockerfile
     env_file:
       - env/.env
-    restart: on-failure
+    restart: always
     ports:
       - "6379:6379"
   db:
@@ -15,7 +15,7 @@ services:
       - env/.env
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: on-failure
+    restart: always
     ports:
       - "5432:5432"
   bot:
@@ -28,7 +28,3 @@ services:
     depends_on:
       - db
       - redis
-
-
-volumes:
-  pgdata:

@@ -1,16 +1,17 @@
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
-import app.entities.query.filters as _filters
 import pytest
 import pytest_asyncio
 import pytz
+
+import app.entities.query.filters as _filters
 from app.entities.choices.user_role import UserRole
 from app.entities.query import Pagination, Sorting
 from app.entities.user import User, UserAdd, UserUpdate
 from app.exceptions import UniqueViolationError
 from app.repo import UserRepo
-
 from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)
@@ -160,7 +161,7 @@ class TestUserRepo:
         ], "or_": True}, 4),
     ])
     async def test_filters(
-            self, repo: UserRepo, args: dict, expecting: int,
+            self, repo: UserRepo, args: dict[str, Any], expecting: int,
     ) -> None:
         items = (await repo.get_all(**args)).items
         assert isinstance(items, list)
@@ -178,7 +179,7 @@ class TestUserRepo:
         ({}, (None, None, None, 5, 5)),
     ])
     async def test_pagination(
-            self, repo: UserRepo, args: dict, expecting: tuple,
+            self, repo: UserRepo, args: dict[str, Any], expecting: tuple,
     ) -> None:
         result = await repo.get_all(**args)
         assert result.page == expecting[0]

@@ -65,15 +65,15 @@ def user_actions_kb(user: User, order_count: int, *, current_user: User) -> Inli
         if user.id != current_user.id:
             keyboard.append([InlineKeyboardButton(
                 text=BLOCK,
-                callback_data=UserCallbackData(id=user.id, action="block").pack()),
+                callback_data=UserCallbackData(id=user.id, set_role=UserRole.BLOCKED).pack()),
             ])
         if user.role == UserRole.BLOCKED:
             keyboard.append([InlineKeyboardButton(
                 text=UNBLOCK,
-                callback_data=UserCallbackData(id=user.id, action="unblock").pack()),
+                callback_data=UserCallbackData(id=user.id, set_role=UserRole.USER).pack()),
             ])
         keyboard.append([InlineKeyboardButton(
             text=SET_ROLE,
-            callback_data=UserCallbackData(id=user.id, action="set_role").pack()),
+            callback_data=UserCallbackData(id=user.id, set_role=UserRole.USER).pack()),
         ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

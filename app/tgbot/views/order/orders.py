@@ -130,10 +130,11 @@ def order_item_text(order: Order, current_user: User) -> str:
 
 
 def pagination_buttons(
-        result: QueryResult,
+        result: QueryResult[Order],
         callback_data: OrdersCallbackData,
 ) -> list[InlineKeyboardButton]:
-    if result.page is not None and result.total_pages > 1:
+    if (result.page is not None and
+            result.total_pages is not None and result.total_pages > 1):
         params = callback_data.model_dump(exclude={"page"})
         prev_page = result.page - 1 if result.page > 1 else result.total_pages
         next_page =result.page + 1 if result.page < result.total_pages else 1

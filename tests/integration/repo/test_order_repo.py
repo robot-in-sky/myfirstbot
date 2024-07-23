@@ -1,10 +1,12 @@
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
-import app.entities.query.filters as _filters
 import pytest
 import pytest_asyncio
 import pytz
+
+import app.entities.query.filters as _filters
 from app.entities.choices.order_status import OrderStatus
 from app.entities.order import Order, OrderAdd, OrderUpdate
 from app.entities.query.pagination import Pagination
@@ -12,7 +14,6 @@ from app.entities.query.sorting import Sorting
 from app.entities.user import User, UserAdd
 from app.exceptions import ForeignKeyViolationError
 from app.repo import OrderRepo, UserRepo
-
 from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)
@@ -143,7 +144,7 @@ class TestOrderRepo:
         ]}, 2),
     ])
     async def test_filters(
-            self, repo: OrderRepo, args: dict, expecting: int,
+            self, repo: OrderRepo, args: dict[str, Any], expecting: int,
     ) -> None:
         items = (await repo.get_all(**args)).items
         assert isinstance(items, list)
@@ -162,7 +163,7 @@ class TestOrderRepo:
         ({}, (None, None, None, 5, 5)),
     ])
     async def test_pagination(
-            self, repo: OrderRepo, args: dict, expecting: tuple,
+            self, repo: OrderRepo, args: dict[str, Any], expecting: tuple,
     ) -> None:
         result = await repo.get_all(**args)
         assert result.page == expecting[0]
@@ -182,7 +183,7 @@ class TestOrderRepo:
         ({"sorting": Sorting(order_by="label", sort="desc")},
             ("Tiger", "Bharat")),
     ])
-    async def test_sorting(self, repo: OrderRepo, args: dict, expecting: tuple) -> None:
+    async def test_sorting(self, repo: OrderRepo, args: dict[str, Any], expecting: tuple) -> None:
         items = (await repo.get_all(**args)).items
         sorting: Sorting = args["sorting"]
         field = sorting.order_by

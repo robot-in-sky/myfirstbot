@@ -28,9 +28,10 @@ ruff = "^0.4.1"
 ruff-lsp = "^0.0.53"
 pytest = "^8.2.1"
 pytest-asyncio = "^0.23.7"
+types-pytz = "^2024.1.0.20240417"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py310"
 line-length = 120
 src = ["app"]
 

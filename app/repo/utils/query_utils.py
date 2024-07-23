@@ -14,7 +14,7 @@ def esc_spec_chars(string: str, spec_chars: tuple[str, ...] = ("%", "_")) -> str
 
 
 def single_clause(stmt: Select[Any], filter_: _filters.QueryFilter) -> ColumnElement[bool]:  # noqa: PLR0911
-    columns: dict[str, ColumnElement] = {}
+    columns: dict[str, ColumnElement[Any]] = {}
     from_clauses = stmt.get_final_froms()
     for from_clause in from_clauses:
         columns |= from_clause.columns
@@ -90,7 +90,7 @@ def apply_search(
 
 
 def apply_sorting(stmt: Select[Any], sorting: _sorting.Sorting) -> Select[Any]:
-    column: ColumnElement = stmt.selected_columns[sorting.order_by]
+    column: ColumnElement[Any] = stmt.selected_columns[sorting.order_by]
     if sorting.sort == _sorting.DESC:
         return stmt.order_by(desc(column))
     return stmt.order_by(column)
