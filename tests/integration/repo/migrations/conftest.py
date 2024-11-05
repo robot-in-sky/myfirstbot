@@ -1,9 +1,9 @@
 import pytest
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
+from src.config import Settings
+from src.definitions import APP_DIR
 
-from app.config import Settings
-from app.definitions import APP_DIR
 from tests.utils.migrations import get_alembic_config
 
 

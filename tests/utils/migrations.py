@@ -4,8 +4,7 @@ from pathlib import Path
 
 from alembic.config import Config
 from sqlalchemy import URL, MetaData, engine_from_config, pool, text
-
-from app.definitions import ROOT_DIR
+from src.definitions import ROOT_DIR
 
 
 def get_alembic_config(

@@ -109,10 +109,10 @@ dmypy.json
 .pytype/
 cython_debug/
 
-### .dockerignore
-env/*
-!env/.env.example
+### Custom
+# env/*
+# !env/.env.example
 .git
 tests/
-LICENSE
-README.md
+# LICENSE
+# README.md

@@ -1,5 +1,5 @@
-from app.repo.models import OrmBase
-from app.repo.utils import Database
+from src.repo.models import OrmBase
+from src.repo.utils import Database
 
 
 class MockedDatabase(Database):

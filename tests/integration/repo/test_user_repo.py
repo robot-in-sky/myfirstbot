@@ -1,17 +1,12 @@
 import logging
-from datetime import UTC, datetime, timedelta
-from typing import Any
 
 import pytest
 import pytest_asyncio
-import pytz
+from src.entities.choices.user_role import UserRole
+from src.entities.user import User, UserAdd, UserQueryPaged, UserUpdate
+from src.exceptions import UniqueViolationError
+from src.repo import UserRepo
 
-import app.entities.query.filters as _filters
-from app.entities.choices.user_role import UserRole
-from app.entities.query import Pagination, Sorting
-from app.entities.user import User, UserAdd, UserUpdate
-from app.exceptions import UniqueViolationError
-from app.repo import UserRepo
 from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)
@@ -92,96 +87,61 @@ class TestUserRepo:
 
 
     async def test_set_role(self, repo: UserRepo) -> None:
-        id_ = (await repo.get_all()).items[0].id
+        id_ = (await repo.get_many(UserQueryPaged())).items[0].id
         await repo.set_role(id_, UserRole.AGENT)
         role = (await repo.get(id_)).role
         assert role == UserRole.AGENT
 
 
-    @pytest.mark.parametrize(("args", "expecting"), [
-        ({}, 5),
-        ({"filters": []}, 5),
+    @pytest.mark.parametrize(("query", "expecting"), [
+        (UserQueryPaged(), 5),
 
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="eq", value=123456003)]}, 1),
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="ne", value=123456003)]}, 4),
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="gt", value=123456003)]}, 2),
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="lt", value=123456003)]}, 2),
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="ge", value=123456003)]}, 3),
-        ({"filters": [_filters.NumQueryFilter(field="telegram_id", type="le", value=123456003)]}, 3),
+        (UserQueryPaged(role=UserRole.USER), 4),
+        (UserQueryPaged(role=UserRole.AGENT), 1),
+        (UserQueryPaged(role=UserRole.ADMINISTRATOR), 0),
 
-        ({"filters": [_filters.StrQueryFilter(field="first_name", type="eq", value="Ivan")]}, 2),
-        ({"filters": [_filters.StrQueryFilter(field="first_name", type="ne", value="Ivan")]}, 3),
-        ({"filters": [_filters.StrQueryFilter(field="user_name", type="like", value="Ivan")]}, 2),
+        (UserQueryPaged(role__in=set()), 0),
+        (UserQueryPaged(role__in={UserRole.USER, UserRole.ADMINISTRATOR}), 4),
+        (UserQueryPaged(role__in={UserRole.AGENT, UserRole.ADMINISTRATOR}), 1),
+        (UserQueryPaged(role__in={UserRole.USER, UserRole.AGENT}), 5),
+        (UserQueryPaged(role__in={UserRole.ADMINISTRATOR, UserRole.BLOCKED}), 0),
 
-        ({"filters": [_filters.ChoiceQueryFilter(field="role", type="is", value=UserRole.USER)]}, 4),
-        ({"filters": [_filters.ChoiceQueryFilter(field="role", type="is", value=UserRole.AGENT)]}, 1),
-        ({"filters": [_filters.ChoiceQueryFilter(field="role", type="isn", value=UserRole.AGENT)]}, 4),
+        (UserQueryPaged(search="Ivan"), 2),
+        (UserQueryPaged(search="je"), 2),
+        (UserQueryPaged(search="777"), 1),
+        (UserQueryPaged(search="Koothrappali"), 1),
 
-        ({"filters": [
-            _filters.DateTimeQueryFilter(field="created", type="lt", value=datetime.now(UTC) + timedelta(minutes=1)),
-        ]}, 5),
-        ({"filters": [
-            _filters.DateTimeQueryFilter(field="created", type="gt", value=datetime.now(UTC) + timedelta(minutes=1)),
-        ]}, 0),
-        ({"filters": [
-            _filters.DateTimeQueryFilter(
-                field="created", type="lt", value=datetime.now(pytz.timezone("Asia/Kolkata")) + timedelta(minutes=1),
-            ),
-        ]}, 5),
-        ({"filters": [
-            _filters.DateTimeQueryFilter(
-                field="created", type="lt", value=datetime.now(pytz.timezone("US/Eastern")) + timedelta(minutes=1),
-            ),
-        ]}, 5),
-
-        ({"filters": [_filters.IsNullQueryFilter(field="chat_id", type="is")]}, 1),
-        ({"filters": [_filters.IsNullQueryFilter(field="chat_id", type="isn")]}, 4),
-
-        ({"filters": [
-            _filters.InSetQueryFilter(field="first_name", type="in", value={"Ivan", "Sasha", "John"}),
-        ]}, 3),
-        ({"filters": [
-            _filters.InSetQueryFilter(field="first_name", type="nin", value={"Ivan", "Sasha", "John"}),
-        ]}, 2),
-        ({"filters": [
-            _filters.InSetQueryFilter(
-                field="role", type="in", value={UserRole.USER, UserRole.ADMINISTRATOR},
-            ),
-        ]}, 4),
-
-        ({"filters": [
-             _filters.StrQueryFilter(field="first_name", type="eq", value="Ivan"),
-             _filters.StrQueryFilter(field="last_name", type="eq", value="Ivanov"),
-        ]}, 1),
-
-        ({"filters": [
-             _filters.NumQueryFilter(field="telegram_id", type="eq", value=123456003),
-             _filters.StrQueryFilter(field="first_name", type="eq", value="Ivan"),
-             _filters.StrQueryFilter(field="last_name", type="eq", value="Koothrappali"),
-        ], "or_": True}, 4),
+        (UserQueryPaged(role=UserRole.USER, search="Ivan"), 1),
+        (UserQueryPaged(role__in={UserRole.USER, UserRole.AGENT}, search="Ivan"), 2),
     ])
     async def test_filters(
-            self, repo: UserRepo, args: dict[str, Any], expecting: int,
+            self, repo: UserRepo, query: UserQueryPaged, expecting: int,
     ) -> None:
-        items = (await repo.get_all(**args)).items
+        items = (await repo.get_many(query)).items
         assert isinstance(items, list)
         if len(items) > 0:
             for item in items:
                 assert isinstance(item, User)
         assert len(items) == expecting
 
-    @pytest.mark.parametrize(("args", "expecting"), [
-        ({"pagination": Pagination(page=1, per_page=2)}, (1, 2, 3, 2, 5)),
-        ({"pagination": Pagination(page=2, per_page=2)}, (2, 2, 3, 2, 5)),
-        ({"pagination": Pagination(page=3, per_page=2)}, (3, 2, 3, 1, 5)),
-        ({"pagination": Pagination(page=1, per_page=3)}, (1, 3, 2, 3, 5)),
-        ({"pagination": Pagination(page=2, per_page=3)}, (2, 3, 2, 2, 5)),
-        ({}, (None, None, None, 5, 5)),
+    @pytest.mark.parametrize(("query", "expecting"), [
+        (UserQueryPaged(page=1, per_page=2), (1, 2, 3, 2, 5)),
+        (UserQueryPaged(page=2, per_page=2), (2, 2, 3, 2, 5)),
+        (UserQueryPaged(page=3, per_page=2), (3, 2, 3, 1, 5)),
+        (UserQueryPaged(page=1, per_page=3), (1, 3, 2, 3, 5)),
+        (UserQueryPaged(page=2, per_page=3), (2, 3, 2, 2, 5)),
+        (UserQueryPaged(), (1, 10, 1, 5, 5)),
+        (UserQueryPaged(page=1), (1, 10, 1, 5, 5)),
+        (UserQueryPaged(page=100), (100, 10, 1, 0, 5)),
+        (UserQueryPaged(page=-1), (None, None, None, 0, 5)),
+        (UserQueryPaged(per_page=-1), (None, None, None, 0, 5)),
+        (UserQueryPaged(page=1, per_page=-1), (None, None, None, 0, 5)),
+        (UserQueryPaged(page=100, per_page=-1), (None, None, None, 0, 5)),
     ])
     async def test_pagination(
-            self, repo: UserRepo, args: dict[str, Any], expecting: tuple,
+            self, repo: UserRepo, query: UserQueryPaged, expecting: tuple,
     ) -> None:
-        result = await repo.get_all(**args)
+        result = await repo.get_many(query)
         assert result.page == expecting[0]
         assert result.per_page == expecting[1]
         assert result.total_pages == expecting[2]
@@ -189,30 +149,22 @@ class TestUserRepo:
         assert result.total_items == expecting[4]
 
 
-    @pytest.mark.parametrize(("args", "expecting"), [
-        ({"sorting": Sorting(order_by="telegram_id")},
-            (123456001, 123456005)),
-        ({"sorting": Sorting(order_by="telegram_id", sort="desc")},
-            (123456005, 123456001)),
-        ({"sorting": Sorting(order_by="chat_id")},
-            (123456786, None)),
-        ({"sorting": Sorting(order_by="chat_id", sort="desc")},
-            (None, 123456786)),
-        ({"sorting": Sorting(order_by="user_name")},
-            ("Ivan Ivanov", "raj3456.bangalore")),
-        ({"sorting": Sorting(order_by="user_name", sort="desc")},
-            ("raj3456.bangalore", "Ivan Ivanov")),
+    @pytest.mark.parametrize(("query", "expecting"), [
+        (UserQueryPaged(sort_by="telegram_id"), (123456001, 123456005)),
+        (UserQueryPaged(sort_by="telegram_id", sort="desc"), (123456005, 123456001)),
+        (UserQueryPaged(sort_by="chat_id"), (123456786, None)),
+        (UserQueryPaged(sort_by="chat_id", sort="desc"), (None, 123456786)),
+        (UserQueryPaged(sort_by="user_name"), ("Ivan Ivanov", "raj3456.bangalore")),
+        (UserQueryPaged(sort_by="user_name", sort="desc"), ("raj3456.bangalore", "Ivan Ivanov")),
     ])
-    async def test_sorting(self, repo: UserRepo, args: dict, expecting: tuple) -> None:
-        items = (await repo.get_all(**args)).items
-        sorting: Sorting = args["sorting"]
-        field = sorting.order_by
-        assert getattr(items[0], field) == expecting[0]
-        assert getattr(items[-1], field) == expecting[1]
+    async def test_sorting(self, repo: UserRepo, query: UserQueryPaged, expecting: tuple) -> None:
+        items = (await repo.get_many(query)).items
+        assert getattr(items[0], query.sort_by) == expecting[0]
+        assert getattr(items[-1], query.sort_by) == expecting[1]
 
 
     async def test_update(self, repo: UserRepo) -> None:
-        id_ = (await repo.get_all()).items[0].id
+        id_ = (await repo.get_many(UserQueryPaged())).items[0].id
         update = UserUpdate(
             user_name="Foo Bar",
             first_name="Foo",
@@ -229,10 +181,10 @@ class TestUserRepo:
 
 
     async def test_delete(self, repo: UserRepo) -> None:
-        initial = await repo.get_all()
+        initial = await repo.get_many(UserQueryPaged())
         id_ = initial.items[0].id
         result = await repo.delete(id_)
         assert result == id_
-        final = await repo.get_all()
+        final = await repo.get_many(UserQueryPaged())
         assert len(initial.items) - len(final.items) == 1
         assert await repo.delete(-1) is None

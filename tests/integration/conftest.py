@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from app.config import Settings
-from app.definitions import ENVFILE_PATH
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.config import Settings
+from src.definitions import ENVFILE_PATH
 
 from tests.utils.mocked_database import MockedDatabase
 

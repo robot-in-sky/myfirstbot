@@ -109,6 +109,6 @@ dmypy.json
 .pytype/
 cython_debug/
 
-### .gitignore
+### Custom
 env/*
 !env/*.example
