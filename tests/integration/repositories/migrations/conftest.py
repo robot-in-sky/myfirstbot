@@ -10,7 +10,7 @@ from tests.utils.migrations import get_alembic_config
 @pytest.fixture()
 def alembic_config(settings: Settings) -> Config:
     return get_alembic_config(
-        file_=APP_DIR.joinpath("repo/alembic.ini"),
+        file_=APP_DIR.joinpath("repositories/alembic.ini"),
         db_url=settings.db.url,
     )
 

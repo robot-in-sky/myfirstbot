@@ -3,8 +3,9 @@ from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from src.entities.choices import UserRole
+from src.entities.order import OrderQueryPaged, OrderQuery
 from src.entities.user import User
-from src.repo.utils import Database
+from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.buttons import MY_ORDERS, ORDERS
 from src.tgbot.callbacks import OrderFilterCallbackData, OrderSearchCallbackData, OrdersCallbackData
@@ -25,7 +26,7 @@ async def orders_button_handler(
     params = callback_data.model_dump(exclude_none=True)
     if message.text == MY_ORDERS or current_user.role < UserRole.AGENT:
         params["user_id"] = current_user.id
-    result = await OrderService(db, current_user).get_all(**params)
+    result = await OrderService(db, current_user).get_many(OrderQueryPaged(**params))
     await show_orders(result,
                       callback_data,
                       current_user=current_user,
@@ -43,7 +44,7 @@ async def orders_callback_handler(
     params = callback_data.model_dump(exclude_none=True)
     if current_user.role < UserRole.AGENT:
         params["user_id"] = current_user.id
-    result = await OrderService(db, current_user).get_all(**params)
+    result = await OrderService(db, current_user).get_many(OrderQueryPaged(**params))
     if isinstance(query.message, Message):
         if callback_data.page:
             await query.message.edit_reply_markup(
@@ -79,8 +80,8 @@ async def order_filter_callback_handler(
         )
         if current_user.role < UserRole.AGENT:
             params["user_id"] = current_user.id
-        count_by_status = await service.get_count_by_status(**params)
-        total_count = await service.get_count(**params)
+        count_by_status = await service.get_count_by_status(OrderQuery(**params))
+        total_count = await service.get_count(OrderQuery(**params))
         await show_order_filter(count_by_status,
                                 total_count,
                                 callback_data,

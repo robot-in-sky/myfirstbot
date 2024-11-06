@@ -7,12 +7,12 @@ from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import UserRole
-from src.entities.user import User, UserAdd, UserQuery, UserQueryPaged, UserUpdate
-from src.repo.base import AbstractRepo
-from src.repo.models import OrmUser
-from src.repo.utils import Database, exception_mapper
-from src.repo.utils.query_utils import (
+from src.entities.choices import OrderStatus
+from src.entities.order import Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
+from src.repositories.base import AbstractRepo
+from src.repositories.models import OrmOrder
+from src.repositories.utils import Database, exception_mapper
+from src.repositories.utils.query_utils import (
     apply_pagination,
     apply_search,
     apply_sorting,
@@ -22,80 +22,88 @@ from src.repo.utils.query_utils import (
 )
 
 
-class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
+class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
     def __init__(self, database: Database) -> None:
         self.db = database
-        self.search_fields = {"user_name", "first_name", "last_name"}
+        self.search_fields = {"label"}
+
 
     @exception_mapper
-    async def add(self, instance: UserAdd) -> User:
-        stmt = (insert(OrmUser).values(**instance.model_dump())
-                     .returning(OrmUser))
+    async def add(self, instance: OrderAdd) -> Order:
+        stmt = (insert(OrmOrder).values(**instance.model_dump())
+                 .returning(OrmOrder))
         async with self.db.get_session() as session:
             result = await session.scalar(stmt)
             await session.commit()
-            return User.model_validate(result)
+            return Order.model_validate(result)
 
-    async def get(self, id_: int) -> User | None:
-        stmt = select(OrmUser).where(OrmUser.id == id_)
+
+    async def get(self, id_: int) -> Order | None:
+        stmt = select(OrmOrder).where(OrmOrder.id == id_)
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
-                return User.model_validate(result)
+                return Order.model_validate(result)
             return None
 
-    async def get_by_telegram_id(self, telegram_id: int) -> User | None:
-        stmt = select(OrmUser).where(OrmUser.telegram_id == telegram_id)
-        async with self.db.get_session() as session:
-            result = await session.scalar(stmt)
-            return User.model_validate(result) if result else None
 
-    async def update(self, id_: int, instance: UserUpdate) -> User | None:
-        stmt = (update(OrmUser).where(OrmUser.id == id_)
+    async def update(self, id_: int, instance: OrderUpdate) -> Order | None:
+        stmt = (update(OrmOrder).where(OrmOrder.id == id_)
                  .values(**instance.model_dump(), updated=datetime.now(UTC))
-                 .returning(OrmUser))
+                 .returning(OrmOrder))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
                 await session.commit()
-                return User.model_validate(result)
+                return Order.model_validate(result)
             return None
+
 
     async def delete(self, id_: int) -> int | None:
-        stmt = delete(OrmUser).where(OrmUser.id == id_).returning(OrmUser.id)
+        stmt = delete(OrmOrder).where(OrmOrder.id == id_).returning(OrmOrder.id)
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
                 await session.commit()
                 return result
             return None
 
-    async def set_role(self, id_: int, role: UserRole) -> int | None:
-        stmt = (update(OrmUser).where(OrmUser.id == id_)
-                 .values(role=role, updated=datetime.now(UTC))
-                 .returning(OrmUser.id))
+
+    async def set_status(self, id_: int, status: OrderStatus) -> int | None:
+        stmt = (update(OrmOrder).where(OrmOrder.id == id_)
+                 .values(status=status, updated=datetime.now(UTC))
+                 .returning(OrmOrder.id))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
                 await session.commit()
                 return result
             return None
+
 
     """
-        role: UserRole | None = None
-        role__in: set[UserRole] | None = None
+        user_id: int | None = None
+        status: OrderStatus | None = None
+        status__in: set[OrderStatus] | None = None
         search: str | None = None
     """
     def _apply_filters(
             self,
-            stmt: Select[tuple[OrmUser]],
-            query: UserQuery,
-    ) -> Select[tuple[OrmUser]]:
+            stmt: Select[tuple[OrmOrder]],
+            query: OrderQuery,
+    ) -> Select[tuple[OrmOrder]]:
         clauses = []
-        if query.role is not None:
-            column = get_column(stmt, "role")
-            clauses.append(column == query.role)
-        if query.role__in is not None:
-            column = get_column(stmt, "role")
-            values = match_types(query.role__in, column)
+        if query.user_id is not None:
+            column = get_column(stmt, "user_id")
+            clauses.append(column == query.user_id)
+        if query.status is not None:
+            column = get_column(stmt, "status")
+            clauses.append(column == query.status)
+        if query.status__in is not None:
+            column = get_column(stmt, "status")
+            values = match_types(query.status__in, column)
             clauses.append(column.in_(values))
+        if query.status__not_in is not None:
+            column = get_column(stmt, "status")
+            values = match_types(query.status__not_in, column)
+            clauses.append(column.notin_(values))
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
@@ -104,8 +112,8 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         return stmt
 
 
-    async def get_many(self, query: UserQueryPaged) -> QueryResult[User]:
-        stmt = select(OrmUser)
+    async def get_many(self, query: OrderQueryPaged) -> QueryResult[Order]:
+        stmt = select(OrmOrder)
         stmt = self._apply_filters(stmt, query)
 
         async with self.db.get_session() as session:
@@ -119,13 +127,13 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             if query.page > 0 and query.per_page > 0 and total_items > 0:
                 stmt = apply_pagination(stmt, query.page, query.per_page)
                 orm_items = (await session.scalars(stmt)).all()
-                items = TypeAdapter(list[User]).validate_python(orm_items)
+                items = TypeAdapter(list[Order]).validate_python(orm_items)
 
                 page = query.page
                 per_page = query.per_page
                 total_pages = ceil(total_items / query.per_page)
 
-            return QueryResult[User](
+            return QueryResult[Order](
                 items=items,
                 page=page,
                 per_page=per_page,
@@ -133,23 +141,24 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 total_items=total_items,
             )
 
-    async def get_count(self, query: UserQuery) -> int:
-        stmt = select(OrmUser)
+    async def get_count(self, query: OrderQuery) -> int:
+        stmt = select(OrmOrder)
         stmt = self._apply_filters(stmt, query)
 
         async with self.db.get_session() as session:
             return await get_row_count(session, stmt)
 
-    async def get_count_by_role(self, query: UserQuery) -> list[QueryCountItem[UserRole]]:
-        column = OrmUser.role
+
+    async def get_count_by_status(self, query: OrderQuery) -> list[QueryCountItem[OrderStatus]]:
+        column = OrmOrder.status
         stmt = select(column, func.count(column))
-        query.role = None
-        query.role__in = None
+        query.status = None
+        query.status__in = None
         stmt = self._apply_filters(stmt, query)
         stmt = stmt.group_by(column).order_by(column)
 
         async with self.db.get_session() as session:
             result = (await session.execute(stmt)).all()
-            return [QueryCountItem[UserRole](
+            return [QueryCountItem[OrderStatus](
                 value=item[0], count=item[1],
             ) for item in result]

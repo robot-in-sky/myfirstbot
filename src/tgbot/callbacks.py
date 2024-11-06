@@ -6,7 +6,7 @@ from src.tgbot.definitions import PER_PAGE_DEFAULT
 
 class UsersCallbackData(CallbackData, prefix="users"):
     role: UserRole | None = None
-    s: str | None = None
+    search: str | None = None
     page: int | None = None
     per_page: int = PER_PAGE_DEFAULT
 
@@ -27,7 +27,7 @@ class UserCallbackData(CallbackData, prefix="user"):
 class OrdersCallbackData(CallbackData, prefix="orders"):
     user_id: int | None = None
     status: OrderStatus | None = None
-    s: str | None = None
+    search: str | None = None
     page: int | None = None
     per_page: int = PER_PAGE_DEFAULT
 

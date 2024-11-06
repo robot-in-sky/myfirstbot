@@ -1,3 +1,3 @@
-from .auth import AuthService
-from .order import OrderService
-from .user import UserService
+from .auth_service import AuthService
+from .order_service import OrderService
+from .user_service import UserService

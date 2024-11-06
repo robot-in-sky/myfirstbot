@@ -3,10 +3,10 @@ from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from src.entities.choices import UserRole
-from src.entities.order import OrderAdd
+from src.entities.order import OrderAdd, OrderQueryPaged
 from src.entities.user import User
-from src.repo.utils import Database
-from src.services import OrderService, UserService
+from src.repositories.utils import Database
+from src.services import OrderService
 from src.tgbot import buttons
 from src.tgbot.callbacks import OrderCallbackData, OrdersCallbackData
 from src.tgbot.scenes import EditOrderScene, NewOrderScene
@@ -131,7 +131,7 @@ async def order_actions_callback_handler(
             params = callback_data.model_dump(exclude_none=True)
             if current_user.role < UserRole.AGENT:
                 params["user_id"] = current_user.id
-            result = await OrderService(db, current_user).get_all(**params)
+            result = await OrderService(db, current_user).get_many(OrderQueryPaged(**params))
             await show_orders(result,
                               callback_data,
                               notice,

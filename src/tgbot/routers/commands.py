@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.entities.choices import UserRole
 from src.entities.user import User
-from src.repo.utils import Database
+from src.repositories.utils import Database
 from src.services import UserService
 from src.tgbot.views.menu import show_menu, signin_menu_kb
 from src.tgbot.views.user.user import user_role

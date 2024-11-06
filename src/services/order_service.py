@@ -1,13 +1,12 @@
 import logging
 
+from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus, UserRole
-from src.entities.order import Order, OrderAdd, OrderUpdate
-from src.entities.query import QueryCountItem, Pagination, QueryResult, Search, Sorting
-from src.entities.query.filters import ChoiceQueryFilter, NumQueryFilter, QueryFilter
+from src.entities.order import Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
 from src.entities.user import User
 from src.exceptions import AccessDeniedError, InvalidStateError, NotFoundError
-from src.repo.order_repo import OrderRepo
-from src.repo.utils import Database
+from src.repositories.order_repo import OrderRepo
+from src.repositories.utils import Database
 from src.services.utils.access_level import access_level
 
 
@@ -15,79 +14,42 @@ class OrderService:
 
     def __init__(self, database: Database, current_user: User) -> None:
         self.order_repo = OrderRepo(database)
-        self.search_fields = {"label"}
         self.current_user = current_user
 
     def _log(self, order: Order, message: str) -> None:
         logging.info(f"Order #{order.id} [@{self.current_user.user_name}]: {message}")
 
     @access_level(required=UserRole.USER)
-    async def get_all(  # noqa: PLR0913
-            self,
-            user_id: int | None = None,
-            status: OrderStatus | None = None,
-            s: str | None = None,
-            page: int = 1,
-            per_page: int = 10,
-    ) -> QueryResult[Order]:
-        filters: list[QueryFilter] = []
-        if user_id:
-            if self.current_user.role < UserRole.AGENT and user_id != self.current_user.id:
-                raise AccessDeniedError
-            filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
-        if status:
-            if self.current_user.role < UserRole.AGENT and status == OrderStatus.TRASH:
-                raise AccessDeniedError
-            filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
-        else:
-            filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        return await self.order_repo.get_many(
-            filters=filters,
-            search=Search(s=s, fields=self.search_fields) if s else None,
-            pagination=Pagination(page=page, per_page=per_page),
-            sorting=Sorting(order_by="created", sort="desc"),
-        )
-
-    @access_level(required=UserRole.USER)
-    async def get_count(
-            self,
-            user_id: int | None = None,
-            status: OrderStatus | None = None,
-            s: str | None = None,
-    ) -> int:
-        filters: list[QueryFilter] = []
-        if user_id:
-            if self.current_user.role < UserRole.AGENT and user_id != self.current_user.id:
-                raise AccessDeniedError
-            filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
-        if status:
-            if self.current_user.role < UserRole.AGENT and status == OrderStatus.TRASH:
-                raise AccessDeniedError
-            filters.append(ChoiceQueryFilter(field="status", type="is", value=status))
-        else:
-            filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        return await self.order_repo.get_count(
-            filters=filters,
-            search=Search(s=s, fields=self.search_fields) if s else None,
-        )
-
-    @access_level(required=UserRole.USER)
-    async def get_count_by_status(
-            self,
-            user_id: int | None = None,
-            s: str | None = None,
-    ) -> list[QueryCountItem[OrderStatus]]:
-        filters: list[QueryFilter] = []
-        if user_id:
-            if self.current_user.role < UserRole.AGENT and user_id != self.current_user.id:
-                raise AccessDeniedError
-            filters.append(NumQueryFilter(field="user_id", type="eq", value=user_id))
+    async def get_many(self, q: OrderQueryPaged) -> QueryResult[Order]:
         if self.current_user.role < UserRole.AGENT:
-            filters.append(ChoiceQueryFilter(field="status", type="isn", value=OrderStatus.TRASH))
-        return await self.order_repo.get_count_by_status(
-            filters=filters,
-            search=Search(s=s, fields=self.search_fields) if s else None,
-        )
+            if q.user_id != self.current_user.id:
+                raise AccessDeniedError
+            if q.status == OrderStatus.TRASH:
+                raise AccessDeniedError
+            q.status__not_in = q.status__not_in or set()
+            q.status__not_in.add(OrderStatus.TRASH)
+        return await self.order_repo.get_many(q)
+
+    @access_level(required=UserRole.USER)
+    async def get_count(self, q: OrderQuery) -> int:
+        if self.current_user.role < UserRole.AGENT:
+            if q.user_id != self.current_user.id:
+                raise AccessDeniedError
+            if q.status == OrderStatus.TRASH:
+                raise AccessDeniedError
+            q.status__not_in |= {OrderStatus.TRASH}
+        return await self.order_repo.get_count(q)
+
+    @access_level(required=UserRole.USER)
+    async def get_count_by_status(self, q: OrderQuery) -> list[QueryCountItem[OrderStatus]]:
+        q.status = None
+        q.status__in = None
+        q.status__not_in = None
+        if self.current_user.role < UserRole.AGENT:
+            if q.user_id != self.current_user.id:
+                raise AccessDeniedError
+            q.status__not_in |= {OrderStatus.TRASH}
+        return await self.order_repo.get_count_by_status(q)
 
     @access_level(required=UserRole.USER)
     async def new(self, instance: OrderAdd) -> Order:

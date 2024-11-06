@@ -5,7 +5,7 @@ import pytest_asyncio
 from src.entities.choices.user_role import UserRole
 from src.entities.user import User, UserAdd, UserQueryPaged, UserUpdate
 from src.exceptions import UniqueViolationError
-from src.repo import UserRepo
+from src.repositories import UserRepo
 
 from tests.utils.mocked_database import MockedDatabase
 

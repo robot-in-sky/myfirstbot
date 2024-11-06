@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.entities.order import OrderAdd
 from src.entities.user import User
-from src.repo.utils import Database
+from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.scenes.order import ORDER_FIELDS
 from src.tgbot.utils.fields import validate_field_input

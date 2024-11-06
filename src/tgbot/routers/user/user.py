@@ -2,7 +2,8 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from src.entities import User
-from src.repo.utils import Database
+from src.entities.order import OrderQuery
+from src.repositories.utils import Database
 from src.services import OrderService, UserService
 from src.tgbot.callbacks import UserCallbackData
 from src.tgbot.filters import IsAdmin
@@ -19,7 +20,7 @@ async def user_callback_handler(
         current_user: User,
 ) -> None:
     user = await UserService(db, current_user).get(callback_data.id)
-    order_count = await OrderService(db, current_user).get_count(user.id)
+    order_count = await OrderService(db, current_user).get_count(OrderQuery(user_id=user.id))
     await query.answer()
     if isinstance(query.message, Message):
         await show_user(user,

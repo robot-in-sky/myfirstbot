@@ -2,8 +2,8 @@ from collections.abc import Sequence
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
+from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import UserRole
-from src.entities.query import QueryCountItem, QueryResult
 from src.entities.user import User
 from src.tgbot.buttons import (
     BACK,
@@ -52,8 +52,8 @@ async def show_user_filter(
                     callback_data=UsersCallbackData(**params).pack())]]
     reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
     text = "Пользователи\n"
-    if callback_data.s:
-        text += f"Поиск: {callback_data.s}\n"
+    if callback_data.search:
+        text += f"Поиск: {callback_data.search}\n"
     text += "Фильтр: выберите роль"
     if replace_text:
         await message.edit_text(text, reply_markup=reply_markup)
@@ -72,8 +72,8 @@ async def show_users(
     reply_markup = users_result_kb(result, callback_data)
     text = "Пользователи\n"
     if len(result.items) > 0:
-        if callback_data.s:
-            text += f"Поиск: {callback_data.s}\n"
+        if callback_data.search:
+            text += f"Поиск: {callback_data.search}\n"
         if callback_data.role:
             text += f"Фильтр: {user_role(callback_data.role)}\n"
         if replace_text:
@@ -135,11 +135,11 @@ def footer_buttons(callback_data: UsersCallbackData) -> list[InlineKeyboardButto
     filter_text = FILTER if callback_data.role is None else FILTER_CHECKED
     keyboard += [InlineKeyboardButton(text=filter_text, callback_data=filter_cb)]
 
-    if callback_data.s is None:
+    if callback_data.search is None:
         search_cb = UserSearchCallbackData(**params).pack()
         search_text = SEARCH
     else:
-        _params = callback_data.model_dump(exclude={"page", "s"})
+        _params = callback_data.model_dump(exclude={"page", "search"})
         search_cb = UsersCallbackData(**_params).pack()
         search_text = SEARCH_RESET
     keyboard += [InlineKeyboardButton(text=search_text, callback_data=search_cb)]

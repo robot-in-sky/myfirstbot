@@ -2,9 +2,9 @@ from collections.abc import Sequence
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
+from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus
 from src.entities.order import Order
-from src.entities.query import QueryCountItem, QueryResult
 from src.entities.user import User
 from src.tgbot.buttons import (
     BACK,
@@ -63,8 +63,8 @@ async def show_order_filter(  # noqa: PLR0913
                     callback_data=OrdersCallbackData(**params).pack())]]
     reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
     text = get_orders_title(callback_data.user_id, current_user) + "\n"
-    if callback_data.s:
-        text += f"Поиск: {callback_data.s}\n"
+    if callback_data.search:
+        text += f"Поиск: {callback_data.search}\n"
     text += "Фильтр: выберите статус"
     if replace_text:
         await message.edit_text(text, reply_markup=reply_markup)
@@ -88,8 +88,8 @@ async def show_orders(  # noqa: PLR0913
         text += f"ℹ <i>{notice}</i>\n\n"
     text += get_orders_title(callback_data.user_id, current_user) + "\n"
     if len(result.items) > 0:
-        if callback_data.s:
-            text += f"Поиск: {callback_data.s}\n"
+        if callback_data.search:
+            text += f"Поиск: {callback_data.search}\n"
         if callback_data.status:
             text += f"Фильтр: {order_status(callback_data.status)}\n"
         if replace_text:
@@ -155,11 +155,11 @@ def footer_buttons(callback_data: OrdersCallbackData) -> list[InlineKeyboardButt
     filter_text = FILTER if callback_data.status is None else FILTER_CHECKED
     keyboard += [InlineKeyboardButton(text=filter_text, callback_data=filter_cb)]
 
-    if callback_data.s is None:
+    if callback_data.search is None:
         search_cb = OrderSearchCallbackData(**params).pack()
         search_text = SEARCH
     else:
-        _params = callback_data.model_dump(exclude={"page", "s"})
+        _params = callback_data.model_dump(exclude={"page", "search"})
         search_cb = OrdersCallbackData(**_params).pack()
         search_text = SEARCH_RESET
     keyboard += [InlineKeyboardButton(text=search_text, callback_data=search_cb)]

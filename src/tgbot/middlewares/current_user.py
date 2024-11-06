@@ -5,10 +5,10 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
 from src.entities.user import UserAdd
-from src.services.auth import AuthService
+from src.services.auth_service import AuthService
 
 if TYPE_CHECKING:
-    from src.repo.utils.database import Database
+    from src.repositories.utils.database import Database
 
 
 class CurrentUserMiddleware(BaseMiddleware):

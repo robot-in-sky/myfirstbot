@@ -35,11 +35,12 @@ class OrderQuery(Base):
     user_id: int | None = None
     status: OrderStatus | None = None
     status__in: set[OrderStatus] | None = None
+    status__not_in: set[OrderStatus] | None = None
     search: str | None = None
 
 
 class OrderQueryPaged(OrderQuery):
-    sort_by: str | None = None
-    sort: Literal["asc", "desc"] | None = "asc"
+    sort_by: str | None = "created"
+    sort: Literal["asc", "desc"] | None = "desc"
     page: int = 1
     per_page: int = 10

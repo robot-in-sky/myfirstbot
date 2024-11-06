@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from src.entities.order import OrderUpdate
 from src.entities.user import User
-from src.repo.utils import Database
+from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.callbacks import EditorCallbackData, OrderCallbackData
 from src.tgbot.scenes.order import ORDER_FIELDS

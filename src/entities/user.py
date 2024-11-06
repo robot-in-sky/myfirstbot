@@ -41,7 +41,7 @@ class UserQuery(Base):
 
 
 class UserQueryPaged(UserQuery):
-    sort_by: str | None = None
-    sort: Literal["asc", "desc"] = "asc"
+    sort_by: str | None = "created"
+    sort: Literal["asc", "desc"] | None = "desc"
     page: int = 1
     per_page: int = 10

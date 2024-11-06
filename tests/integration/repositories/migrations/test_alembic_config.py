@@ -18,7 +18,7 @@ def test_alembic_script_location(alembic_config: Config) -> None:
 
 
 def test_alembic_sqlalchemy_url(alembic_config: Config) -> None:
-    sqlalchemy_url = alembic_config.get_main_option("sqlalchemy_url")
+    sqlalchemy_url = alembic_config.get_main_option("sqlalchemy.url")
     assert sqlalchemy_url
     assert make_url(sqlalchemy_url)
 

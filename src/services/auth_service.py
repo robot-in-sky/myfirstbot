@@ -3,8 +3,8 @@ import logging
 from src.config import settings
 from src.entities.choices.user_role import UserRole
 from src.entities.user import User, UserAdd, UserUpdate
-from src.repo import UserRepo
-from src.repo.utils import Database
+from src.repositories import UserRepo
+from src.repositories.utils import Database
 
 
 class AuthService:

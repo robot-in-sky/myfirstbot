@@ -9,7 +9,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio.client import Redis
 
 from src.config import settings
-from src.repo.utils.database import Database
+from src.repositories.utils.database import Database
 from src.tgbot.dispatcher import get_dispatcher
 
 bot = Bot(token=settings.bot.token,

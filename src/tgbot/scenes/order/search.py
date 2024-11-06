@@ -4,8 +4,9 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, ForceReply, Message
 
 from src.entities.choices import OrderStatus, UserRole
+from src.entities.order import OrderQueryPaged
 from src.entities.user import User
-from src.repo.utils import Database
+from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.callbacks import OrderSearchCallbackData, OrdersCallbackData
 from src.tgbot.views.order.orders import show_orders
@@ -44,7 +45,7 @@ class SearchOrderScene(Scene, state="search_order"):
             params["user_id"] = current_user.id
         if params.get("status"):
             params["status"] = OrderStatus(params["status"])
-        result = await OrderService(db, current_user).get_all(**params)
+        result = await OrderService(db, current_user).get_many(OrderQueryPaged(**params))
         callback_data = OrdersCallbackData(**params)
         await message.chat.delete_message(data["message_id"])
         await show_orders(result,
@@ -57,6 +58,6 @@ class SearchOrderScene(Scene, state="search_order"):
     async def process_input(self, message: Message, state: FSMContext) -> None:
         params = (await state.get_data()).get("params", {})
         if message.text:
-            params["s"] = message.text
+            params["search"] = message.text
             await state.update_data(params=params)
             await self.wizard.exit()

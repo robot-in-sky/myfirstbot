@@ -3,8 +3,8 @@ from aiogram.filters import and_f
 from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
-from src.entities.user import User
-from src.repo.utils import Database
+from src.entities.user import User, UserQuery, UserQueryPaged
+from src.repositories.utils import Database
 from src.services import UserService
 from src.tgbot.buttons import USERS
 from src.tgbot.callbacks import UserFilterCallbackData, UserSearchCallbackData, UsersCallbackData
@@ -21,7 +21,7 @@ async def users_button_handler(
         message: Message, db: Database, current_user: User) -> None:
     callback_data = UsersCallbackData()
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(db, current_user).get_all(**params)
+    result = await UserService(db, current_user).get_many(UserQueryPaged(**params))
     await show_users(result,
                      callback_data,
                      message=message)
@@ -35,7 +35,7 @@ async def users_callback_handler(
         current_user: User,
 ) -> None:
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(db, current_user).get_all(**params)
+    result = await UserService(db, current_user).get_many(UserQueryPaged(**params))
     await query.answer()
     if isinstance(query.message, Message):
         if callback_data.page:
@@ -68,8 +68,8 @@ async def user_filter_callback_handler(
             exclude_none=True,
             exclude={"role", "page", "per_page"},
         )
-        count_by_status = await service.get_count_by_role(**params)
-        total_count = await service.get_count(**params)
+        count_by_status = await service.get_count_by_role(UserQuery(**params))
+        total_count = await service.get_count(UserQuery(**params))
         await show_user_filter(count_by_status,
                                total_count,
                                callback_data,

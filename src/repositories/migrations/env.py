@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.repo.models import OrmBase
+from src.repositories.models import OrmBase
 from src.config import settings
 
 # This line is needed to IDE doesn't delete first import line.

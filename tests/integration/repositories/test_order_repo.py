@@ -6,7 +6,7 @@ from src.entities.choices.order_status import OrderStatus
 from src.entities.order import Order, OrderAdd, OrderQueryPaged, OrderUpdate
 from src.entities.user import User, UserAdd
 from src.exceptions import ForeignKeyViolationError
-from src.repo import OrderRepo, UserRepo
+from src.repositories import OrderRepo, UserRepo
 
 from tests.utils.mocked_database import MockedDatabase
 

@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.entities.choices import OrderStatus
-from src.repo.models import OrmBase
+from src.repositories.models import OrmBase
 
 
 class OrmOrder(OrmBase):
