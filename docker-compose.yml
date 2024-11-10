@@ -28,6 +28,21 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: pguser
+      DB_PASSWORD: 1qazxsw2
+      DB_DATABASE: myfirstbot
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DATABASE: 0
+      REDIS_USERNAME: default
+      REDIS_PASSWORD: 1qazxsw2
+      BOT_TOKEN: ***REMOVED***
+      DEBUG: 0
+      LOG_LEVEL: INFO
+      DEFAULT_ADMINS: "[462658059]"
     depends_on:
       - postgres
       - redis
