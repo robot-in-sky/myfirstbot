@@ -1,24 +1,37 @@
-version: '3.8'
+version: '3.3'
 volumes:
-  pgdata:
-  redisdata:
+  pgdb-data:
+  redis-data:
 services:
-  postgres:
+  pgdb:
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdb-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    ports:
+      - '5050:5050'
   redis:
     image: redis:7-alpine
-    restart: always
+    restart: unless-stopped
     volumes:
-      - redisdata:/data
+      - redis-data:/data
+      - redis-conf:/usr/local/etc/redis/redis.conf
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
@@ -44,7 +57,7 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       DEBUG: 0
       LOG_LEVEL: INFO
-      DEFAULT_ADMINS: "[462658059]"
+      DEFAULT_ADMINS: ${DEFAULT_ADMINS}
     depends_on:
-      - postgres
+      - pgdb
       - redis
