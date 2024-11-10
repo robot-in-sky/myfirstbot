@@ -9,9 +9,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: 1qazxsw2
-      POSTGRES_DB: myfirstbot
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
   redis:
@@ -31,15 +31,15 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: pguser
-      DB_PASSWORD: 1qazxsw2
-      DB_DATABASE: myfirstbot
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_DATABASE: 0
-      REDIS_USERNAME: default
-      REDIS_PASSWORD: 1qazxsw2
-      BOT_TOKEN: 8197893079:AAGRBX5-6Jc81_qL8RRBfNEz240mBFaihS8
+      REDIS_DATABASE: ${REDIS_DATABASE}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
       DEBUG: 0
       LOG_LEVEL: INFO
       DEFAULT_ADMINS: "[462658059]"
