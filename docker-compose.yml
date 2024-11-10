@@ -1,8 +1,9 @@
 version: '3.8'
 volumes:
   pgdb-data:
-  redis-data:
   pgadmin-data:
+  redis-data:
+  redis-conf:
 services:
   pgdb:
     image: postgres:15-alpine
