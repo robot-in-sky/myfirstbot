@@ -27,7 +27,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     restart: unless-stopped
     ports:
-      - '5050:5050'
+      - "5050:5050"
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -46,7 +46,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      DB_HOST: postgres
+      DB_HOST: pgdb
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
