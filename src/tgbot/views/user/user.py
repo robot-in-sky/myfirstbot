@@ -50,8 +50,8 @@ def user_summary(user: User) -> str:
         f"<b>Telegram ID:</b> {user.telegram_id}",
         f"<b>Chat ID:</b> {user.chat_id or '-'}",
         "",
-        f"Первый вход: {user.created.strftime(DATE_TIME_FORMAT)}",
-        f"Изменён: {user.updated.strftime(DATE_TIME_FORMAT)}",
+        f"Первый вход: {user.created_at.strftime(DATE_TIME_FORMAT)}",
+        f"Изменён: {user.updated_at.strftime(DATE_TIME_FORMAT)}",
     ]
     return "\n".join(lines)
 

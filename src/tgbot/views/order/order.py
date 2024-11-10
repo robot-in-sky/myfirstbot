@@ -50,8 +50,8 @@ def order_summary(order: Order) -> str:
         f"    <b>Количество:</b> {order.qty}    ",
         "",
         f"Пользователь: @{order.user.user_name}",
-        f"Создан: {order.created.strftime(DATE_TIME_FORMAT)}",
-        f"Изменен: {order.updated.strftime(DATE_TIME_FORMAT)}",
+        f"Создан: {order.created_at.strftime(DATE_TIME_FORMAT)}",
+        f"Изменен: {order.updated_at.strftime(DATE_TIME_FORMAT)}",
     ]
     return "\n".join(lines)
 
@@ -60,7 +60,7 @@ def order_actions_kb(
         order: Order,
         *,
         current_user: User,
-        to_menu: bool = False
+        to_menu: bool = False,
 ) -> InlineKeyboardMarkup:
 
     def action_button(text: str, action: str) -> InlineKeyboardButton:
