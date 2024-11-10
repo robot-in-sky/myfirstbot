@@ -1,7 +1,8 @@
-version: '3.3'
+version: '3.8'
 volumes:
   pgdb-data:
   redis-data:
+  pgadmin-data:
 services:
   pgdb:
     image: postgres:15-alpine
