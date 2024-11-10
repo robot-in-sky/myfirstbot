@@ -20,9 +20,9 @@ services:
     volumes:
       - redisdata:/data
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_PORT=6379
-      - REDIS_DATABASES=8
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+      REDIS_DATABASES: 8
     ports:
       - "6379:6379"
   bot:
