@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import PositiveInt
-
 from src.entities.base import Base
 from src.entities.choices import UserRole
 
@@ -23,8 +21,8 @@ class User(Base):
     last_name: str | None = None
     chat_id: int | None = None
     role: UserRole
-    created: datetime
-    updated: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
 class UserUpdate(Base):
@@ -41,7 +39,10 @@ class UserQuery(Base):
 
 
 class UserQueryPaged(UserQuery):
-    sort_by: str | None = "created"
+    sort_by: str | None = "created_at"
     sort: Literal["asc", "desc"] | None = "desc"
     page: int = 1
     per_page: int = 10
+
+
+USER_SEARCH_BY = {"user_name", "first_name", "last_name"}

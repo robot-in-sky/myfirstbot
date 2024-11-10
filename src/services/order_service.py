@@ -37,7 +37,8 @@ class OrderService:
                 raise AccessDeniedError
             if q.status == OrderStatus.TRASH:
                 raise AccessDeniedError
-            q.status__not_in |= {OrderStatus.TRASH}
+            q.status__not_in = q.status__not_in or set()
+            q.status__not_in.add(OrderStatus.TRASH)
         return await self.order_repo.get_count(q)
 
     @access_level(required=UserRole.USER)
@@ -48,7 +49,8 @@ class OrderService:
         if self.current_user.role < UserRole.AGENT:
             if q.user_id != self.current_user.id:
                 raise AccessDeniedError
-            q.status__not_in |= {OrderStatus.TRASH}
+            q.status__not_in = q.status__not_in or set()
+            q.status__not_in.add(OrderStatus.TRASH)
         return await self.order_repo.get_count_by_status(q)
 
     @access_level(required=UserRole.USER)

@@ -21,8 +21,8 @@ class Order(Base):
     size: int
     qty: int
     status: OrderStatus
-    created: datetime
-    updated: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
 class OrderUpdate(Base):
@@ -40,7 +40,10 @@ class OrderQuery(Base):
 
 
 class OrderQueryPaged(OrderQuery):
-    sort_by: str | None = "created"
+    sort_by: str | None = "created_at"
     sort: Literal["asc", "desc"] | None = "desc"
     page: int = 1
     per_page: int = 10
+
+
+ORDER_SEARCH_BY = {"label"}

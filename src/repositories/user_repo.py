@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import UserRole
-from src.entities.user import User, UserAdd, UserQuery, UserQueryPaged, UserUpdate
+from src.entities.user import USER_SEARCH_BY, User, UserAdd, UserQuery, UserQueryPaged, UserUpdate
 from src.repositories.base import AbstractRepo
 from src.repositories.models import OrmUser
 from src.repositories.utils import Database, exception_mapper
@@ -26,7 +26,6 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
 
     def __init__(self, database: Database) -> None:
         self.db = database
-        self.search_fields = {"user_name", "first_name", "last_name"}
 
     @exception_mapper
     async def add(self, instance: UserAdd) -> User:
@@ -52,7 +51,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
 
     async def update(self, id_: int, instance: UserUpdate) -> User | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
-                 .values(**instance.model_dump(), updated=datetime.now(UTC))
+                 .values(**instance.model_dump(), updated_at=datetime.now(UTC))
                  .returning(OrmUser))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -70,7 +69,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
 
     async def set_role(self, id_: int, role: UserRole) -> int | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
-                 .values(role=role, updated=datetime.now(UTC))
+                 .values(role=role, updated_at=datetime.now(UTC))
                  .returning(OrmUser.id))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -83,8 +82,8 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         role__in: set[UserRole] | None = None
         search: str | None = None
     """
+    @staticmethod
     def _apply_filters(
-            self,
             stmt: Select[tuple[OrmUser]],
             query: UserQuery,
     ) -> Select[tuple[OrmUser]]:
@@ -99,7 +98,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, self.search_fields)
+            stmt = apply_search(stmt, query.search, USER_SEARCH_BY)
 
         return stmt
 

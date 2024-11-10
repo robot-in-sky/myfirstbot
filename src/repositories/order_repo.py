@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus
-from src.entities.order import Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
+from src.entities.order import ORDER_SEARCH_BY, Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
 from src.repositories.base import AbstractRepo
 from src.repositories.models import OrmOrder
 from src.repositories.utils import Database, exception_mapper
@@ -26,7 +26,6 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
     def __init__(self, database: Database) -> None:
         self.db = database
-        self.search_fields = {"label"}
 
 
     @exception_mapper
@@ -49,7 +48,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
     async def update(self, id_: int, instance: OrderUpdate) -> Order | None:
         stmt = (update(OrmOrder).where(OrmOrder.id == id_)
-                 .values(**instance.model_dump(), updated=datetime.now(UTC))
+                 .values(**instance.model_dump(), updated_at=datetime.now(UTC))
                  .returning(OrmOrder))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -69,7 +68,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
     async def set_status(self, id_: int, status: OrderStatus) -> int | None:
         stmt = (update(OrmOrder).where(OrmOrder.id == id_)
-                 .values(status=status, updated=datetime.now(UTC))
+                 .values(status=status, updated_at=datetime.now(UTC))
                  .returning(OrmOrder.id))
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -84,8 +83,8 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
         status__in: set[OrderStatus] | None = None
         search: str | None = None
     """
+    @staticmethod
     def _apply_filters(
-            self,
             stmt: Select[tuple[OrmOrder]],
             query: OrderQuery,
     ) -> Select[tuple[OrmOrder]]:
@@ -107,7 +106,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, self.search_fields)
+            stmt = apply_search(stmt, query.search, ORDER_SEARCH_BY)
 
         return stmt
 

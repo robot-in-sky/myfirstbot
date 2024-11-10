@@ -18,5 +18,5 @@ class OrmUser(OrmBase):
     last_name: Mapped[str] = mapped_column(Text, nullable=True)
     chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     role: Mapped["UserRole"] = mapped_column(Enum(UserRole), default=UserRole.USER)
-    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
-    updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
