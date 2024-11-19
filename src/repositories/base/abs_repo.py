@@ -4,15 +4,15 @@ from typing import Generic, TypeVar
 from src.entities.base import Base, QueryResult
 
 _TEntity = TypeVar("_TEntity", bound=Base)
-_TEntityCreate = TypeVar("_TEntityCreate", bound=Base)
+_TEntityAdd = TypeVar("_TEntityAdd", bound=Base)
 _TEntityUpdate = TypeVar("_TEntityUpdate", bound=Base)
 _TEntityQueryPaged = TypeVar("_TEntityQueryPaged", bound=Base)
 
 
-class AbstractRepo(Generic[_TEntity, _TEntityCreate, _TEntityUpdate]):
+class AbstractRepo(Generic[_TEntity, _TEntityAdd, _TEntityUpdate]):
 
     @abstractmethod
-    async def add(self, instance: _TEntityCreate) -> _TEntity:
+    async def add(self, instance: _TEntityAdd) -> _TEntity:
         ...
 
     @abstractmethod
