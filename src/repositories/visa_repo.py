@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import VisaStatus
 from src.entities.visa import (
-    VISA_FORM_SEARCH_BY,
+    VISA_SEARCH_BY,
     Visa,
     VisaAdd,
     VisaQuery,
@@ -113,7 +113,7 @@ class VisaRepo(AbstractRepo[Visa, VisaAdd, VisaUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, VISA_FORM_SEARCH_BY)
+            stmt = apply_search(stmt, query.search, VISA_SEARCH_BY)
 
         return stmt
 
