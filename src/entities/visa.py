@@ -92,4 +92,4 @@ class VisaQueryPaged(VisaQuery):
     per_page: int = 10
 
 
-VISA_FORM_SEARCH_BY = {"surname", "given_name", "passport_no"}
+VISA_SEARCH_BY = {"surname", "given_name", "passport_no"}
