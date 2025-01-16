@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.config import DatabaseSettings
+from .database_settings import DatabaseSettings
 
 
-class Database:
+class DatabaseClient:
 
     def __init__(self, settings: DatabaseSettings) -> None:
         self.engine = create_async_engine(

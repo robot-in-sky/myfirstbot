@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 
 from src.entities.choices import OrderStatus, UserRole
-from src.tgbot.definitions import PER_PAGE_DEFAULT
+from src.tgbot.views.const import PER_PAGE_DEFAULT
 
 
 class UsersCallbackData(CallbackData, prefix="users"):

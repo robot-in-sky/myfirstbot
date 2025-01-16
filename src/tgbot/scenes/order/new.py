@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
+from src.deps import Dependencies
 from src.entities.order import OrderAdd
 from src.entities.user import User
-from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.scenes.order import ORDER_FIELDS
 from src.tgbot.utils.fields import validate_field_input
@@ -45,12 +45,12 @@ class NewOrderScene(Scene, state="new_order"):
             self,
             message: Message,
             state: FSMContext,
-            db: Database,
+            deps: Dependencies,
             current_user: User,
     ) -> None:
         order_data = (await state.get_data()).get("order", {})
         order_data["user_id"] = current_user.id
-        order = await OrderService(db, current_user).new(OrderAdd(**order_data))
+        order = await OrderService(deps, current_user).new(OrderAdd(**order_data))
         await show_order(order,"Заказ успешно создан",
                          current_user=current_user,
                          message=message,

@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.tgbot.buttons import CANCEL, OK
+from src.tgbot.views.buttons import CANCEL, OK
 
 
 def ok_cancel_kb(ok_cb: CallbackData, cancel_cb: CallbackData) -> InlineKeyboardMarkup:

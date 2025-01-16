@@ -5,9 +5,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
+from src.deps import Dependencies
 from src.entities.order import OrderUpdate
 from src.entities.user import User
-from src.repositories.utils import Database
 from src.services import OrderService
 from src.tgbot.callbacks import EditorCallbackData, OrderCallbackData
 from src.tgbot.scenes.order import ORDER_FIELDS
@@ -40,13 +40,13 @@ class EditOrderScene(Scene, state="edit_order"):
             self,
             query: CallbackQuery,
             state: FSMContext,
-            db: Database,
+            deps: Dependencies,
             current_user: User,
     ) -> None:
         if query.data is None:
             return
         order_id = OrderCallbackData.unpack(query.data).id
-        order_data = (await OrderService(db, current_user).get(order_id)).model_dump()
+        order_data = (await OrderService(current_user, deps).get(order_id)).model_dump()
         field_ids = ["id"] + [f.id for f in ORDER_FIELDS]
         order_data = {id_: order_data[id_] for id_ in field_ids}
         idx = 0
@@ -69,7 +69,7 @@ class EditOrderScene(Scene, state="edit_order"):
             query: CallbackQuery,
             callback_data: OrderCallbackData,
             state: FSMContext,
-            db: Database,
+            deps: Dependencies,
             current_user: User,
     ) -> None:
         data = await state.get_data()
@@ -104,7 +104,7 @@ class EditOrderScene(Scene, state="edit_order"):
                         await state.update_data(order_updated=order_data)
 
                 case "save" | "cancel" | _ as action:
-                    service = OrderService(db, current_user)
+                    service = OrderService(deps, current_user)
                     if action == "save":
                         if order_data != data["order_original"]:
                             update = {f.id: order_data[f.id] for f in ORDER_FIELDS}

@@ -9,8 +9,7 @@ from src.tgbot.utils.fields import Field
 async def show_field_input(field: Field, value: Any = None, *, message: Message) -> Message:
     return await message.answer(
         field.input_text,
-        reply_markup=field_input_kb(field, value)
-    )
+        reply_markup=field_input_kb(field, value))
 
 def field_input_kb(field: Field, value: Any = None) -> ReplyKeyboardMarkup | ForceReply:
     if field.kb_options:
@@ -18,8 +17,7 @@ def field_input_kb(field: Field, value: Any = None) -> ReplyKeyboardMarkup | For
     placeholder = str(value) if value else field.placeholder
     return ForceReply(
         force_reply=True,
-        input_field_placeholder=placeholder
-    )
+        input_field_placeholder=placeholder)
 
 def field_options_kb(options: Sequence[Any], col: int = 2) -> ReplyKeyboardMarkup:
     keyboard = []

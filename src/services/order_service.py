@@ -1,19 +1,19 @@
 import logging
 
+from src.deps import Dependencies
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus, UserRole
 from src.entities.order import Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
 from src.entities.user import User
 from src.exceptions import AccessDeniedError, InvalidStateError, NotFoundError
 from src.repositories.order_repo import OrderRepo
-from src.repositories.utils import Database
 from src.services.utils.access_level import access_level
 
 
 class OrderService:
 
-    def __init__(self, database: Database, current_user: User) -> None:
-        self.order_repo = OrderRepo(database)
+    def __init__(self, deps: Dependencies, current_user: User) -> None:
+        self.order_repo = OrderRepo(deps.db)
         self.current_user = current_user
 
     def _log(self, order: Order, message: str) -> None:

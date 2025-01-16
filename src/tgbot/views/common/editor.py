@@ -3,7 +3,7 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.tgbot import buttons
+from src.tgbot.views import buttons
 from src.tgbot.callbacks import EditorCallbackData
 from src.tgbot.utils.fields import Field
 

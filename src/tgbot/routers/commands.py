@@ -3,9 +3,9 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from src.deps import Dependencies
 from src.entities.choices import UserRole
 from src.entities.user import User
-from src.repositories.utils import Database
 from src.services import UserService
 from src.tgbot.views.menu import show_menu, signin_menu_kb
 from src.tgbot.views.user.user import user_role
@@ -25,8 +25,8 @@ async def command_start_handler(message: Message, current_user: User, state: FSM
 
 
 @router.callback_query(F.data.startswith("signin_as:"))
-async def signin_as_callback(query: CallbackQuery, db: Database, current_user: User) -> None:
-    service = UserService(db, current_user)
+async def signin_as_callback(query: CallbackQuery, deps: Dependencies, current_user: User) -> None:
+    service = UserService(deps, current_user)
     match query.data:
         case "signin_as:agent":
             await service.set_role(current_user.id, UserRole.AGENT)

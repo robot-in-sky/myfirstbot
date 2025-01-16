@@ -2,12 +2,12 @@ from aiogram import F, Router
 from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
+from src.deps import Dependencies
 from src.entities.choices import UserRole
 from src.entities.order import OrderAdd, OrderQueryPaged
 from src.entities.user import User
-from src.repositories.utils import Database
 from src.services import OrderService
-from src.tgbot import buttons
+from src.tgbot.views import buttons
 from src.tgbot.callbacks import OrderCallbackData, OrdersCallbackData
 from src.tgbot.scenes import EditOrderScene, NewOrderScene
 from src.tgbot.views.common.ok_cancel import ok_cancel_kb
@@ -29,10 +29,10 @@ router.callback_query.register(
 async def order_callback_handler(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
-        db: Database,
+        deps: Dependencies,
         current_user: User,
 ) -> None:
-    order = await OrderService(db, current_user).get(callback_data.id)
+    order = await OrderService(current_user, deps).get(callback_data.id)
     await query.answer()
     if isinstance(query.message, Message):
         await show_order(order,
@@ -48,7 +48,7 @@ router.callback_query.register(
 
 @router.callback_query(OrderCallbackData.filter(
     F.action.in_({"trash_ask", "delete_ask", "duplicate_ask"})))
-async def order_trash_ask_callback_handler(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
+async def order_ask_callback_handler(query: CallbackQuery, callback_data: OrderCallbackData) -> None:
     match callback_data.action:
         case "trash_ask":
             action, text = "trash", "Вы уверены что хотите удалить заказ?"
@@ -70,10 +70,10 @@ async def order_trash_ask_callback_handler(query: CallbackQuery, callback_data: 
 async def order_duplicate_callback_handler(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
-        db: Database,
+        deps: Dependencies,
         current_user: User,
 ) -> None:
-    service = OrderService(db, current_user)
+    service = OrderService(current_user, deps)
     order = await service.get(callback_data.id)
     new_order = await service.new(OrderAdd(user_id=current_user.id,
                                            label=order.label,
@@ -88,13 +88,13 @@ async def order_duplicate_callback_handler(
 
 
 @router.callback_query(OrderCallbackData.filter(F.action))
-async def order_actions_callback_handler(
+async def order_action_callback_handler(
         query: CallbackQuery,
         callback_data: OrderCallbackData,
-        db: Database,
+        deps: Dependencies,
         current_user: User,
 ) -> None:
-    service = OrderService(db, current_user)
+    service = OrderService(deps, current_user)
     order_id = callback_data.id
     notice, back = None, False
     match callback_data.action:
@@ -131,7 +131,7 @@ async def order_actions_callback_handler(
             params = callback_data.model_dump(exclude_none=True)
             if current_user.role < UserRole.AGENT:
                 params["user_id"] = current_user.id
-            result = await OrderService(db, current_user).get_many(OrderQueryPaged(**params))
+            result = await OrderService(deps, current_user).get_many(OrderQueryPaged(**params))
             await show_orders(result,
                               callback_data,
                               notice,

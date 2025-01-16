@@ -12,7 +12,7 @@ class OrmUser(OrmBase):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, autoincrement=True, primary_key=True)
-    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     user_name: Mapped[str] = mapped_column(Text)
     first_name: Mapped[str] = mapped_column(Text, nullable=True)
     last_name: Mapped[str] = mapped_column(Text, nullable=True)

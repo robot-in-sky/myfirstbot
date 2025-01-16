@@ -8,7 +8,7 @@ from src.entities.user import UserAdd
 from src.services.auth_service import AuthService
 
 if TYPE_CHECKING:
-    from src.repositories.utils.database import Database
+    from src.deps import Dependencies
 
 
 class CurrentUserMiddleware(BaseMiddleware):
@@ -19,7 +19,7 @@ class CurrentUserMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: dict[str, Any],
     ) -> Any:
-        db: Database = data["db"]
+        deps: Dependencies = data["deps"]
 
         from_user = None
         chat_id = None
@@ -31,14 +31,11 @@ class CurrentUserMiddleware(BaseMiddleware):
                 from_user = event.callback_query.from_user
 
         if from_user:
-            data["current_user"] = await AuthService(db).synchronize_user(
-                UserAdd(
-                    telegram_id=from_user.id,
-                    user_name=from_user.username or "",
-                    first_name=from_user.first_name,
-                    last_name=from_user.last_name,
-                    chat_id=chat_id,
-                )
-            )
+            data["current_user"] = await AuthService(deps).synchronize_user(
+                                                    UserAdd(telegram_id=from_user.id,
+                                                            user_name=from_user.username or "",
+                                                            first_name=from_user.first_name,
+                                                            last_name=from_user.last_name,
+                                                            chat_id=chat_id))
 
         return await handler(event, data)
