@@ -1,18 +1,18 @@
 import logging
 
+from src.deps import Dependencies
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import UserRole
 from src.entities.user import User, UserQuery, UserQueryPaged
 from src.exceptions import AccessDeniedError, NotFoundError
 from src.repositories import UserRepo
-from src.repositories.utils.database import Database
 from src.services.utils.access_level import access_level
 
 
 class UserService:
 
-    def __init__(self, database: Database, current_user: User) -> None:
-        self.user_repo = UserRepo(database)
+    def __init__(self, deps: Dependencies, current_user: User) -> None:
+        self.user_repo = UserRepo(deps.db)
         self.current_user = current_user
 
 

@@ -2,8 +2,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.entities.choices import UserRole
 from src.entities.user import User
-from src.tgbot import buttons
 from src.tgbot.callbacks import OrdersCallbackData, UsersCallbackData
+from src.tgbot.views import buttons
 from src.tgbot.views.user.user import user_role
 
 

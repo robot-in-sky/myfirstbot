@@ -16,9 +16,10 @@ from src.entities.visa import (
     VisaQueryPaged,
     VisaUpdate,
 )
+from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
 from src.repositories.models import OrmVisa
-from src.repositories.utils import Database, exception_mapper
+from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,
     apply_search,
@@ -31,8 +32,8 @@ from src.repositories.utils.query_utils import (
 
 class VisaRepo(AbstractRepo[Visa, VisaAdd, VisaUpdate]):
 
-    def __init__(self, database: Database) -> None:
-        self.db = database
+    def __init__(self, db: DatabaseClient) -> None:
+        self.db = db
 
 
     @exception_mapper

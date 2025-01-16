@@ -1,0 +1,35 @@
+version: '3.8'
+volumes:
+  pgdb-data:
+  redis-data:
+  redis-conf:
+services:
+  pgdb:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    volumes:
+      - pgdb-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+      - redis-conf:/usr/local/etc/redis/redis.conf
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
+      REDIS_DATABASES: 8
+    ports:
+      - "6379:6379"
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"

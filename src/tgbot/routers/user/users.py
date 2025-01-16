@@ -3,10 +3,10 @@ from aiogram.filters import and_f
 from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
+from src.deps import Dependencies
 from src.entities.user import User, UserQuery, UserQueryPaged
-from src.repositories.utils import Database
 from src.services import UserService
-from src.tgbot.buttons import USERS
+from src.tgbot.views.buttons import USERS
 from src.tgbot.callbacks import UserFilterCallbackData, UserSearchCallbackData, UsersCallbackData
 from src.tgbot.filters import IsAdmin
 from src.tgbot.scenes import SearchUserScene
@@ -18,10 +18,10 @@ scene_registry = SceneRegistry(router)
 
 @router.message(F.text == USERS, IsAdmin())
 async def users_button_handler(
-        message: Message, db: Database, current_user: User) -> None:
+        message: Message, deps: Dependencies, current_user: User) -> None:
     callback_data = UsersCallbackData()
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(db, current_user).get_many(UserQueryPaged(**params))
+    result = await UserService(deps, current_user).get_many(UserQueryPaged(**params))
     await show_users(result,
                      callback_data,
                      message=message)
@@ -31,11 +31,11 @@ async def users_button_handler(
 async def users_callback_handler(
         query: CallbackQuery,
         callback_data: UsersCallbackData,
-        db: Database,
+        deps: Dependencies,
         current_user: User,
 ) -> None:
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(db, current_user).get_many(UserQueryPaged(**params))
+    result = await UserService(deps, current_user).get_many(UserQueryPaged(**params))
     await query.answer()
     if isinstance(query.message, Message):
         if callback_data.page:
@@ -58,12 +58,12 @@ router.callback_query.register(
 async def user_filter_callback_handler(
         query: CallbackQuery,
         callback_data: UserFilterCallbackData,
-        db: Database,
+        deps: Dependencies,
         current_user: User,
 ) -> None:
     await query.answer()
     if isinstance(query.message, Message):
-        service = UserService(db, current_user)
+        service = UserService(current_user, deps)
         params = callback_data.model_dump(
             exclude_none=True,
             exclude={"role", "page", "per_page"},

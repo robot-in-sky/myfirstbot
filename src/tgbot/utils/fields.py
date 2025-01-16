@@ -41,7 +41,7 @@ async def validate_field_input(f: Field, text: str) -> None:
 
                 max_value = f.validators.get("max")
                 if max_value and value > max_value :
-                    err_msg = f"Макисмальное значение {max_value}."
+                    err_msg = f"Максимальное значение {max_value}."
                     raise ValidationError(err_msg)
 
             case _:

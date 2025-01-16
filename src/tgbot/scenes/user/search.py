@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, ForceReply, Message
 
+from src.deps import Dependencies
 from src.entities.choices import UserRole
 from src.entities.user import User, UserQueryPaged
-from src.repositories.utils import Database
 from src.services import UserService
 from src.tgbot.callbacks import UserSearchCallbackData, UsersCallbackData
 from src.tgbot.views.user.users import show_users
@@ -35,14 +35,14 @@ class SearchUserScene(Scene, state="search_user"):
             self,
             message: Message,
             state: FSMContext,
-            db: Database,
+            deps: Dependencies,
             current_user: User,
     ) -> None:
         data = await state.get_data()
         params = data.get("params", {})
         if params.get("role"):
             params["role"] = UserRole(params["role"])
-        result = await UserService(db, current_user).get_many(UserQueryPaged(**params))
+        result = await UserService(deps, current_user).get_many(UserQueryPaged(**params))
         callback_data = UsersCallbackData(**params)
         await message.chat.delete_message(data["message_id"])
         await show_users(result,

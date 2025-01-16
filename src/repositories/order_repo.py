@@ -9,9 +9,10 @@ from sqlalchemy.dialects.postgresql import insert
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus
 from src.entities.order import ORDER_SEARCH_BY, Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
+from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
 from src.repositories.models import OrmOrder
-from src.repositories.utils import Database, exception_mapper
+from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,
     apply_search,
@@ -24,8 +25,8 @@ from src.repositories.utils.query_utils import (
 
 class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
 
-    def __init__(self, database: Database) -> None:
-        self.db = database
+    def __init__(self, db: DatabaseClient) -> None:
+        self.db = db
 
 
     @exception_mapper

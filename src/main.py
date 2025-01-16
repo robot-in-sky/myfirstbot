@@ -1,43 +1,25 @@
 import asyncio
 import logging
+import sys
 
-from aiogram import Bot
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.fsm.storage.base import DefaultKeyBuilder
-from aiogram.fsm.storage.redis import RedisStorage
-from redis.asyncio.client import Redis
+from src.app import Application
+from src.settings import AppSettings, ValidationError
 
-from src.config import settings
-from src.repositories.utils.database import Database
-from src.tgbot.dispatcher import get_dispatcher
 
-bot = Bot(token=settings.bot.token,
-          default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+async def main() -> None:
+    try:
+        settings = AppSettings()
+    except ValidationError as e:
+        logging.error(e)
+        sys.exit(1)
 
-storage = RedisStorage(
-    redis=Redis(
-        port=settings.redis.port,
-        host=settings.redis.host,
-        db=settings.redis.database,
-        username=settings.redis.username,
-        password=settings.redis.password,
-    ),
-    state_ttl=settings.redis.ttl_state,
-    data_ttl=settings.redis.ttl_data,
-    key_builder=DefaultKeyBuilder(with_destiny=True),
-)
-
-dp = get_dispatcher(storage=storage)
-
-async def start_bot() -> None:
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot,
-                           allowed_updates=dp.resolve_used_update_types(),
-                           db=Database(settings.db))
+    try:
+        app = Application(settings)
+        await app.start()
+    except Exception:
+        logging.exception("Unexpected error")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=settings.log_level)
-    """logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w")"""
-    asyncio.run(start_bot())
+    asyncio.run(main())
