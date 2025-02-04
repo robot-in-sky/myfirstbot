@@ -20,6 +20,7 @@ psycopg = {extras = ["binary"], version = "^3.1.18"}
 pytz = "^2024.1"
 aio-pika = "^9.5.4"
 aiobotocore = "^2.17.0"
+uuid7 = "^0.1.0"
 
 [tool.poetry.group.dev]
 optional=true
@@ -59,7 +60,7 @@ fixable = ["ALL"]
 ]
 "test_*.py" = [
     "S101", # Using assert in tests is allowed.
-    "PLR2004", # Magic value comprison
+    "PLR2004", # Magic value comparison
 ]
 
 [tool.ruff.lint.pycodestyle]

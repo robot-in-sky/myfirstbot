@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger, DateTime, Enum, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.entities.choices import UserRole
-from src.repositories.models import OrmBase
+from src.repositories.orm_models import OrmBase
 
 
 class OrmUser(OrmBase):

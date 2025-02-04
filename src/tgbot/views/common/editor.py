@@ -3,9 +3,9 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from src.tgbot.views import buttons
 from src.tgbot.callbacks import EditorCallbackData
 from src.tgbot.utils.fields import Field
+from src.tgbot.views import buttons
 
 
 def editor_summary(
@@ -30,8 +30,11 @@ def editor_kb() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=buttons.PAGE_PREV, callback_data="_"),
          InlineKeyboardButton(text=buttons.EDITOR_UP, callback_data=EditorCallbackData(action="up").pack()),
          InlineKeyboardButton(text=buttons.PAGE_NEXT, callback_data="_")],
+
         [InlineKeyboardButton(text=buttons.EDITOR_RESET, callback_data=EditorCallbackData(action="return").pack()),
          InlineKeyboardButton(text=buttons.EDITOR_DOWN, callback_data=EditorCallbackData(action="down").pack()),
          InlineKeyboardButton(text=buttons.EDITOR_EDIT, callback_data=EditorCallbackData(action="edit").pack())],
+
         [InlineKeyboardButton(text=buttons.CANCEL, callback_data=EditorCallbackData(action="cancel").pack()),
-         InlineKeyboardButton(text=buttons.SAVE, callback_data=EditorCallbackData(action="save").pack())]])
+         InlineKeyboardButton(text=buttons.SAVE, callback_data=EditorCallbackData(action="save").pack())],
+    ])

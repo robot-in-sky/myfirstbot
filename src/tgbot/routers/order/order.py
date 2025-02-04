@@ -6,10 +6,9 @@ from src.deps import Dependencies
 from src.entities.choices import UserRole
 from src.entities.order import OrderAdd, OrderQueryPaged
 from src.entities.user import User
-from src.services import OrderService
-from src.tgbot.views import buttons
 from src.tgbot.callbacks import OrderCallbackData, OrdersCallbackData
 from src.tgbot.scenes import EditOrderScene, NewOrderScene
+from src.tgbot.views import buttons
 from src.tgbot.views.common.ok_cancel import ok_cancel_kb
 from src.tgbot.views.order.order import show_order
 from src.tgbot.views.order.orders import show_orders
@@ -32,7 +31,7 @@ async def order_callback_handler(
         deps: Dependencies,
         current_user: User,
 ) -> None:
-    order = await OrderService(current_user, deps).get(callback_data.id)
+    order = await deps.orders(current_user).get(callback_data.id)
     await query.answer()
     if isinstance(query.message, Message):
         await show_order(order,
@@ -73,9 +72,9 @@ async def order_duplicate_callback_handler(
         deps: Dependencies,
         current_user: User,
 ) -> None:
-    service = OrderService(current_user, deps)
-    order = await service.get(callback_data.id)
-    new_order = await service.new(OrderAdd(user_id=current_user.id,
+    orders = deps.orders(current_user)
+    order = await orders.get(callback_data.id)
+    new_order = await orders.new(OrderAdd(user_id=current_user.id,
                                            label=order.label,
                                            size=order.size,
                                            qty=order.qty))
@@ -94,33 +93,33 @@ async def order_action_callback_handler(
         deps: Dependencies,
         current_user: User,
 ) -> None:
-    service = OrderService(deps, current_user)
+    orders = deps.orders(current_user)
     order_id = callback_data.id
     notice, back = None, False
     match callback_data.action:
         case "submit":
-            await service.submit(order_id)
+            await orders.submit(order_id)
             notice = "Заказ отправлен на проверку"
         case "return":
-            await service.return_(order_id)
+            await orders.return_(order_id)
             notice = "Заказ возвращен на доработку"
         case "accept":
-            await service.accept(order_id)
+            await orders.accept(order_id)
             notice = "Заказ взят в работу"
         case "reject":
-            await service.reject(order_id)
+            await orders.reject(order_id)
             notice = "Заказ возвращён на доработку"
         case "done":
-            await service.done(order_id)
+            await orders.done(order_id)
             notice = "Заказ завершён"
         case "trash":
-            await service.trash(order_id)
+            await orders.trash(order_id)
             notice, back = f"Заказ #{order_id} удалён", True
         case "restore":
-            await service.restore(order_id)
+            await orders.restore(order_id)
             notice = "Заказ восстановлен"
         case "delete":
-            await service.delete(order_id)
+            await orders.delete(order_id)
             notice, back = f"Заказ #{order_id} удален окончательно", True
         case "back" | _:
             back = True
@@ -131,7 +130,7 @@ async def order_action_callback_handler(
             params = callback_data.model_dump(exclude_none=True)
             if current_user.role < UserRole.AGENT:
                 params["user_id"] = current_user.id
-            result = await OrderService(deps, current_user).get_many(OrderQueryPaged(**params))
+            result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
             await show_orders(result,
                               callback_data,
                               notice,
@@ -139,7 +138,7 @@ async def order_action_callback_handler(
                               message=query.message,
                               replace_text=True)
         else:
-            await show_order(await service.get(order_id),
+            await show_order(await orders.get(order_id),
                              notice,
                              current_user=current_user,
                              message=query.message,

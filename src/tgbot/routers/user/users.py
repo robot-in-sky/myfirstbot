@@ -5,11 +5,10 @@ from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.user import User, UserQuery, UserQueryPaged
-from src.services import UserService
-from src.tgbot.views.buttons import USERS
 from src.tgbot.callbacks import UserFilterCallbackData, UserSearchCallbackData, UsersCallbackData
 from src.tgbot.filters import IsAdmin
 from src.tgbot.scenes import SearchUserScene
+from src.tgbot.views.buttons import USERS
 from src.tgbot.views.user.users import show_user_filter, show_users, users_result_kb
 
 router = Router()
@@ -21,7 +20,7 @@ async def users_button_handler(
         message: Message, deps: Dependencies, current_user: User) -> None:
     callback_data = UsersCallbackData()
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(deps, current_user).get_many(UserQueryPaged(**params))
+    result = await deps.users(current_user).get_many(UserQueryPaged(**params))
     await show_users(result,
                      callback_data,
                      message=message)
@@ -35,7 +34,7 @@ async def users_callback_handler(
         current_user: User,
 ) -> None:
     params = callback_data.model_dump(exclude_none=True)
-    result = await UserService(deps, current_user).get_many(UserQueryPaged(**params))
+    result = await deps.users(current_user).get_many(UserQueryPaged(**params))
     await query.answer()
     if isinstance(query.message, Message):
         if callback_data.page:
@@ -63,13 +62,13 @@ async def user_filter_callback_handler(
 ) -> None:
     await query.answer()
     if isinstance(query.message, Message):
-        service = UserService(current_user, deps)
+        users = deps.users(current_user)
         params = callback_data.model_dump(
             exclude_none=True,
             exclude={"role", "page", "per_page"},
         )
-        count_by_status = await service.get_count_by_role(UserQuery(**params))
-        total_count = await service.get_count(UserQuery(**params))
+        count_by_status = await users.get_count_by_role(UserQuery(**params))
+        total_count = await users.get_count(UserQuery(**params))
         await show_user_filter(count_by_status,
                                total_count,
                                callback_data,

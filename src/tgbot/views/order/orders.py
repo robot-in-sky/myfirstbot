@@ -6,6 +6,13 @@ from src.entities.base import QueryCountItem, QueryResult
 from src.entities.choices import OrderStatus
 from src.entities.order import Order
 from src.entities.user import User
+from src.tgbot.callbacks import (
+    OrderCallbackData,
+    OrderFilterCallbackData,
+    OrderSearchCallbackData,
+    OrdersCallbackData,
+)
+from src.tgbot.utils.helpers import cut_string
 from src.tgbot.views.buttons import (
     BACK,
     FILTER,
@@ -17,14 +24,7 @@ from src.tgbot.views.buttons import (
     SEARCH_RESET,
     TO_MENU,
 )
-from src.tgbot.callbacks import (
-    OrderCallbackData,
-    OrderFilterCallbackData,
-    OrderSearchCallbackData,
-    OrdersCallbackData,
-)
 from src.tgbot.views.const import BUTTON_TEXT_MAX_LEN, COLUMN_DELIMITER
-from src.tgbot.utils.helpers import cut_string
 from src.tgbot.views.order.order import order_status
 from src.tgbot.views.user.user import is_admin
 

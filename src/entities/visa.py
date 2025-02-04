@@ -1,5 +1,6 @@
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from pydantic import StringConstraints
 
@@ -15,6 +16,18 @@ Str50 = Annotated[str, StringConstraints(max_length=50)]
 
 
 class VisaBase(Base):
+    country: Country
+    visa_type: VisaType
+    # entry_port: Port
+    # arrival_date: date
+    # surname: Str50
+    # given_name: Str50
+    # passport_no: Str14
+    attachment_id: UUID
+    form_data: dict[str, Any]
+
+
+class FormData(Base):
 
     # 1. REGISTRATION
     nationality: Country

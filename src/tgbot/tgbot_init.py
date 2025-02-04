@@ -14,8 +14,8 @@ from .routers import routers
 from .tgbot_settings import TgBotSettings
 
 
-def setup_tgbot(tgbot_settings: TgBotSettings,
-                redis_settings: RedisSettings) -> tuple[Bot, Dispatcher]:
+def tgbot_init(tgbot_settings: TgBotSettings,
+               redis_settings: RedisSettings) -> tuple[Bot, Dispatcher]:
 
     bot = Bot(token=tgbot_settings.token,
                default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -41,4 +41,5 @@ def setup_tgbot(tgbot_settings: TgBotSettings,
     dp.startup.register(set_commands)
     dp.update.outer_middleware(CurrentUserMiddleware())
     dp.include_routers(*routers)
+
     return bot, dp

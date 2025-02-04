@@ -1,15 +1,14 @@
 import logging
 
-from src.deps import Dependencies
-from src.entities.choices.user_role import UserRole
 from src.entities.user import User, UserAdd, UserUpdate
+from src.io.database import DatabaseClient
 from src.repositories import UserRepo
 
 
 class AuthService:
 
-    def __init__(self, deps: Dependencies) -> None:
-        self.user_repo = UserRepo(deps.db)
+    def __init__(self, database: DatabaseClient) -> None:
+        self.user_repo = UserRepo(database)
 
 
     async def synchronize_user(self, data: UserAdd) -> User:

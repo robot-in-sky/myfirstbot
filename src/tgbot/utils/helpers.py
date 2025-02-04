@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 
 def cut_string(string: str, limit: int = 10) -> str:
@@ -18,3 +19,7 @@ def remove_emojis(string: str) -> str:
         flags=re.UNICODE,
     )
     return pattern.sub(r"", string)
+
+
+def sub_dict_by_prefix(data: dict[str, Any], prefix: str) -> dict[str, Any]:
+    return {k.replace(prefix, "", 1): v for k, v in data.items() if k.startswith(prefix)}

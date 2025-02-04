@@ -26,7 +26,7 @@ async def orders_button_handler(
     params = callback_data.model_dump(exclude_none=True)
     if message.text == MY_ORDERS or current_user.role < UserRole.AGENT:
         params["user_id"] = current_user.id
-    result = await OrderService(deps, current_user).get_many(OrderQueryPaged(**params))
+    result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
     await show_orders(result,
                       callback_data,
                       current_user=current_user,
@@ -44,7 +44,7 @@ async def orders_callback_handler(
     params = callback_data.model_dump(exclude_none=True)
     if current_user.role < UserRole.AGENT:
         params["user_id"] = current_user.id
-    result = await OrderService(deps, current_user).get_many(OrderQueryPaged(**params))
+    result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
     if isinstance(query.message, Message):
         if callback_data.page:
             await query.message.edit_reply_markup(
@@ -73,15 +73,15 @@ async def order_filter_callback_handler(
 ) -> None:
     await query.answer()
     if isinstance(query.message, Message):
-        service = OrderService(deps, current_user)
+        orders = deps.orders(current_user)
         params = callback_data.model_dump(
             exclude_none=True,
             exclude={"status", "page", "per_page"},
         )
         if current_user.role < UserRole.AGENT:
             params["user_id"] = current_user.id
-        count_by_status = await service.get_count_by_status(OrderQuery(**params))
-        total_count = await service.get_count(OrderQuery(**params))
+        count_by_status = await orders.get_count_by_status(OrderQuery(**params))
+        total_count = await orders.get_count(OrderQuery(**params))
         await show_order_filter(count_by_status,
                                 total_count,
                                 callback_data,

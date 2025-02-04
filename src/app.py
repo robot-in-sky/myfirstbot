@@ -4,25 +4,15 @@ from aio_pika.patterns import JsonRPC
 
 from src.deps import Dependencies
 from src.io.amqp import AMQPClient
-from src.io.database import DatabaseClient
-from src.io.redis import RedisClient
-from src.io.s3 import S3Client
 from src.settings import AppSettings, LogSettings
-from src.tgbot.setup import setup_tgbot
+from src.tgbot.tgbot_init import tgbot_init
 
 
 class Application:
     def __init__(self, settings: AppSettings) -> None:
-        self.settings = settings
-
         self.configure_logging(settings.log)
-
-        self.deps = Dependencies(
-            settings=self.settings,
-            db=DatabaseClient(settings.db),
-            redis=RedisClient(settings.redis),
-            s3=S3Client(settings.s3))
-
+        self.settings = settings
+        self.deps = Dependencies(settings)
 
     @staticmethod
     def configure_logging(settings: LogSettings) -> None:
@@ -33,11 +23,12 @@ class Application:
         amqp = AMQPClient(self.settings.amqp)
         connection = await amqp.get_connection()
         channel = await connection.channel()
-        self.deps.rpc = await JsonRPC.create(channel)
+        rpc = await JsonRPC.create(channel)
+        self.deps.set_rpc(rpc)
 
         try:
-            bot, dp = setup_tgbot(tgbot_settings=self.settings.tgbot,
-                                  redis_settings=self.settings.redis)
+            bot, dp = tgbot_init(tgbot_settings=self.settings.tgbot,
+                                 redis_settings=self.settings.redis)
 
             await bot.delete_webhook(drop_pending_updates=True)
             await dp.start_polling(bot,

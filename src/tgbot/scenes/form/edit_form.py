@@ -33,7 +33,7 @@ async def show_order_editor(
     return await message.answer(text, reply_markup=keyboard)
 
 
-class EditOrderScene(Scene, state="edit_order"):
+class EditOrderScene(Scene, state="edit_visa"):
 
     @on.callback_query.enter()
     async def on_enter_callback(
