@@ -16,6 +16,12 @@ class Field(BaseModel):
     validators: dict[str, Any] | None = None
 
 
+class FormSection(BaseModel):
+    id: str
+    name: str
+    fields: list[Field]
+
+
 async def validate_field_input(f: Field, text: str) -> None:
     if f.validators:
         value: str | int
@@ -50,5 +56,5 @@ async def validate_field_input(f: Field, text: str) -> None:
 
         allowed_values = f.validators.get("in")
         if allowed_values and value not in allowed_values:
-            err_msg = f"Допустимые значения {allowed_values}."
+            err_msg = f"Значение {value}. Допустимые значения {allowed_values}."
             raise ValidationError(err_msg)

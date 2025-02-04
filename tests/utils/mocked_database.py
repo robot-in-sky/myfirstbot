@@ -1,4 +1,4 @@
-from src.repositories.models import OrmBase
+from src.repositories.orm_models import OrmBase
 from src.repositories.utils import Database
 
 

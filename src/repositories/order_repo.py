@@ -11,7 +11,7 @@ from src.entities.choices import OrderStatus
 from src.entities.order import ORDER_SEARCH_BY, Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
 from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
-from src.repositories.models import OrmOrder
+from src.repositories.orm_models import OrmOrder
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,
@@ -140,6 +140,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
                 total_pages=total_pages,
                 total_items=total_items,
             )
+
 
     async def get_count(self, query: OrderQuery) -> int:
         stmt = select(OrmOrder)

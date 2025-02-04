@@ -18,7 +18,7 @@ from src.entities.visa import (
 )
 from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
-from src.repositories.models import OrmVisa
+from src.repositories.orm_models import OrmVisa
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,

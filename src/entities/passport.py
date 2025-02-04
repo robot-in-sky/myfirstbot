@@ -1,4 +1,5 @@
 from datetime import date
+from enum import StrEnum
 
 from src.entities.base import Base
 from src.entities.choices import Gender
@@ -16,8 +17,8 @@ class PassportDetails(Base):
     expire_date: date | None
 
 
-class PassportAttachments(Base):
-    source: str
-    scanned: str | None
-    photo: str | None
-    debug: str | None
+class PassportFiles(StrEnum):
+    SOURCE = "source.png"
+    SCANNED = "scanned.png"
+    PHOTO = "photo.png"
+    DEBUG = "debug.png"

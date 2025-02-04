@@ -11,7 +11,7 @@ from src.entities.choices import UserRole
 from src.entities.user import USER_SEARCH_BY, User, UserAdd, UserQuery, UserQueryPaged, UserUpdate
 from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
-from src.repositories.models import OrmUser
+from src.repositories.orm_models import OrmUser
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,
@@ -28,6 +28,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
     def __init__(self, db: DatabaseClient) -> None:
         self.db = db
 
+
     @exception_mapper
     async def add(self, instance: UserAdd) -> User:
         stmt = (insert(OrmUser).values(**instance.model_dump())
@@ -37,6 +38,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             await session.commit()
             return User.model_validate(result)
 
+
     async def get(self, id_: int) -> User | None:
         stmt = select(OrmUser).where(OrmUser.id == id_)
         async with self.db.get_session() as session:
@@ -44,11 +46,13 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 return User.model_validate(result)
             return None
 
+
     async def get_by_telegram_id(self, telegram_id: int) -> User | None:
         stmt = select(OrmUser).where(OrmUser.telegram_id == telegram_id)
         async with self.db.get_session() as session:
             result = await session.scalar(stmt)
             return User.model_validate(result) if result else None
+
 
     async def update(self, id_: int, instance: UserUpdate) -> User | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
@@ -60,6 +64,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 return User.model_validate(result)
             return None
 
+
     async def delete(self, id_: int) -> int | None:
         stmt = delete(OrmUser).where(OrmUser.id == id_).returning(OrmUser.id)
         async with self.db.get_session() as session:
@@ -67,6 +72,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 await session.commit()
                 return result
             return None
+
 
     async def set_role(self, id_: int, role: UserRole) -> int | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
@@ -133,12 +139,14 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 total_items=total_items,
             )
 
+
     async def get_count(self, query: UserQuery) -> int:
         stmt = select(OrmUser)
         stmt = self._apply_filters(stmt, query)
 
         async with self.db.get_session() as session:
             return await get_row_count(session, stmt)
+
 
     async def get_count_by_role(self, query: UserQuery) -> list[QueryCountItem[UserRole]]:
         column = OrmUser.role

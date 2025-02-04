@@ -34,7 +34,7 @@ def main_menu_kb(current_user: User) -> InlineKeyboardMarkup:
     keyboard = [[
             InlineKeyboardButton(
                 text=buttons.NEW_ORDER,
-                callback_data="new_order"),
+                callback_data="fill_visa_form"),
             InlineKeyboardButton(
                 text=buttons.MY_ORDERS,
                 callback_data=OrdersCallbackData(user_id=current_user.id).pack())]]

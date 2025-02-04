@@ -16,24 +16,49 @@ from src.tgbot.views.common.editor import editor_kb, editor_summary
 from src.tgbot.views.common.field_input import show_field_input
 from src.tgbot.views.order.order import show_order
 
-
-async def show_order_editor(
-        data: dict[str, Any],
-        selected: str,
-        *,
-        message: Message,
-        replace_text: bool = False,
-) -> Message:
-    text = f"<b>Заказ #{data['id']}</b> — Редактирование\n\n"
-    text += editor_summary(ORDER_FIELDS, data, selected)
-    keyboard = editor_kb()
-    if replace_text:
-        await message.edit_text(text, reply_markup=keyboard)
-        return message
-    return await message.answer(text, reply_markup=keyboard)
+"""
+State data structure:
+{
+    "edit_section.section_id": section_id,
+    "edit_section.current_field": field_id,
+    "edit_section.is_expecting": False,
+    "edit_section.message_id": message.message_id,
+    "edit_section.data.{field_id}": value.
+    ...
+}
+"""
 
 
-class EditOrderScene(Scene, state="edit_order"):
+
+
+
+class EditSectionScene(Scene, state="edit_section"):
+
+
+    @on.message.enter()
+    async def message_on_enter(
+            self, message: Message, state: FSMContext, deps: Dependencies) -> None:
+        state_data = await state.get_data()
+        form_step = state_data.get("form.current_step", 0)
+        section_step = state_data.get("section.current_step", 0)
+        section = VISA_FIELDS[step]
+        if section_step == 0:
+            await message.answer(f"Раздел {form_step + 1}: {section.name}")
+        try:
+            field = section.fields[section_step]
+            await show_field_input(field, message=message)
+        except IndexError:
+            data = state_data.get("section_data", {})
+            await state.update_data(section_step=0, section_data={})
+            await self.wizard.goto("fill_form")
+
+
+    @on.callback_query.enter()
+    async def callback_query_on_enter(
+            self, query: CallbackQuery, state: FSMContext, step: int) -> None:
+        await query.answer()
+        if isinstance(query.message, Message):
+            await self.message_on_enter(query.message, state, step)
 
     @on.callback_query.enter()
     async def on_enter_callback(

@@ -5,7 +5,6 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
 from src.entities.user import UserAdd
-from src.services.auth_service import AuthService
 
 if TYPE_CHECKING:
     from src.deps import Dependencies
@@ -31,7 +30,7 @@ class CurrentUserMiddleware(BaseMiddleware):
                 from_user = event.callback_query.from_user
 
         if from_user:
-            data["current_user"] = await AuthService(deps).synchronize_user(
+            data["current_user"] = await deps.auth.synchronize_user(
                                                     UserAdd(telegram_id=from_user.id,
                                                             user_name=from_user.username or "",
                                                             first_name=from_user.first_name,

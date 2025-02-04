@@ -3,8 +3,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from src.entities.choices import OrderStatus
 from src.entities.order import Order
 from src.entities.user import User
-from src.tgbot.views import buttons
 from src.tgbot.callbacks import OrderCallbackData, UserCallbackData
+from src.tgbot.views import buttons
 from src.tgbot.views.const import DATE_TIME_FORMAT
 from src.tgbot.views.user.user import is_admin
 

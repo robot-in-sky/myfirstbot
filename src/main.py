@@ -16,6 +16,8 @@ async def main() -> None:
     try:
         app = Application(settings)
         await app.start()
+    except asyncio.CancelledError:
+        logging.warning("Cancelled")
     except Exception:
         logging.exception("Unexpected error")
         sys.exit(1)
