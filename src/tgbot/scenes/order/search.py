@@ -4,10 +4,8 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, ForceReply, Message
 
 from src.deps import Dependencies
-from src.entities.choices import OrderStatus, UserRole
-from src.entities.order import OrderQueryPaged
-from src.entities.user import User
-from src.services import OrderService
+from src.entities.order import OrderQueryPaged, OrderStatus
+from src.entities.user import User, UserRole
 from src.tgbot.callbacks import OrderSearchCallbackData, OrdersCallbackData
 from src.tgbot.views.order.orders import show_orders
 
@@ -45,7 +43,7 @@ class SearchOrderScene(Scene, state="search_order"):
             params["user_id"] = current_user.id
         if params.get("status"):
             params["status"] = OrderStatus(params["status"])
-        result = await OrderService(deps, current_user).get_many(OrderQueryPaged(**params))
+        result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
         callback_data = OrdersCallbackData(**params)
         await message.chat.delete_message(data["message_id"])
         await show_orders(result,

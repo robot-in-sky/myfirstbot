@@ -23,3 +23,10 @@ def remove_emojis(string: str) -> str:
 
 def sub_dict_by_prefix(data: dict[str, Any], prefix: str) -> dict[str, Any]:
     return {k.replace(prefix, "", 1): v for k, v in data.items() if k.startswith(prefix)}
+
+
+def get_key_by_value(mapping: dict[Any, Any], value: str, default: str | None = None) -> Any:
+    try:
+        return next(filter(lambda i: i[1] == value, mapping.items()))[0]
+    except StopIteration:
+        return default

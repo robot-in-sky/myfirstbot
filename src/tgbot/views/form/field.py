@@ -3,25 +3,50 @@ from typing import Any
 
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from src.tgbot.utils.fields import Field
+from src.entities.form import Field
+from src.tgbot.views.buttons import ALL
 
 CURRENT_VALUE_TEXT = "Текущее значение"
+KB_SORTING_MIN_NUMBER = 10
 
-async def show_field_input(field: Field, value: Any = None, *, message: Message) -> Message:
+
+def render_value(field: Field, value: Any) -> str:
+    if field.choice is not None:
+        return field.choice.output.get(value, value)
+    return str(value)
+
+
+async def show_field_input(field: Field,
+                           value: Any = None, *,
+                           message: Message,
+                           replace: bool = False) -> Message:
     text = field.input_text
     if value is not None:
-        text += f"\n{CURRENT_VALUE_TEXT}: {value}"
-    return await message.answer(text, reply_markup=field_input_kb(field))
+        output_value = render_value(field, value)
+        text += f"\n{CURRENT_VALUE_TEXT}: {output_value}"
+    keyboard = field_input_kb(field)
+    if replace:
+        await message.delete()
+    return await message.answer(text, reply_markup=keyboard)
 
 
-def field_input_kb(field: Field) -> ReplyKeyboardMarkup:
+async def show_all_options(field: Field, message: Message) -> Message:
+    keyboard = field_input_kb(field, all_opts=True)
+    await message.delete()
+    return await message.answer(ALL, reply_markup=keyboard)
+
+
+def field_input_kb(field: Field, *, all_opts: bool = False) -> ReplyKeyboardMarkup:
     options = []
-    if field.kb_options:
-        options = [*field.kb_options.keys()]
-    kwargs = {}
-    if field.kb_columns:
-        kwargs["col"] = field.kb_columns
-    return options_kb(options, **kwargs)
+    if field.choice:
+        choice = field.choice
+        values = choice.all if all_opts else choice.default
+        options = [render_value(field, v) for v in values]
+        if len(options) > KB_SORTING_MIN_NUMBER:
+            options.sort()
+        if not all_opts and len(choice.default) < len(choice.all):
+            options.append(ALL)
+    return options_kb(options)
 
 
 def options_kb(options: Sequence[Any], col: int = 2) -> ReplyKeyboardMarkup | ReplyKeyboardRemove:

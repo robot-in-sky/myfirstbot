@@ -1,6 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 
-from src.entities.choices import OrderStatus, UserRole
+from src.entities.order import OrderStatus
+from src.entities.user import UserRole
 from src.tgbot.views.const import PER_PAGE_DEFAULT
 
 

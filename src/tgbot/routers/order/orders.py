@@ -3,13 +3,11 @@ from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.choices import UserRole
 from src.entities.order import OrderQuery, OrderQueryPaged
-from src.entities.user import User
-from src.services import OrderService
-from src.tgbot.views.buttons import MY_ORDERS, ORDERS
+from src.entities.user import User, UserRole
 from src.tgbot.callbacks import OrderFilterCallbackData, OrderSearchCallbackData, OrdersCallbackData
 from src.tgbot.scenes import SearchOrderScene
+from src.tgbot.views.buttons import MY_ORDERS, ORDERS
 from src.tgbot.views.order.orders import orders_result_kb, show_order_filter, show_orders
 
 router = Router()

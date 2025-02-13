@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from src.entities.choices import UserRole
-from src.entities.user import User
+from src.entities.user import User, UserRole
 from src.tgbot.callbacks import OrdersCallbackData, UserCallbackData
 from src.tgbot.views.buttons import BLOCK, SET_ROLE, UNBLOCK, USER_ORDERS
 from src.tgbot.views.const import DATE_TIME_FORMAT

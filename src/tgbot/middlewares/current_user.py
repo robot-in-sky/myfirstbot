@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
-from src.entities.user import UserAdd
+from src.entities.user.user import UserAdd
 
 if TYPE_CHECKING:
     from src.deps import Dependencies

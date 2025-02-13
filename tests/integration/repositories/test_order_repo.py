@@ -2,9 +2,9 @@ import logging
 
 import pytest
 import pytest_asyncio
-from src.entities.choices.order_status import OrderStatus
-from src.entities.order import Order, OrderAdd, OrderQueryPaged, OrderUpdate
-from src.entities.user import User, UserAdd
+from src.entities.visa.choices import OrderStatus
+from src.entities.order.order import Order, OrderAdd, OrderQueryPaged, OrderUpdate
+from src.entities.user.user import User, UserAdd
 from src.exceptions import ForeignKeyViolationError
 from src.repositories import OrderRepo, UserRepo
 

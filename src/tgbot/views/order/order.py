@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from src.entities.choices import OrderStatus
-from src.entities.order import Order
+from src.entities.order import Order, OrderStatus
 from src.entities.user import User
 from src.tgbot.callbacks import OrderCallbackData, UserCallbackData
 from src.tgbot.views import buttons

@@ -36,11 +36,9 @@ class S3Client:
 
     async def put_object(self, object_name: str, data: bytes) -> None:
         async with self.get_client() as client:
-            await client.put_object(
-                Bucket=self.bucket_name,
-                Key=object_name,
-                Body=data,
-            )
+            await client.put_object(Bucket=self.bucket_name,
+                                    Key=object_name,
+                                    Body=data)
             self._logger.info(f"File {object_name} uploaded to {self.bucket_name}")
 
 

@@ -3,8 +3,7 @@ from collections.abc import Sequence
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import OrderStatus
-from src.entities.order import Order
+from src.entities.order import Order, OrderStatus
 from src.entities.user import User
 from src.tgbot.callbacks import (
     OrderCallbackData,

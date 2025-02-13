@@ -3,9 +3,8 @@ from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.choices import UserRole
 from src.entities.order import OrderAdd, OrderQueryPaged
-from src.entities.user import User
+from src.entities.user import User, UserRole
 from src.tgbot.callbacks import OrderCallbackData, OrdersCallbackData
 from src.tgbot.scenes import EditOrderScene, NewOrderScene
 from src.tgbot.views import buttons

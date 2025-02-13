@@ -7,8 +7,15 @@ from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import UserRole
-from src.entities.user import USER_SEARCH_BY, User, UserAdd, UserQuery, UserQueryPaged, UserUpdate
+from src.entities.user import (
+    User,
+    UserAdd,
+    UserQuery,
+    UserQueryPaged,
+    UserRole,
+    UserSearchBy,
+    UserUpdate,
+)
 from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
 from src.repositories.orm_models import OrmUser
@@ -105,7 +112,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, USER_SEARCH_BY)
+            stmt = apply_search(stmt, query.search, list(map(str, UserSearchBy)))
 
         return stmt
 
@@ -131,19 +138,16 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
                 per_page = query.per_page
                 total_pages = ceil(total_items / query.per_page)
 
-            return QueryResult[User](
-                items=items,
-                page=page,
-                per_page=per_page,
-                total_pages=total_pages,
-                total_items=total_items,
-            )
+            return QueryResult[User](items=items,
+                                     page=page,
+                                     per_page=per_page,
+                                     total_pages=total_pages,
+                                     total_items=total_items)
 
 
     async def get_count(self, query: UserQuery) -> int:
         stmt = select(OrmUser)
         stmt = self._apply_filters(stmt, query)
-
         async with self.db.get_session() as session:
             return await get_row_count(session, stmt)
 
@@ -155,9 +159,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
         query.role__in = None
         stmt = self._apply_filters(stmt, query)
         stmt = stmt.group_by(column).order_by(column)
-
         async with self.db.get_session() as session:
             result = (await session.execute(stmt)).all()
-            return [QueryCountItem[UserRole](
-                value=item[0], count=item[1],
-            ) for item in result]
+            return [QueryCountItem[UserRole](value=item[0],
+                                             count=item[1]) for item in result]

@@ -7,13 +7,13 @@ from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import VisaStatus
-from src.entities.visa import (
-    VISA_SEARCH_BY,
+from src.entities.visa.choices import VisaStatus
+from src.entities.visa.visa import (
     Visa,
     VisaAdd,
     VisaQuery,
     VisaQueryPaged,
+    VisaSearchBy,
     VisaUpdate,
 )
 from src.io.database import DatabaseClient
@@ -114,7 +114,7 @@ class VisaRepo(AbstractRepo[Visa, VisaAdd, VisaUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, VISA_SEARCH_BY)
+            stmt = apply_search(stmt, query.search, list(map(str, VisaSearchBy)))
 
         return stmt
 
@@ -140,18 +140,15 @@ class VisaRepo(AbstractRepo[Visa, VisaAdd, VisaUpdate]):
                 per_page = query.per_page
                 total_pages = ceil(total_items / query.per_page)
 
-            return QueryResult[Visa](
-                items=items,
-                page=page,
-                per_page=per_page,
-                total_pages=total_pages,
-                total_items=total_items,
-            )
+            return QueryResult[Visa](items=items,
+                                     page=page,
+                                     per_page=per_page,
+                                     total_pages=total_pages,
+                                     total_items=total_items)
 
     async def get_count(self, query: VisaQuery) -> int:
         stmt = select(OrmVisa)
         stmt = self._apply_filters(stmt, query)
-
         async with self.db.get_session() as session:
             return await get_row_count(session, stmt)
 
@@ -163,9 +160,7 @@ class VisaRepo(AbstractRepo[Visa, VisaAdd, VisaUpdate]):
         query.status__in = None
         stmt = self._apply_filters(stmt, query)
         stmt = stmt.group_by(column).order_by(column)
-
         async with self.db.get_session() as session:
             result = (await session.execute(stmt)).all()
-            return [QueryCountItem[VisaStatus](
-                value=item[0], count=item[1],
-            ) for item in result]
+            return [QueryCountItem[VisaStatus](value=item[0],
+                                               count=item[1]) for item in result]
