@@ -3,8 +3,14 @@ from collections.abc import Sequence
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import UserRole
-from src.entities.user import User
+from src.entities.user import User, UserRole
+from src.tgbot.callbacks import (
+    UserCallbackData,
+    UserFilterCallbackData,
+    UserSearchCallbackData,
+    UsersCallbackData,
+)
+from src.tgbot.utils.helpers import cut_string
 from src.tgbot.views.buttons import (
     BACK,
     FILTER,
@@ -16,14 +22,7 @@ from src.tgbot.views.buttons import (
     SEARCH_RESET,
     TO_MENU,
 )
-from src.tgbot.callbacks import (
-    UserCallbackData,
-    UserFilterCallbackData,
-    UserSearchCallbackData,
-    UsersCallbackData,
-)
 from src.tgbot.views.const import BUTTON_TEXT_MAX_LEN, COLUMN_DELIMITER
-from src.tgbot.utils.helpers import cut_string
 from src.tgbot.views.user.user import user_role
 
 

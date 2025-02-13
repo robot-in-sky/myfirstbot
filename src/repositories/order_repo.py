@@ -7,8 +7,15 @@ from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.choices import OrderStatus
-from src.entities.order import ORDER_SEARCH_BY, Order, OrderAdd, OrderQuery, OrderQueryPaged, OrderUpdate
+from src.entities.order import (
+    Order,
+    OrderAdd,
+    OrderQuery,
+    OrderQueryPaged,
+    OrderSearchBy,
+    OrderStatus,
+    OrderUpdate,
+)
 from src.io.database import DatabaseClient
 from src.repositories.base import AbstractRepo
 from src.repositories.orm_models import OrmOrder
@@ -107,7 +114,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
         stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, ORDER_SEARCH_BY)
+            stmt = apply_search(stmt, query.search, list(map(str, OrderSearchBy)))
 
         return stmt
 
@@ -133,19 +140,16 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
                 per_page = query.per_page
                 total_pages = ceil(total_items / query.per_page)
 
-            return QueryResult[Order](
-                items=items,
-                page=page,
-                per_page=per_page,
-                total_pages=total_pages,
-                total_items=total_items,
-            )
+            return QueryResult[Order](items=items,
+                                      page=page,
+                                      per_page=per_page,
+                                      total_pages=total_pages,
+                                      total_items=total_items)
 
 
     async def get_count(self, query: OrderQuery) -> int:
         stmt = select(OrmOrder)
         stmt = self._apply_filters(stmt, query)
-
         async with self.db.get_session() as session:
             return await get_row_count(session, stmt)
 
@@ -157,9 +161,7 @@ class OrderRepo(AbstractRepo[Order, OrderAdd, OrderUpdate]):
         query.status__in = None
         stmt = self._apply_filters(stmt, query)
         stmt = stmt.group_by(column).order_by(column)
-
         async with self.db.get_session() as session:
             result = (await session.execute(stmt)).all()
-            return [QueryCountItem[OrderStatus](
-                value=item[0], count=item[1],
-            ) for item in result]
+            return [QueryCountItem[OrderStatus](value=item[0],
+                                                count=item[1]) for item in result]

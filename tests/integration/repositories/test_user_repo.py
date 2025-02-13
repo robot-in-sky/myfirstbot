@@ -2,8 +2,8 @@ import logging
 
 import pytest
 import pytest_asyncio
-from src.entities.choices.user_role import UserRole
-from src.entities.user import User, UserAdd, UserQueryPaged, UserUpdate
+from src.entities.visa.choices import UserRole
+from src.entities.user.user import User, UserAdd, UserQueryPaged, UserUpdate
 from src.exceptions import UniqueViolationError
 from src.repositories import UserRepo
 

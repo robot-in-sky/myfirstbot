@@ -22,7 +22,7 @@ class FormSection(BaseModel):
     fields: list[Field]
 
 
-async def validate_field_input(f: Field, text: str) -> None:
+def validate_field_input(f: Field, text: str) -> None:
     if f.validators:
         value: str | int
         match f.type:

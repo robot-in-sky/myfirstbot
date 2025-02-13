@@ -1,6 +1,6 @@
 from aio_pika.patterns import JsonRPC
 
-from src.entities import User
+from src.entities.user import User
 from src.io.database import DatabaseClient
 from src.io.redis import RedisClient
 from src.io.s3 import S3Client

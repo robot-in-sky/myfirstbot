@@ -4,8 +4,8 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.order import OrderAdd
-from src.entities.user import User
+from src.entities.order.order import OrderAdd
+from src.entities.user.user import User
 from src.services import OrderService
 from src.tgbot.scenes.order import ORDER_FIELDS
 from src.tgbot.utils.fields import validate_field_input
@@ -64,7 +64,7 @@ class NewOrderScene(Scene, state="new_order"):
         order_data = data.get("order", {})
         if message.text:
             field = ORDER_FIELDS[step]
-            await validate_field_input(field, message.text)
+            validate_field_input(field, message.text)
             order_data[field.id] = message.text
             await state.update_data(order=order_data, step=step + 1)
             await self.wizard.retake()

@@ -42,3 +42,5 @@ EDITOR_EDIT = "✏️"
 EDITOR_RESET = "✏️ ↩"
 SAVE = "💾 Сохранить"
 CONFIRM = "✅ OK"
+
+ALL = "..."

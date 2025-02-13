@@ -1,16 +1,10 @@
-import asyncio
-
-from aiogram import Bot, F, Router, types
+from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, CallbackQuery, InputMediaPhoto, Message
-from uuid_extensions import uuid7
+from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.choices import UserRole
-from src.entities.passport import PassportFiles
-from src.entities.recognition import RecognitionResult
-from src.entities.user import User
+from src.entities.user import User, UserRole
 from src.tgbot.views.menu import show_menu, signin_menu_kb
 from src.tgbot.views.user.user import user_role
 

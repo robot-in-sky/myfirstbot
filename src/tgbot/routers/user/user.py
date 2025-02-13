@@ -2,8 +2,8 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities import User
 from src.entities.order import OrderQuery
+from src.entities.user import User
 from src.tgbot.callbacks import UserCallbackData
 from src.tgbot.filters import IsAdmin
 from src.tgbot.views.user.user import show_user

@@ -18,7 +18,7 @@ def visa_type_kb() -> InlineKeyboardMarkup:
 
 def check_passport_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="Отправить снова",
+        InlineKeyboardButton(text="Ещё раз",
                               callback_data="passport_checked:no"),
         InlineKeyboardButton(text="OK",
                               callback_data="passport_checked:yes")]])

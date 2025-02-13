@@ -46,7 +46,7 @@ class EditOrderScene(Scene, state="edit_order"):
         if query.data is None:
             return
         order_id = OrderCallbackData.unpack(query.data).id
-        order_data = (await OrderService(deps, current_user).get(order_id)).model_dump()
+        order_data = (await deps.orders(current_user).get(order_id)).model_dump()
         field_ids = ["id"] + [f.id for f in ORDER_FIELDS]
         order_data = {id_: order_data[id_] for id_ in field_ids}
         idx = 0
@@ -128,7 +128,7 @@ class EditOrderScene(Scene, state="edit_order"):
         if data["expect_input"] and message.text:
             order_data, idx = data["order_updated"], data["selector_idx"]
             field = ORDER_FIELDS[idx]
-            await validate_field_input(field, message.text)
+            validate_field_input(field, message.text)
             order_data[field.id] = message.text
             await message.answer("Значение изменено", reply_markup=ReplyKeyboardRemove())
             await message.chat.delete_message(data["message_id"])
