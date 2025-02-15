@@ -1,15 +1,18 @@
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-SECTION_DONE_TEXTS = ["Проверьте введённые данные",
-                      "Отлично! Проверьте данные",
-                      "А теперь проверьте"]
+from src.tgbot.views import buttons
+
+FORM_DONE_TEXT = ("🎉🎉🎉 Ура! Анкета заполнена!\n"
+                  "Сохраняем данные?")
+FORM_RECHECK = "⏫ Начнём с начала"
+
+def form_check_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=buttons.CHECK_AGAIN, callback_data="form_checked:no")],
+        [InlineKeyboardButton(text=buttons.SAVE, callback_data="form_checked:yes")]])
 
 
-def get_section_done_text(step: int) -> str:
-    idx = step % len(SECTION_DONE_TEXTS)
-    return SECTION_DONE_TEXTS[idx]
-
-
-async def show_section_done_message(message: Message, *, step: int) -> None:
-    text = get_section_done_text(step)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+async def show_form_done_message(message: Message) -> Message:
+    text = FORM_DONE_TEXT
+    keyboard = form_check_kb()
+    return await message.answer(text, reply_markup=keyboard)

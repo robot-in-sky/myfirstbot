@@ -2,10 +2,10 @@ from src.entities.form import PortInd
 
 PORT_IND_ALL = list(PortInd)
 
-PORT_IND_DEFAULT = [PortInd.I033,
-                    PortInd.I034,
-                    PortInd.I004,
-                    PortInd.I001]
+PORT_IND_FEATURED = [PortInd.I033,
+                     PortInd.I034,
+                     PortInd.I004,
+                     PortInd.I001]
 
 PORT_IND_OUTPUT = {
     PortInd.I022: "Аэропорт Ахмедабад",

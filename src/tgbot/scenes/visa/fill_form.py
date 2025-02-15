@@ -7,7 +7,7 @@ from src.deps import Dependencies
 from src.exceptions import ValidationError
 from src.tgbot.views.buttons import ALL
 from src.tgbot.views.form.field import show_all_options, show_field_input
-from src.tgbot.views.form.form import show_section_done_message
+from src.tgbot.views.form.form import FORM_RECHECK, show_form_done_message
 
 """
     "form.form_id": form_id,
@@ -36,7 +36,7 @@ class FillFormScene(Scene, state="fill_form"):
             section = form.sections[form_step]
             await state.set_data(data)
         except IndexError:
-            await self.wizard.goto("apply_visa")
+            await show_form_done_message(message)
         else:
 
             if section_step == 0:
@@ -46,8 +46,6 @@ class FillFormScene(Scene, state="fill_form"):
             try:
                 field = section.fields[section_step]
             except IndexError:
-                # if section.id != "passport_details":
-                #    await show_section_done_message(message, step=form_step)
                 await self.wizard.goto("edit_section", section_id=section.id)
             else:
                 # Skip field if value is not empty
@@ -73,6 +71,24 @@ class FillFormScene(Scene, state="fill_form"):
                                         form_id=form_id)
 
 
+    @on.callback_query(F.data)
+    async def form_data_update_callback(self, query: CallbackQuery, state: FSMContext) -> None:
+        await query.answer()
+        if isinstance(query.message, Message) and query.data.startswith("form_checked:"):
+            _, checked = query.data.split(":")
+            if checked == "no":
+                data = await state.get_data()
+                form_id = data["form.form_id"]
+                data["form.form_step"] = 0
+                data["form.section_step"] = 0
+                await state.set_data(data)
+                await query.message.edit_text(FORM_RECHECK)
+                await self.wizard.retake(form_id=form_id)
+            elif checked == "yes":
+                await query.message.delete()
+                await self.wizard.goto("apply_visa")
+
+
     @on.message(F.text)
     async def process_input(self,
                             message: Message,
@@ -90,11 +106,11 @@ class FillFormScene(Scene, state="fill_form"):
                 await show_all_options(field, message=message)
                 return
             try:
-                value = deps.forms.validate_field_input(field, message.text)
+                value = deps.forms.validate_input(field, message.text)
             except ValidationError as error:
                 await message.answer(str(error))
-            else:
-                data[f"form.data.{section.id}.{field.id}"] = value
-                data["form.section_step"] = section_step + 1
-                await state.set_data(data)
-                await self.wizard.retake(form_id=form_id)
+                return
+            data[f"form.data.{section.id}.{field.id}"] = value
+            data["form.section_step"] = section_step + 1
+            await state.set_data(data)
+            await self.wizard.retake(form_id=form_id)

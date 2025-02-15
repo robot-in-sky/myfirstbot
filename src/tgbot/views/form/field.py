@@ -1,17 +1,27 @@
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Any
 
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from src.entities.form import Field
 from src.tgbot.views.buttons import ALL
+from src.tgbot.views.const import DATE_TIME_FORMAT
 
 CURRENT_VALUE_TEXT = "Текущее значение"
 KB_SORTING_MIN_NUMBER = 10
 
 
 def render_value(field: Field, value: Any) -> str:
-    if field.choice is not None:
+    if value is None:
+        return "-"
+    if field.is_date:
+        try:
+            date_ = datetime.strptime(value, "%Y-%m-%d").date()  # noqa: DTZ007
+            return date_.strftime(DATE_TIME_FORMAT)
+        except ValueError:
+            pass
+    if field.choice:
         return field.choice.output.get(value, value)
     return str(value)
 
@@ -40,11 +50,11 @@ def field_input_kb(field: Field, *, all_opts: bool = False) -> ReplyKeyboardMark
     options = []
     if field.choice:
         choice = field.choice
-        values = choice.all if all_opts else choice.default
+        values = choice.all if all_opts else choice.featured
         options = [render_value(field, v) for v in values]
         if len(options) > KB_SORTING_MIN_NUMBER:
             options.sort()
-        if not all_opts and len(choice.default) < len(choice.all):
+        if not all_opts and len(choice.featured) < len(choice.all):
             options.append(ALL)
     return options_kb(options)
 

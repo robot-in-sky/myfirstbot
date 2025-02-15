@@ -1,8 +1,7 @@
 from src.entities.form import Choice, Field, Form, Section
-from src.tgbot.utils.helpers import get_key_by_value
 
 from . import choices
-from .field_validator import validate_field
+from .field_validators import apply_validators, validate_choice_input, validate_date_input
 
 
 class FormService:
@@ -10,93 +9,283 @@ class FormService:
         self._choices = [
             Choice(id="country",
                    all=choices.country.COUNTRY_ALL,
-                   default=choices.country.COUNTRY_DEFAULT,
+                   featured=choices.country.COUNTRY_FEATURED,
                    output=choices.country.COUNTRY_OUTPUT),
 
             Choice(id="gender",
                    all=choices.gender.GENDER_ALL,
-                   default=choices.gender.GENDER_DEFAULT,
+                   featured=choices.gender.GENDER_FEATURED,
                    output=choices.gender.GENDER_OUTPUT),
 
             Choice(id="martial_status",
                    all=choices.martial_status.MARTIAL_STATUS_ALL,
-                   default=choices.martial_status.MARTIAL_STATUS_DEFAULT,
+                   featured=choices.martial_status.MARTIAL_STATUS_FEATURED,
                    output=choices.martial_status.MARTIAL_STATUS_OUTPUT),
 
             Choice(id="education_ind",
                    all=choices.education.EDUCATION_IND_ALL,
-                   default=choices.education.EDUCATION_IND_DEFAULT,
+                   featured=choices.education.EDUCATION_IND_FEATURED,
                    output=choices.education.EDUCATION_IND_OUTPUT),
 
             Choice(id="port_ind",
                    all=choices.port.PORT_IND_ALL,
-                   default=choices.port.PORT_IND_DEFAULT,
+                   featured=choices.port.PORT_IND_FEATURED,
                    output=choices.port.PORT_IND_OUTPUT),
 
             Choice(id="religion_ind",
                    all=choices.religion.RELIGION_IND_ALL,
-                   default=choices.religion.RELIGION_IND_DEFAULT,
+                   featured=choices.religion.RELIGION_IND_FEATURED,
                    output=choices.religion.RELIGION_IND_OUTPUT),
         ]
 
         self._fields = [
+            # 1. REGISTRATION
+            Field(id="nationality",
+                  name="Гражданство",
+                  input_text="Укажите гражданство (по паспорту)",
+                  choice=self.get_choice("country")),
+
+            Field(id="entry_port",
+                  name="Порт прибытия",
+                  input_text="Выберите планируемый порт прибытия",
+                  choice=self.get_choice("port_ind")),
+
+            Field(id="arrival_date",
+                  name="Дата прибытия",
+                  input_text="Выедите планируемую дату прибытия в формате ДД.ММ.ГГГГ",
+                  is_date=True),
+
+            # 2. BASIC DETAILS
+            # 2.1 Applicant Details
             Field(id="surname",
                   name="Фамилия",
-                  input_text="Введите фамилию на английском, как в загранпаспорте",
-                  validators=["str20", "eng"]),
+                  input_text="Введите фамилию на английском, как в паспорте",
+                  validators=["str50", "eng_chars_spaces"]),
 
             Field(id="given_name",
                   name="Имя",
-                  input_text="Введите имя на английском, как в загранпаспорте",
-                  validators=["str20", "eng"]),
+                  input_text="Введите имя на английском, как в паспорте",
+                  validators=["str50", "eng_chars_spaces"]),
+
+            Field(id="prev_surname",
+                  name="Предыдущая фамилия",
+                  input_text="Введите предыдущую фамилию на английском",
+                  validators=["str50", "eng_chars_spaces"]),
+
+            Field(id="prev_given_name",
+                  name="Предыдущее имя",
+                  input_text="Введите предыдущее имя на английском",
+                  validators=["str50", "eng_chars_spaces"]),
 
             Field(id="gender",
                   name="Пол",
                   input_text="Укажите пол",
                   choice=self.get_choice("gender")),
 
-            Field(id="nationality",
-                  name="Гражданство",
-                  input_text="Гражданство по паспорту",
-                  choice=self.get_choice("country")),
-
             Field(id="birth_date",
                   name="Дата рождения",
                   input_text="Введите дату рождения в формате ДД.ММ.ГГГГ",
-                  validators = ["birth_date"]),
+                  is_date=True),
 
-            Field(id="nationality",
-                  name="Гражданство",
-                  input_text="Гражданство по паспорту",
+            Field(id="birth_country",
+                  name="Страна рождения",
+                  input_text="Укажите страну рождения",
                   choice=self.get_choice("country")),
+
+            Field(id="birth_place",
+                  name="Место рождения",
+                  input_text="Укажите место рождения:\n"
+                             "только название города или региона на английском",
+                  validators=["str50", "eng_chars_digits_spaces"]),
+
+            Field(id="national_id_no",
+                  name="Внутренний документ",
+                  input_text="Номер внутреннего идентифицирующего документа (внутреннего паспорта)",
+                  validators=["str30", "eng_chars_digits_spaces"]),
+
+            Field(id="religion_ind",
+                  name="Религия",
+                  input_text="Укажите религиозную принадлежность",
+                  choice=self.get_choice("religion_ind")),
+
+            Field(id="religion_other",
+                  name="Религия другое",
+                  input_text="Укажите религиозную принадлежность на английском",
+                  validators=["str20", "eng_chars_spaces"]),
+
+            Field(id="education_ind",
+                  name="Образование",
+                  input_text="Укажите образование",
+                  choice=self.get_choice("education_ind")),
+
+            Field(id="prev_country",
+                  name="Предыдущее гражданство",
+                  input_text="Укажите предыдущее гражданство",
+                  choice=self.get_choice("country")),
+
+            # 2.2 Passport Details
+            Field(id="passport_no",
+                  name="Номер паспорта",
+                  input_text="Укажите номер паспорта (загран)",
+                  validators=["str14", "digits_spaces"]),
+
+            Field(id="passport_issue_place",
+                  name="Место выдачи",
+                  input_text="Укажите место выдачи паспорта",
+                  validators=["str20", "eng_chars_digits_spaces"]),
+
+            Field(id="passport_issue_date",
+                  name="Дата выдачи",
+                  input_text="Укажите дату выдачи паспорта в формате ДД.ММ.ГГГГ",
+                  is_date=True),
+
+            Field(id="passport_expiry_date",
+                  name="Дата окончания",
+                  input_text="Укажите дату окончания срока действия паспорта в формате ДД.ММ.ГГГГ",
+                  is_date=True),
+
+            # 3. FAMILY DETAILS
+            # 3.1 Address Details
+            Field(id="country",
+                  name="Страна проживания",
+                  input_text="Укажите страну проживания",
+                  choice=self.get_choice("country")),
+
+            Field(id="state",
+                  name="Регион",
+                  input_text="Введите название региона на английском",
+                  validators=["str35", "eng_chars_digits_spaces"]),
+
+            Field(id="address",
+                  name="Адрес",
+                  input_text="Введите адрес проживания на английском",
+                  validators=["str35", "address"]),
+
+            Field(id="zipcode",
+                  name="Индекс",
+                  input_text="Укажите почтовый индекс",
+                  validators=["str15", "digits"]),
+
+            Field(id="phone",
+                  name="Номер телефона",
+                  input_text="Введите номер телефона",
+                  validators=["str15", "phone"]),
+
+            # 3.2 Family Details
+            Field(id="father_name",
+                  name="Имя отца",
+                  input_text="Введите имя отца на английском",
+                  validators=["str50", "eng_chars_spaces"]),
+
+            Field(id="father_nationality",
+                  name="Гражданство отца",
+                  input_text="Укажите гражданство отца",
+                  choice=self.get_choice("country")),
+
+            Field(id="father_birth_country",
+                  name="Страна рождения отца",
+                  input_text="Укажите страну рождения отца",
+                  choice=self.get_choice("country")),
+
+            Field(id="father_birth_place",
+                  name="Место рождения отца",
+                  input_text="Укажите место рождения отца:\n"
+                             "только название города или региона на английском",
+                  validators=["str50", "eng_chars_digits_spaces"]),
 
             Field(id="mother_name",
                   name="Имя матери",
                   input_text="Введите имя матери на английском",
-                  validators=["str20", "eng"]),
+                  validators=["str50", "eng_chars_spaces"]),
+
+            Field(id="mother_nationality",
+                  name="Гражданство матери",
+                  input_text="Укажите гражданство матери",
+                  choice=self.get_choice("country")),
+
+            Field(id="mother_birth_country",
+                  name="Страна рождения матери",
+                  input_text="Укажите страну рождения матери",
+                  choice=self.get_choice("country")),
+
+            Field(id="mother_birth_place",
+                  name="Место рождения матери",
+                  input_text="Укажите место рождения матери:\n"
+                             "только название города или региона на английском",
+                  validators=["str50", "eng_chars_digits_spaces"]),
+
+            Field(id="martial_status",
+                  name="Семейное положение",
+                  input_text="Укажите семейное положение",
+                  choice=self.get_choice("martial_status")),
         ]
 
         self._sections = [
+            Section(id="registration",
+                    name="Регистрационные данные",
+                    fields=[
+                        self.get_field("nationality"),
+                        self.get_field("entry_port"),
+                        self.get_field("arrival_date"),
+                    ]),
+
+            Section(id="applicant_details",
+                    name="Данные заявителя",
+                    fields=[
+                        self.get_field("surname"),
+                        self.get_field("given_name"),
+                        self.get_field("gender"),
+                        self.get_field("birth_date"),
+                        self.get_field("birth_country"),
+                        self.get_field("birth_place"),
+                        self.get_field("national_id_no"),
+                        self.get_field("religion_ind"),
+                        self.get_field("education_ind"),
+                    ]),
+
             Section(id="passport_details",
-                    name="Паспортные данные",
-                    fields=[self.get_field("given_name"),
-                            self.get_field("surname"),
-                            self.get_field("gender")]),
+                    name="Данные паспорта",
+                    fields=[
+                        self.get_field("passport_no"),
+                        self.get_field("passport_issue_place"),
+                        self.get_field("passport_issue_date"),
+                        self.get_field("passport_expiry_date"),
+                    ]),
 
             Section(id="address_details",
                     name="Данные о месте проживания",
-                    fields=[self.get_field("nationality")]),
+                    fields=[
+                        self.get_field("country"),
+                        self.get_field("state"),
+                        self.get_field("address"),
+                        self.get_field("zipcode"),
+                        self.get_field("phone"),
+                    ]),
 
             Section(id="family_details",
                     name="Данные о семье",
-                    fields=[self.get_field("mother_name")]),
+                    fields=[
+                        self.get_field("martial_status"),
+                        self.get_field("father_name"),
+                        self.get_field("father_nationality"),
+                        self.get_field("father_birth_country"),
+                        self.get_field("father_birth_place"),
+                        self.get_field("mother_name"),
+                        self.get_field("mother_nationality"),
+                        self.get_field("mother_birth_country"),
+                        self.get_field("mother_birth_place"),
+                    ]),
         ]
 
         self._forms = [
             Form(id="ind_tour", name="Туристическая виза в Индию",
-                 sections=[self.get_section("passport_details"),
-                           self.get_section("address_details"),
-                           self.get_section("family_details")]),
+                 sections=[
+                     self.get_section("registration"),
+                     self.get_section("applicant_details"),
+                     self.get_section("passport_details"),
+                     self.get_section("address_details"),
+                     self.get_section("family_details"),
+                 ]),
         ]
 
     def get_choice(self, id_: str) -> Choice:
@@ -113,13 +302,14 @@ class FormService:
 
 
     @staticmethod
-    def validate_field_input(field: Field, text: str) -> str:
+    def validate_input(field: Field, text: str) -> str:
         value = text.strip()
-        validators = []
-        if field.choice:
-            value = get_key_by_value(field.choice.output, value, value)
-            validators.append(field.choice.id)
-        if field.validators:
-            validators.extend(field.validators)
-        validate_field(value, validators)
+        if field.is_date:
+            date_value = validate_date_input(field, value)
+            value = str(date_value)
+        elif field.choice:
+            choice_value = validate_choice_input(field, value)
+            value = str(choice_value)
+        elif field.validators:
+            apply_validators(value, field.validators)
         return value

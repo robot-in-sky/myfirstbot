@@ -2,8 +2,8 @@ from src.entities.form import Country
 
 COUNTRY_ALL = list(Country)
 
-COUNTRY_DEFAULT = [Country.RUS, Country.KAZ,
-                   Country.BLR]
+COUNTRY_FEATURED = [Country.RUS, Country.KAZ,
+                    Country.BLR]
 
 COUNTRY_OUTPUT = {
     Country.AFG: "Афганистан",
