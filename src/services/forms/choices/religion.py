@@ -2,10 +2,10 @@ from src.entities.form import ReligionInd
 
 RELIGION_IND_ALL = list(ReligionInd)
 
-RELIGION_IND_DEFAULT = [ReligionInd.CHRISTIAN,
-                        ReligionInd.ISLAM,
-                        ReligionInd.HINDU,
-                        ReligionInd.BUDDHISM]
+RELIGION_IND_FEATURED = [ReligionInd.CHRISTIAN,
+                         ReligionInd.HINDU,
+                         ReligionInd.BUDDHISM,
+                         ReligionInd.ISLAM]
 
 RELIGION_IND_OUTPUT = {
     ReligionInd.BAHAI: "Бахаи",

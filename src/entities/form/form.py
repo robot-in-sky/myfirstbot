@@ -6,7 +6,7 @@ from enum import Enum
 class Choice:
     id: str
     all: list[Enum]
-    default: list[Enum]
+    featured: list[Enum]
     output: dict[Enum, str]
 
 
@@ -15,6 +15,7 @@ class Field:
     id: str
     name: str
     input_text: str
+    is_date: bool = False
     choice: Choice | None = None
     validators: list[str] | None = None
 

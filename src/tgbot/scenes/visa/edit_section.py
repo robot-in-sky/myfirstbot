@@ -73,7 +73,7 @@ class EditSectionScene(Scene, state="edit_section"):
                             message_id=query.message.message_id,
                             reply_markup=None)
                         await show_section_completed(query.message)
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(0.3)
                         # Switch form step
                         form_id = data["form.form_id"]
                         form_step = data.get("form.form_step", 0)
@@ -108,11 +108,11 @@ class EditSectionScene(Scene, state="edit_section"):
                     await show_all_options(field, message=message)
                     return
                 try:
-                    value = deps.forms.validate_field_input(field, message.text)
+                    value = deps.forms.validate_input(field, message.text)
                 except ValidationError as error:
                     await message.answer(str(error))
-                else:
-                    data[f"form.data.{section_id}.{field_id}"] = value
-                    data["section.field_id"] = None
-                    await state.set_data(data)
-                    await self.wizard.retake(section_id=section_id)
+                    return
+                data[f"form.data.{section_id}.{field_id}"] = value
+                data["section.field_id"] = None
+                await state.set_data(data)
+                await self.wizard.retake(section_id=section_id)
