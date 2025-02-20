@@ -74,19 +74,31 @@ class FormService:
                   input_text="Введите имя на английском, как в паспорте",
                   validators=["str50", "eng_chars_spaces"]),
 
+            Field(id="_prev_surname_cond",
+                  name="Фамилия менялась?",
+                  input_text="Менялась ли фамилия когда-либо?",
+                  type=FieldType.CHOICE,
+                  choice=self.get_choice("yes_no"),
+                  hidden=True),
+
             Field(id="prev_surname",
                   name="Предыдущая фамилия",
                   input_text="Введите предыдущую фамилию на английском",
                   validators=["str50", "eng_chars_spaces"],
-                  is_optional=True,
-                  condition_text="Менялась ли фамилия когда-либо?"),
+                  depends_on="_prev_surname_cond"),
+
+            Field(id="_prev_given_name_cond",
+                  name="Имя менялось?",
+                  input_text="Менялось ли имя когда-либо?",
+                  type=FieldType.CHOICE,
+                  choice=self.get_choice("yes_no"),
+                  hidden=True),
 
             Field(id="prev_given_name",
                   name="Предыдущее имя",
                   input_text="Введите предыдущее имя на английском",
                   validators=["str50", "eng_chars_spaces"],
-                  is_optional=True,
-                  condition_text="Менялось ли имя когда-либо?"),
+                  depends_on="_prev_given_name_cond"),
 
             Field(id="gender",
                   name="Пол",
@@ -128,13 +140,19 @@ class FormService:
                   type=FieldType.CHOICE,
                   choice=self.get_choice("education_ind")),
 
+            Field(id="_prev_nationality_cond",
+                  name="Гражданство менялось?",
+                  input_text="Менялось ли гражданство когда-либо?",
+                  type=FieldType.CHOICE,
+                  choice=self.get_choice("yes_no"),
+                  hidden=True),
+
             Field(id="prev_nationality",
                   name="Предыдущее гражданство",
                   input_text="Укажите предыдущее гражданство",
                   type=FieldType.CHOICE,
                   choice=self.get_choice("country"),
-                  is_optional=True,
-                  condition_text="Менялось ли гражданство когда-либо?"),
+                  depends_on="_prev_nationality_cond"),
 
             # 2.2 Passport Details
             Field(id="passport_no",
@@ -253,16 +271,19 @@ class FormService:
                     fields=[
                         self.get_field("surname"),
                         self.get_field("given_name"),
-                        self.get_field("prev_surname"),
-                        self.get_field("prev_given_name"),
                         self.get_field("gender"),
                         self.get_field("birth_date"),
                         self.get_field("birth_country"),
                         self.get_field("birth_place"),
                         self.get_field("national_id_no"),
-                        self.get_field("religion_ind"),
-                        self.get_field("education_ind"),
+                        self.get_field("_prev_surname_cond"),
+                        self.get_field("prev_surname"),
+                        self.get_field("_prev_given_name_cond"),
+                        self.get_field("prev_given_name"),
+                        self.get_field("_prev_nationality_cond"),
                         self.get_field("prev_nationality"),
+                        self.get_field("education_ind"),
+                        self.get_field("religion_ind"),
                     ]),
 
             Section(id="passport_details",
@@ -337,14 +358,3 @@ class FormService:
                 validators = field.validators or []
                 apply_validators(value, validators)
         return value
-
-
-    def get_condition_field(self, field: Field, id_: str | None = None ) -> Field:
-        default_id = f"{field.id}_condition"
-        name = f"{field.name}?"
-        return Field(
-            id=id_ or default_id,
-            name=name,
-            input_text=field.condition_text,
-            type=FieldType.CHOICE,
-            choice=self.get_choice("yes_no"))

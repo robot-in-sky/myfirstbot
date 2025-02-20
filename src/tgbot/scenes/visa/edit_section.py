@@ -6,22 +6,22 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
+from src.entities.form import FieldType, YesNo
 from src.exceptions import ValidationError
 from src.tgbot.utils.helpers import sub_dict_by_prefix
-from src.tgbot.views.buttons import ALL, NO
-from src.tgbot.views.form.field import show_all_options, show_field_condition, show_field_input
+from src.tgbot.views.buttons import ALL
+from src.tgbot.views.form.field import show_all_options, show_field_input
 from src.tgbot.views.form.section import show_section, show_section_completed, show_section_fields
 
 """
     "section.section_id": section_id,
     "section.field_id": field_id,
+    "section.check_condition": True,
 
     "form.form_id": form_id,
     "form.form_step": form_step,
     "form.section_step": section_step,
     "form.data.{section_id}.{field_id}": value
-
-    "field.check_condition": True,
     ...
 """
 
@@ -40,13 +40,12 @@ class EditSectionScene(Scene, state="edit_section"):
             # Set defaults
             data["section.section_id"] = section_id
             data["section.field_id"] = None
-            data["field.check_condition"] = True
+            data["section.check_condition"] = True
             await state.set_data(data)
 
-        # Show template depending on state data
         section_id = data["section.section_id"]
         field_id = data["section.field_id"]
-        check_condition = data["field.check_condition"]
+        check_conditions = data["section.check_condition"]
 
         if field_id is None:
             section = deps.forms.get_section(section_id)
@@ -54,11 +53,9 @@ class EditSectionScene(Scene, state="edit_section"):
             await show_section(section, section_data, message=message)
         else:
             field = deps.forms.get_field(field_id)
-            if check_condition and field.is_optional:
-                await show_field_condition(field, message=message, replace=True)
-            else:
-                value = data[f"form.data.{section_id}.{field_id}"]
-                await show_field_input(field, value, message=message, replace=True)
+            if check_conditions and field.depends_on:
+                field = deps.forms.get_field(field.depends_on)
+            await show_field_input(field, message=message, replace=True)
 
 
     @on.callback_query.enter()
@@ -121,35 +118,46 @@ class EditSectionScene(Scene, state="edit_section"):
 
         if message.text:
             data = await state.get_data()
-
             section_id = data["section.section_id"]
             field_id = data["section.field_id"]
-            check_condition = data["field.check_condition"]
-
+            check_conditions = data["section.check_condition"]
+            # Field to edit
             field = deps.forms.get_field(field_id)
 
-            if message.text == ALL:
+            # Field to validate and save
+            _field = field
+            if check_conditions and field.depends_on:
+                _field = deps.forms.get_field(field.depends_on)
+
+            if _field.type == FieldType.CHOICE and message.text == ALL:
                 await show_all_options(field, message=message)
                 return
 
-            if check_condition and field.is_optional:
-                if message.text == NO:
-                    value = None
-                else:
-                    data["field.check_condition"] = False
-                    await state.set_data(data)
-                    await self.wizard.retake()
-                    return
+            try:
+                value = deps.forms.validate_input(_field, message.text)
+            except ValidationError as error:
+                await message.answer(str(error))
+                return
 
+            data[f"form.data.{section_id}.{_field.id}"] = value
+
+            if check_conditions and field.depends_on:
+                # Don't check condition after retake
+                data["section.check_condition"] = False
             else:
-                try:
-                    value = deps.forms.validate_input(field, message.text)
-                except ValidationError as error:
-                    await message.answer(str(error))
-                    return
+                # Go to section. Check condition after retake
+                data["section.check_condition"] = True
+                data["section.field_id"] = None
 
-            data[f"form.data.{section_id}.{field_id}"] = value
-            data["section.field_id"] = None
-            data["field.check_condition"] = True
+            if value == YesNo.NO:
+                # Go to section. Check condition after retake
+                data["section.check_condition"] = True
+                data["section.field_id"] = None
+                # Clear values of all dependable fields
+                section = deps.forms.get_section(section_id)
+                for f in section.fields:
+                    if f.depends_on == _field.id:
+                        data[f"form.data.{section_id}.{f.id}"] = None
+
             await state.set_data(data)
             await self.wizard.retake()
