@@ -9,6 +9,16 @@ from src.tgbot.utils.helpers import get_key_by_value
 
 
 class ValidatorModel(BaseModel):
+    int: int
+    float: float
+
+    str14: str = Field(max_length=14)
+    str15: str = Field(max_length=15)
+    str20: str = Field(max_length=20)
+    str30: str = Field(max_length=30)
+    str35: str = Field(max_length=35)
+    str50: str = Field(max_length=50)
+
     eng_chars: str = Field(pattern=r"[a-zA-Z-]+")
     eng_chars_spaces: str = Field(pattern=r"[a-zA-Z-\s]+")
     eng_chars_digits_spaces: str = Field(pattern=r"[0-9a-zA-Z-\s]+")
@@ -17,13 +27,6 @@ class ValidatorModel(BaseModel):
 
     address: str = Field(pattern=r"[0-9a-zA-Z-.,/()]+")
     phone: str = Field(pattern=r"^(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?$")
-
-    str14: str = Field(max_length=14)
-    str15: str = Field(max_length=15)
-    str20: str = Field(max_length=20)
-    str30: str = Field(max_length=30)
-    str35: str = Field(max_length=35)
-    str50: str = Field(max_length=50)
 
 
 def apply_validators(value: Any, validators: Sequence[str]) -> None:
@@ -35,10 +38,14 @@ def apply_validators(value: Any, validators: Sequence[str]) -> None:
         message = "Ошибка валидации!"
         loc = error.errors()[0].get("loc")
         if loc:
-            if loc[0] == "phone":
+            if loc[0] == "int" or loc[0] == "float":
+                message = "Неверный формат числа"
+            elif loc[0] == "phone":
                 message = "Неверный формат номера"
             elif loc[0].startswith("str"):
                 message = "Слишком много символов"
+            elif loc[0].startswith("int") | loc[0].startswith("float"):
+                message = "Некорректное значение"
             else:
                 message = "Недопустимые символы"
         message += "\nПопробуйте снова"

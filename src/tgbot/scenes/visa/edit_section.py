@@ -8,8 +8,8 @@ from aiogram.types import CallbackQuery, Message
 from src.deps import Dependencies
 from src.exceptions import ValidationError
 from src.tgbot.utils.helpers import sub_dict_by_prefix
-from src.tgbot.views.buttons import ALL
-from src.tgbot.views.form.field import show_all_options, show_field_input
+from src.tgbot.views.buttons import ALL, NO
+from src.tgbot.views.form.field import show_all_options, show_field_condition, show_field_input
 from src.tgbot.views.form.section import show_section, show_section_completed, show_section_fields
 
 """
@@ -20,6 +20,8 @@ from src.tgbot.views.form.section import show_section, show_section_completed, s
     "form.form_step": form_step,
     "form.section_step": section_step,
     "form.data.{section_id}.{field_id}": value
+
+    "field.check_condition": True,
     ...
 """
 
@@ -31,13 +33,32 @@ class EditSectionScene(Scene, state="edit_section"):
                                message: Message,
                                state: FSMContext,
                                deps: Dependencies, *,
-                               section_id: str) -> None:
+                               section_id: str | None = None) -> None:
 
-        section = deps.forms.get_section(section_id)
-        data = await state.update_data({"section.section_id": section_id,
-                                        "section.field_id": None})
-        section_data = sub_dict_by_prefix(data, prefix=f"form.data.{section_id}.")
-        await show_section(section, section_data, message=message)
+        data = await state.get_data()
+        if section_id is not None:
+            # Set defaults
+            data["section.section_id"] = section_id
+            data["section.field_id"] = None
+            data["field.check_condition"] = True
+            await state.set_data(data)
+
+        # Show template depending on state data
+        section_id = data["section.section_id"]
+        field_id = data["section.field_id"]
+        check_condition = data["field.check_condition"]
+
+        if field_id is None:
+            section = deps.forms.get_section(section_id)
+            section_data = sub_dict_by_prefix(data, prefix=f"form.data.{section_id}.")
+            await show_section(section, section_data, message=message)
+        else:
+            field = deps.forms.get_field(field_id)
+            if check_condition and field.is_optional:
+                await show_field_condition(field, message=message, replace=True)
+            else:
+                value = data[f"form.data.{section_id}.{field_id}"]
+                await show_field_input(field, value, message=message, replace=True)
 
 
     @on.callback_query.enter()
@@ -45,7 +66,7 @@ class EditSectionScene(Scene, state="edit_section"):
                                       query: CallbackQuery,
                                       state: FSMContext,
                                       deps: Dependencies, *,
-                                      section_id: str) -> None:
+                                      section_id: str | None = None) -> None:
         await query.answer()
         if isinstance(query.message, Message):
             await self.message_on_enter(
@@ -60,12 +81,12 @@ class EditSectionScene(Scene, state="edit_section"):
                                        bot: Bot) -> None:
         await query.answer()
         if isinstance(query.message, Message):
-            data = await state.get_data()
-            section_id = data["section.section_id"]
-            section = deps.forms.get_section(section_id)
+
             if query.data.startswith("section:"):
                 _, action = query.data.split(":")
+                data = await state.get_data()
                 match action:
+
                     case "confirm":
                         # Remove section keyboard
                         await bot.edit_message_reply_markup(
@@ -75,22 +96,21 @@ class EditSectionScene(Scene, state="edit_section"):
                         await show_section_completed(query.message)
                         await asyncio.sleep(0.3)
                         # Switch form step
-                        form_id = data["form.form_id"]
-                        form_step = data.get("form.form_step", 0)
-                        data["form.form_step"] = form_step + 1
+                        data["form.form_step"] = data["form.form_step"] + 1
                         data["form.section_step"] = 0
                         await state.set_data(data)
                         # Go back to form scene
-                        await self.wizard.goto("fill_form", form_id=form_id)
+                        await self.wizard.goto("fill_form")
+
                     case "edit":
+                        section_id = data["section.section_id"]
+                        section = deps.forms.get_section(section_id)
                         await show_section_fields(section, message=query.message)
-            if query.data.startswith("field:"):
+
+            elif query.data.startswith("field:"):
                 _, field_id = query.data.split(":")
-                data["section.field_id"] = field_id
-                await state.set_data(data)
-                field = deps.forms.get_field(field_id)
-                value = data[f"form.data.{section_id}.{field_id}"]
-                await show_field_input(field, value, message=query.message, replace=True)
+                await state.update_data({"section.field_id": field_id})
+                await self.wizard.retake()
 
 
     @on.message(F.text)
@@ -98,21 +118,38 @@ class EditSectionScene(Scene, state="edit_section"):
                             message: Message,
                             state: FSMContext,
                             deps: Dependencies) -> None:
+
         if message.text:
             data = await state.get_data()
+
             section_id = data["section.section_id"]
-            field_id = data.get("section.field_id", None)
-            if field_id and isinstance(field_id, str):
-                field = deps.forms.get_field(field_id)
-                if message.text == ALL:
-                    await show_all_options(field, message=message)
+            field_id = data["section.field_id"]
+            check_condition = data["field.check_condition"]
+
+            field = deps.forms.get_field(field_id)
+
+            if message.text == ALL:
+                await show_all_options(field, message=message)
+                return
+
+            if check_condition and field.is_optional:
+                if message.text == NO:
+                    value = None
+                else:
+                    data["field.check_condition"] = False
+                    await state.set_data(data)
+                    await self.wizard.retake()
                     return
+
+            else:
                 try:
                     value = deps.forms.validate_input(field, message.text)
                 except ValidationError as error:
                     await message.answer(str(error))
                     return
-                data[f"form.data.{section_id}.{field_id}"] = value
-                data["section.field_id"] = None
-                await state.set_data(data)
-                await self.wizard.retake(section_id=section_id)
+
+            data[f"form.data.{section_id}.{field_id}"] = value
+            data["section.field_id"] = None
+            data["field.check_condition"] = True
+            await state.set_data(data)
+            await self.wizard.retake()

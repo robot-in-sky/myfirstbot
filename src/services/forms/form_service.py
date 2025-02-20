@@ -1,4 +1,4 @@
-from src.entities.form import Choice, Field, Form, Section
+from src.entities.form import Choice, Field, FieldType, Form, Section
 
 from . import choices
 from .field_validators import apply_validators, validate_choice_input, validate_date_input
@@ -7,14 +7,19 @@ from .field_validators import apply_validators, validate_choice_input, validate_
 class FormService:
     def __init__(self) -> None:
         self._choices = [
+            Choice(id="yes_no",
+                   all=choices.yes_no.YES_NO,
+                   featured=choices.yes_no.YES_NO,
+                   output=choices.yes_no.YES_NO_OUTPUT),
+
             Choice(id="country",
                    all=choices.country.COUNTRY_ALL,
                    featured=choices.country.COUNTRY_FEATURED,
                    output=choices.country.COUNTRY_OUTPUT),
 
             Choice(id="gender",
-                   all=choices.gender.GENDER_ALL,
-                   featured=choices.gender.GENDER_FEATURED,
+                   all=choices.gender.GENDER,
+                   featured=choices.gender.GENDER,
                    output=choices.gender.GENDER_OUTPUT),
 
             Choice(id="martial_status",
@@ -43,17 +48,19 @@ class FormService:
             Field(id="nationality",
                   name="Гражданство",
                   input_text="Укажите гражданство (по паспорту)",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="entry_port",
                   name="Порт прибытия",
                   input_text="Выберите планируемый порт прибытия",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("port_ind")),
 
             Field(id="arrival_date",
                   name="Дата прибытия",
                   input_text="Выедите планируемую дату прибытия в формате ДД.ММ.ГГГГ",
-                  is_date=True),
+                  type=FieldType.DATE),
 
             # 2. BASIC DETAILS
             # 2.1 Applicant Details
@@ -70,26 +77,32 @@ class FormService:
             Field(id="prev_surname",
                   name="Предыдущая фамилия",
                   input_text="Введите предыдущую фамилию на английском",
-                  validators=["str50", "eng_chars_spaces"]),
+                  validators=["str50", "eng_chars_spaces"],
+                  is_optional=True,
+                  condition_text="Менялась ли фамилия когда-либо?"),
 
             Field(id="prev_given_name",
                   name="Предыдущее имя",
                   input_text="Введите предыдущее имя на английском",
-                  validators=["str50", "eng_chars_spaces"]),
+                  validators=["str50", "eng_chars_spaces"],
+                  is_optional=True,
+                  condition_text="Менялось ли имя когда-либо?"),
 
             Field(id="gender",
                   name="Пол",
                   input_text="Укажите пол",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("gender")),
 
             Field(id="birth_date",
                   name="Дата рождения",
                   input_text="Введите дату рождения в формате ДД.ММ.ГГГГ",
-                  is_date=True),
+                  type=FieldType.DATE),
 
             Field(id="birth_country",
                   name="Страна рождения",
                   input_text="Укажите страну рождения",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="birth_place",
@@ -106,22 +119,22 @@ class FormService:
             Field(id="religion_ind",
                   name="Религия",
                   input_text="Укажите религиозную принадлежность",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("religion_ind")),
-
-            Field(id="religion_other",
-                  name="Религия другое",
-                  input_text="Укажите религиозную принадлежность на английском",
-                  validators=["str20", "eng_chars_spaces"]),
 
             Field(id="education_ind",
                   name="Образование",
                   input_text="Укажите образование",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("education_ind")),
 
-            Field(id="prev_country",
+            Field(id="prev_nationality",
                   name="Предыдущее гражданство",
                   input_text="Укажите предыдущее гражданство",
-                  choice=self.get_choice("country")),
+                  type=FieldType.CHOICE,
+                  choice=self.get_choice("country"),
+                  is_optional=True,
+                  condition_text="Менялось ли гражданство когда-либо?"),
 
             # 2.2 Passport Details
             Field(id="passport_no",
@@ -131,24 +144,25 @@ class FormService:
 
             Field(id="passport_issue_place",
                   name="Место выдачи",
-                  input_text="Укажите место выдачи паспорта",
+                  input_text="Укажите место выдачи паспорта на английском",
                   validators=["str20", "eng_chars_digits_spaces"]),
 
             Field(id="passport_issue_date",
                   name="Дата выдачи",
                   input_text="Укажите дату выдачи паспорта в формате ДД.ММ.ГГГГ",
-                  is_date=True),
+                  type=FieldType.DATE),
 
             Field(id="passport_expiry_date",
                   name="Дата окончания",
                   input_text="Укажите дату окончания срока действия паспорта в формате ДД.ММ.ГГГГ",
-                  is_date=True),
+                  type=FieldType.DATE),
 
             # 3. FAMILY DETAILS
             # 3.1 Address Details
             Field(id="country",
                   name="Страна проживания",
                   input_text="Укажите страну проживания",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="state",
@@ -180,11 +194,13 @@ class FormService:
             Field(id="father_nationality",
                   name="Гражданство отца",
                   input_text="Укажите гражданство отца",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="father_birth_country",
                   name="Страна рождения отца",
                   input_text="Укажите страну рождения отца",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="father_birth_place",
@@ -201,11 +217,13 @@ class FormService:
             Field(id="mother_nationality",
                   name="Гражданство матери",
                   input_text="Укажите гражданство матери",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="mother_birth_country",
                   name="Страна рождения матери",
                   input_text="Укажите страну рождения матери",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("country")),
 
             Field(id="mother_birth_place",
@@ -217,6 +235,7 @@ class FormService:
             Field(id="martial_status",
                   name="Семейное положение",
                   input_text="Укажите семейное положение",
+                  type=FieldType.CHOICE,
                   choice=self.get_choice("martial_status")),
         ]
 
@@ -234,6 +253,8 @@ class FormService:
                     fields=[
                         self.get_field("surname"),
                         self.get_field("given_name"),
+                        self.get_field("prev_surname"),
+                        self.get_field("prev_given_name"),
                         self.get_field("gender"),
                         self.get_field("birth_date"),
                         self.get_field("birth_country"),
@@ -241,6 +262,7 @@ class FormService:
                         self.get_field("national_id_no"),
                         self.get_field("religion_ind"),
                         self.get_field("education_ind"),
+                        self.get_field("prev_nationality"),
                     ]),
 
             Section(id="passport_details",
@@ -304,12 +326,25 @@ class FormService:
     @staticmethod
     def validate_input(field: Field, text: str) -> str:
         value = text.strip()
-        if field.is_date:
-            date_value = validate_date_input(field, value)
-            value = str(date_value)
-        elif field.choice:
-            choice_value = validate_choice_input(field, value)
-            value = str(choice_value)
-        elif field.validators:
-            apply_validators(value, field.validators)
+        match field.type:
+            case FieldType.DATE:
+                date_value = validate_date_input(field, value)
+                value = str(date_value)
+            case FieldType.CHOICE:
+                choice_value = validate_choice_input(field, value)
+                value = str(choice_value)
+            case _:
+                validators = field.validators or []
+                apply_validators(value, validators)
         return value
+
+
+    def get_condition_field(self, field: Field, id_: str | None = None ) -> Field:
+        default_id = f"{field.id}_condition"
+        name = f"{field.name}?"
+        return Field(
+            id=id_ or default_id,
+            name=name,
+            input_text=field.condition_text,
+            type=FieldType.CHOICE,
+            choice=self.get_choice("yes_no"))

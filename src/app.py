@@ -24,7 +24,7 @@ class Application:
         connection = await amqp.get_connection()
         channel = await connection.channel()
         rpc = await JsonRPC.create(channel)
-        self.deps.set_rpc(rpc)
+        self.deps.post_init(rpc)
 
         try:
             bot, dp = tgbot_init(tgbot_settings=self.settings.tgbot,

@@ -4,8 +4,8 @@ from typing import Any
 
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from src.entities.form import Field
-from src.tgbot.views.buttons import ALL
+from src.entities.form import Field, FieldType
+from src.tgbot.views.buttons import ALL, NO, YES
 from src.tgbot.views.const import DATE_TIME_FORMAT
 
 CURRENT_VALUE_TEXT = "Текущее значение"
@@ -15,15 +15,33 @@ KB_SORTING_MIN_NUMBER = 10
 def render_value(field: Field, value: Any) -> str:
     if value is None:
         return "-"
-    if field.is_date:
+    if field.type == FieldType.DATE:
         try:
             date_ = datetime.strptime(value, "%Y-%m-%d").date()  # noqa: DTZ007
             return date_.strftime(DATE_TIME_FORMAT)
         except ValueError:
             pass
-    if field.choice:
+    elif field.type == FieldType.CHOICE:
         return field.choice.output.get(value, value)
     return str(value)
+
+
+async def show_field_condition(field: Field,
+                               message: Message, *,
+                               replace: bool = False) -> Message:
+    if field.condition_text:  # noqa: SIM108
+        text = field.condition_text
+    else:
+        text = f"{field.name}?"
+    keyboard = field_condition_kb()
+    if replace:
+        await message.delete()
+    return await message.answer(text, reply_markup=keyboard)
+
+
+def field_condition_kb() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=YES),
+                                          KeyboardButton(text=NO)]], resize_keyboard=True)
 
 
 async def show_field_input(field: Field,
