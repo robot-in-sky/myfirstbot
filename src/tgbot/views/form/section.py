@@ -26,6 +26,8 @@ async def show_section_completed(message: Message) -> Message:
 def section_summary(section: Section, data: dict[str, Any]) -> str:
     lines = []
     for field in section.fields:
+        if field.hidden:
+            continue
         value = data.get(field.id, None)
         output_value = render_value(field, value) if value is not None else "-"
         line = f"<b>{field.name}</b>: {output_value}"
@@ -48,7 +50,7 @@ async def show_section_fields(section: Section, *, message: Message) -> Message:
 
 
 def section_fields_kb(section: Section, col: int = 2) -> InlineKeyboardMarkup:
-    fields = section.fields
+    fields = [f for f in section.fields if not f.hidden]
     keyboard = []
     for i in range(0, len(fields), col):
         row = [InlineKeyboardButton(text=f.name, callback_data=f"field:{f.id}")

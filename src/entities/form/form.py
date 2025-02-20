@@ -24,8 +24,8 @@ class Field:
     type: FieldType = FieldType.STR
     choice: Choice | None = None
     validators: list[str] | None = None
-    is_optional: bool = False
-    condition_text: str | None = None
+    hidden: bool = False
+    depends_on: str | None = None
 
 
 @dataclass
