@@ -14,10 +14,13 @@ class Dependencies:
         self._db = DatabaseClient(settings.db)
         self._redis = RedisClient(settings.redis)
         self._s3 = S3Client(settings.s3)
-        self._rpc = None
         self._auth = AuthService(self._db)
         self._attachments = AttachmentService(self._s3)
         self._forms = FormService()
+        self._rpc = None
+
+    def post_init(self, rpc: JsonRPC) -> None:
+        self._rpc = rpc
 
     """
     @property
@@ -32,9 +35,6 @@ class Dependencies:
     def s3(self) -> S3Client:
         return self._s3
     """
-
-    def set_rpc(self, rpc: JsonRPC) -> None:
-        self._rpc = rpc
 
     @property
     def rpc(self) -> JsonRPC:

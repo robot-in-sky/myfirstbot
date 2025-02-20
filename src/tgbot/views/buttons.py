@@ -41,6 +41,8 @@ EDITOR_DOWN = "▼"
 EDITOR_EDIT = "✏️"
 EDITOR_RESET = "✏️ ↩"
 
+YES = "Да"
+NO = "Нет"
 ALL = "..."
 CONFIRM = "✅ OK"
 CHECK_AGAIN = "📝 Проверить данные"

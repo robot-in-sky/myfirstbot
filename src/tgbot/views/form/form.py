@@ -8,8 +8,8 @@ FORM_RECHECK = "⏫ Начнём с начала"
 
 def form_check_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=buttons.CHECK_AGAIN, callback_data="form_checked:no")],
-        [InlineKeyboardButton(text=buttons.SAVE, callback_data="form_checked:yes")]])
+        [InlineKeyboardButton(text=buttons.CHECK_AGAIN, callback_data="form:recheck")],
+        [InlineKeyboardButton(text=buttons.SAVE, callback_data="form:save")]])
 
 
 async def show_form_done_message(message: Message) -> Message:
