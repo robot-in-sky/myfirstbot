@@ -2,7 +2,7 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 
-from src.entities.form.form import Section
+from src.entities.form.form import FieldType, Section
 from src.tgbot.views import buttons
 
 from .field import render_value
@@ -12,10 +12,15 @@ SECTION_COMPLETED_TEXT = "✅ Принято"
 SELECT_SECTION_FIELD_TEXT = "Какое поле хотите изменить?"
 
 
-async def show_section(section: Section, data: dict[str, Any], *, message: Message) -> Message:
+async def show_check_section(message: Message) -> Message:
+    return await message.answer(CHECK_SECTION_TEXT, reply_markup=ReplyKeyboardRemove())
+
+
+async def show_section(section: Section,
+                       data: dict[str, Any], *,
+                       message: Message) -> Message:
     text = section_summary(section, data)
     keyboard = section_kb()
-    await message.answer(CHECK_SECTION_TEXT, reply_markup=ReplyKeyboardRemove())
     return await message.answer(text, reply_markup=keyboard)
 
 
@@ -29,8 +34,11 @@ def section_summary(section: Section, data: dict[str, Any]) -> str:
         if field.hidden:
             continue
         value = data.get(field.id, None)
-        output_value = render_value(field, value) if value is not None else "-"
-        line = f"<b>{field.name}</b>: {output_value}"
+        if value is None:
+            continue
+        value_output = render_value(field, value)
+        sep = "\n" if field.type == FieldType.STR else " "
+        line = f"<b>{field.name}</b>:{sep}{value_output}\n"
         lines.append(line)
     lines.append("")
     return "\n".join(lines)

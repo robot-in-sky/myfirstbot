@@ -4,24 +4,17 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.form import FieldType, YesNo
+from src.entities.form import Field, FieldType, Repeater, Section, YesNo
 from src.exceptions import ValidationError
 from src.tgbot.views.buttons import ALL
 from src.tgbot.views.form.field import show_all_options, show_field_input
-from src.tgbot.views.form.form import FORM_RECHECK, show_form_done_message
+from src.tgbot.views.form.form import FORM_RECHECK_TEXT, show_form_done_message
 
-"""
-    "form.form_id": form_id,
-    "form.form_step": form_step,
-    "form.section_step": section_step,
-    "form.data.{section_id}.{field_id}": value
-    ...
-"""
 
 class FillFormScene(Scene, state="fill_form"):
 
     @on.message.enter()
-    async def message_on_enter(self,
+    async def message_on_enter(self,  # noqa: PLR0912, C901
                                message: Message,
                                state: FSMContext,
                                deps: Dependencies, *,
@@ -48,31 +41,39 @@ class FillFormScene(Scene, state="fill_form"):
             await show_form_done_message(message)
         else:
 
-            if section_step == 0:
-                await message.answer(
-                    f"<b>{form_step + 1}. {section.name}</b>")
-            try:
-                field = section.fields[section_step]
-            except IndexError:
-                await self.wizard.goto("edit_section", section_id=section.id)
-            else:
+            # Show section title and save message id
+            if section_step == 0 and data.get("section.section_id", None) is None:
+                _message = await message.answer(
+                    f"<b>{form_step + 1}. {section.name.upper()}</b>")
+                data["form.section_title_id"] = _message.message_id
+                await state.set_data(data)
 
-                key = f"form.data.{section.id}.{field.id}"
-                if key not in data:
-                    if field.depends_on:
-                        cond_field = deps.forms.get_field(field.depends_on)
-                        cond_key = f"form.data.{section.id}.{cond_field.id}"
-                        cond_value = data.get(cond_key, YesNo.NO)
-                        if cond_value == YesNo.YES:
+            if isinstance(section, Repeater):
+                await self.wizard.goto("repeater", repeater_id=section.id)
+
+            elif isinstance(section, Section):
+                try:
+                    field = section.fields[section_step]
+                except IndexError:
+                    await self.wizard.goto("edit_section", section_id=section.id)
+                else:
+
+                    key = f"form.data.{section.id}.{field.id}"
+                    if key not in data:
+                        if field.depends_on:
+                            cond_field = deps.forms.get_field(field.depends_on)
+                            cond_key = f"form.data.{section.id}.{cond_field.id}"
+                            cond_value = data.get(cond_key, YesNo.NO)
+                            if cond_value == YesNo.YES:
+                                await show_field_input(field, message=message)
+                                return
+                        else:
                             await show_field_input(field, message=message)
                             return
-                    else:
-                        await show_field_input(field, message=message)
-                        return
 
-                data["form.section_step"] = section_step + 1
-                await state.set_data(data)
-                await self.wizard.retake()
+                    data["form.section_step"] = section_step + 1
+                    await state.set_data(data)
+                    await self.wizard.retake()
 
 
     @on.callback_query.enter()
@@ -88,6 +89,13 @@ class FillFormScene(Scene, state="fill_form"):
                                         form_id=form_id)
 
 
+    async def show_field_or_repeater(self, field: Field | Repeater, *, message: Message) -> None:
+        if isinstance(field, Field):
+            await show_field_input(field, message=message)
+        elif isinstance(field, Repeater):
+            await self.wizard.goto("repeater", repeater_id=field.id)
+
+
     @on.callback_query(F.data)
     async def form_data_update_callback(self, query: CallbackQuery, state: FSMContext) -> None:
         await query.answer()
@@ -97,7 +105,7 @@ class FillFormScene(Scene, state="fill_form"):
                 if action == "recheck":
                     await state.update_data({"form.form_step": 0,
                                              "form.section_step": 0})
-                    await query.message.edit_text(FORM_RECHECK)
+                    await query.message.edit_text(FORM_RECHECK_TEXT)
                     await self.wizard.retake()
 
                 elif action == "save":
@@ -118,8 +126,11 @@ class FillFormScene(Scene, state="fill_form"):
             section_step = data["form.section_step"]
 
             form = deps.forms.get_form(form_id)
-            section = form.sections[form_step]
-            field = section.fields[section_step]
+            try:
+                section = form.sections[form_step]
+                field = section.fields[section_step]
+            except IndexError:
+                return
 
             if field.type == FieldType.CHOICE and message.text == ALL:
                 await show_all_options(field, message=message)

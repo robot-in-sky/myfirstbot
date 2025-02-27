@@ -25,6 +25,10 @@ def sub_dict_by_prefix(data: dict[str, Any], prefix: str) -> dict[str, Any]:
     return {k.replace(prefix, "", 1): v for k, v in data.items() if k.startswith(prefix)}
 
 
+def remove_keys_by_prefix(data: dict[str, Any], prefix: str) -> dict[str, Any]:
+    return {k: v for k, v in data.items() if not k.startswith(prefix)}
+
+
 def get_key_by_value(mapping: dict[Any, Any], value: str, default: str | None = None) -> Any:
     try:
         return next(filter(lambda i: i[1] == value, mapping.items()))[0]

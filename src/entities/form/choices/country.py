@@ -75,7 +75,6 @@ class Country(StrEnum):
     HND = auto()  # HONDURAS
     HUN = auto()  # HUNGARY
     ISL = auto()  # ICELAND
-    IND = auto()  # INDIA
     IDN = auto()  # INDONESIA
     IRL = auto()  # IRELAND
     IMN = auto()  # ISLE OF MAN
@@ -178,3 +177,10 @@ class Country(StrEnum):
     WSM = auto()  # WEST SAMOA
     ZMB = auto()  # ZAMBIA
     ZWE = auto()  # ZIMBABWE
+
+    IND = auto()  # INDIA
+    BTN = auto()  # BHUTAN
+    PAK = auto()  # PAKISTAN
+    MDV = auto()  # MALDIVES
+    BGD = auto()  # BANGLADESH
+    NPL = auto()  # NEPAL
