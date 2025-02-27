@@ -6,24 +6,38 @@ from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKey
 
 from src.entities.form import Field, FieldType
 from src.tgbot.views.buttons import ALL
-from src.tgbot.views.const import DATE_TIME_FORMAT
 
+STORE_DATE_FORMAT = "%Y-%m-%d"
+RENDER_DATE_FORMAT = "%d.%m.%Y"
+
+EXAMPLE_TEXT = "Пример"
+EXAMPLES_TEXT = "Примеры"
 CURRENT_VALUE_TEXT = "Текущее значение"
+
 KB_SORTING_MIN_NUMBER = 10
 
 
 def render_value(field: Field, value: Any) -> str:
     if value is None:
         return "-"
-    if field.type == FieldType.DATE:
-        try:
-            date_ = datetime.strptime(value, "%Y-%m-%d").date()  # noqa: DTZ007
-            return date_.strftime(DATE_TIME_FORMAT)
-        except ValueError:
-            pass
-    elif field.type == FieldType.CHOICE:
-        return field.choice.output.get(value, value)
-    return str(value)
+
+    match field.type:
+        case FieldType.DATE:
+            try:
+                date_ = datetime.strptime(value, STORE_DATE_FORMAT).date()  # noqa: DTZ007
+                return date_.strftime(RENDER_DATE_FORMAT)
+            except ValueError:
+                pass
+
+        case FieldType.CHOICE:
+            return field.choice.output.get(value, value)
+
+        case FieldType.STR:
+            if field.validators and "phone" in field.validators:
+                return f"{value}"
+            return f"<code>{value}</code>"
+
+    return f"{value}"
 
 
 async def show_field_input(field: Field,
@@ -31,9 +45,18 @@ async def show_field_input(field: Field,
                            message: Message,
                            replace: bool = False) -> Message:
     text = field.input_text
+
+    if field.examples:
+        if len(field.examples) == 1:
+            text += f"\n\n{EXAMPLE_TEXT}: {render_value(field, field.examples[0])}"
+        elif len(field.examples) > 1:
+            examples_output = "\n".join([f"• {render_value(field, e)}" for e in field.examples])
+            text += f"\n\n{EXAMPLES_TEXT}:\n{examples_output}"
+
     if value is not None:
         output_value = render_value(field, value)
-        text += f"\n{CURRENT_VALUE_TEXT}: {output_value}"
+        text += f"\n\n{CURRENT_VALUE_TEXT}: {output_value}"
+
     keyboard = field_input_kb(field)
     if replace:
         await message.delete()

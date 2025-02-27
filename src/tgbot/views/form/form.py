@@ -2,9 +2,9 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.tgbot.views import buttons
 
-FORM_DONE_TEXT = ("🎉🎉🎉 Ура! Анкета заполнена!\n"
+FORM_DONE_TEXT = ("🎉🎉🎉 <b>Ура! Анкета заполнена!</b>\n"
                   "Сохраняем данные?")
-FORM_RECHECK = "⏫ Начнём с начала"
+FORM_RECHECK_TEXT = "📝 Проверяем всё с начала"
 
 def form_check_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[

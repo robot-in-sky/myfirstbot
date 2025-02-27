@@ -26,7 +26,7 @@ class ApplyVisaScene(Scene, state="apply_visa"):
 
     @on.message.enter()
     async def message_on_enter(self, message: Message, state: FSMContext, *,
-                               require_passport: bool = True) -> None:
+                               require_passport: bool = False) -> None:
         data = await state.get_data()
         if data.get("visa.data.country", None) is None:
             await show_country_step(message=message)

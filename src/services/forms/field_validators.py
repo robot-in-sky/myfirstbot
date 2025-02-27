@@ -12,12 +12,15 @@ class ValidatorModel(BaseModel):
     int: int
     float: float
 
+    str10: str = Field(max_length=10)
     str14: str = Field(max_length=14)
     str15: str = Field(max_length=15)
     str20: str = Field(max_length=20)
     str30: str = Field(max_length=30)
     str35: str = Field(max_length=35)
     str50: str = Field(max_length=50)
+    str75: str = Field(max_length=75)
+    str200: str = Field(max_length=200)
 
     eng_chars: str = Field(pattern=r"[a-zA-Z-]+")
     eng_chars_spaces: str = Field(pattern=r"[a-zA-Z-\s]+")

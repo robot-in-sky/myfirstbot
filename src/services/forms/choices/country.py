@@ -1,9 +1,23 @@
 from src.entities.form import Country
 
-COUNTRY_ALL = list(Country)
-
 COUNTRY_FEATURED = [Country.RUS, Country.KAZ,
                     Country.BLR]
+
+COUNTRY_FEATURED2 = [Country.THA, Country.VNM,
+                     Country.LKA]
+
+COUNTRY_ALL = list(Country)
+
+COUNTRY_SAARC = [Country.AFG,
+                 Country.BTN,
+                 Country.PAK,
+                 Country.MDV,
+                 Country.BGD,
+                 Country.LKA,
+                 Country.NPL]
+
+COUNTRY_FILTERED = [c for c in Country if c not in COUNTRY_SAARC and c != Country.IND]
+
 
 COUNTRY_OUTPUT = {
     Country.AFG: "Афганистан",
@@ -79,7 +93,6 @@ COUNTRY_OUTPUT = {
     Country.HND: "Гондурас",
     Country.HUN: "Венгрия",
     Country.ISL: "Исландия",
-    Country.IND: "Индия",
     Country.IDN: "Индонезия",
     Country.IRL: "Ирландия",
     Country.IMN: "Остров Мэн",
@@ -182,4 +195,11 @@ COUNTRY_OUTPUT = {
     Country.WSM: "Западное Самоа",
     Country.ZMB: "Замбия",
     Country.ZWE: "Зимбабве",
+
+    Country.IND: "Индия",
+    Country.BTN: "Бутан",
+    Country.PAK: "Пакистан",
+    Country.MDV: "Мальдивы",
+    Country.BGD: "Бангладеш",
+    Country.NPL: "Непал"
 }

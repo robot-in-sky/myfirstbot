@@ -6,24 +6,17 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.form import FieldType, YesNo
+from src.entities.form import FieldType, Section, YesNo
 from src.exceptions import ValidationError
 from src.tgbot.utils.helpers import sub_dict_by_prefix
 from src.tgbot.views.buttons import ALL
 from src.tgbot.views.form.field import show_all_options, show_field_input
-from src.tgbot.views.form.section import show_section, show_section_completed, show_section_fields
-
-"""
-    "section.section_id": section_id,
-    "section.field_id": field_id,
-    "section.check_condition": True,
-
-    "form.form_id": form_id,
-    "form.form_step": form_step,
-    "form.section_step": section_step,
-    "form.data.{section_id}.{field_id}": value
-    ...
-"""
+from src.tgbot.views.form.section import (
+    show_check_section,
+    show_section,
+    show_section_completed,
+    show_section_fields,
+)
 
 
 class EditSectionScene(Scene, state="edit_section"):
@@ -40,22 +33,34 @@ class EditSectionScene(Scene, state="edit_section"):
             # Set defaults
             data["section.section_id"] = section_id
             data["section.field_id"] = None
-            data["section.check_condition"] = True
             await state.set_data(data)
 
         section_id = data["section.section_id"]
         field_id = data["section.field_id"]
-        check_conditions = data["section.check_condition"]
 
         if field_id is None:
             section = deps.forms.get_section(section_id)
-            section_data = sub_dict_by_prefix(data, prefix=f"form.data.{section_id}.")
-            await show_section(section, section_data, message=message)
+            if isinstance(section, Section):
+                section_data = sub_dict_by_prefix(data, prefix=f"form.data.{section_id}.")
+                title_msg_id = data.get("form.section_title_id", -1)
+                section_modified = message.message_id > title_msg_id
+                if section_modified:
+                    await show_check_section(message=message)
+                await show_section(section, section_data, message=message)
         else:
             field = deps.forms.get_field(field_id)
-            if check_conditions and field.depends_on:
-                field = deps.forms.get_field(field.depends_on)
-            await show_field_input(field, message=message, replace=True)
+            value = data.get(f"form.data.{section_id}.{field_id}", None)
+
+            if field.depends_on:
+                _field = deps.forms.get_field(field.depends_on)
+                _value = data.get(f"form.data.{section_id}.{_field.id}", None)
+                if _field.hidden or _value == YesNo.NO:
+                    data["section.field_id"] = _field.id
+                    await state.set_data(data)
+                    await self.wizard.retake()
+                    return
+
+            await show_field_input(field, value, message=message, replace=True)
 
 
     @on.callback_query.enter()
@@ -92,6 +97,7 @@ class EditSectionScene(Scene, state="edit_section"):
                             reply_markup=None)
                         await show_section_completed(query.message)
                         await asyncio.sleep(0.3)
+                        data["section.section_id"] = None
                         # Switch form step
                         data["form.form_step"] = data["form.form_step"] + 1
                         data["form.section_step"] = 0
@@ -102,7 +108,8 @@ class EditSectionScene(Scene, state="edit_section"):
                     case "edit":
                         section_id = data["section.section_id"]
                         section = deps.forms.get_section(section_id)
-                        await show_section_fields(section, message=query.message)
+                        if isinstance(section, Section):
+                            await show_section_fields(section, message=query.message)
 
             elif query.data.startswith("field:"):
                 _, field_id = query.data.split(":")
@@ -120,44 +127,40 @@ class EditSectionScene(Scene, state="edit_section"):
             data = await state.get_data()
             section_id = data["section.section_id"]
             field_id = data["section.field_id"]
-            check_conditions = data["section.check_condition"]
-            # Field to edit
             field = deps.forms.get_field(field_id)
 
-            # Field to validate and save
-            _field = field
-            if check_conditions and field.depends_on:
-                _field = deps.forms.get_field(field.depends_on)
-
-            if _field.type == FieldType.CHOICE and message.text == ALL:
+            if field.type == FieldType.CHOICE and message.text == ALL:
                 await show_all_options(field, message=message)
                 return
 
             try:
-                value = deps.forms.validate_input(_field, message.text)
+                value = deps.forms.validate_input(field, message.text)
             except ValidationError as error:
                 await message.answer(str(error))
                 return
 
-            data[f"form.data.{section_id}.{_field.id}"] = value
+            key = f"form.data.{section_id}.{field.id}"
+            data[key] = value
+            data["section.field_id"] = None
 
-            if check_conditions and field.depends_on:
-                # Don't check condition after retake
-                data["section.check_condition"] = False
-            else:
-                # Go to section. Check condition after retake
-                data["section.check_condition"] = True
-                data["section.field_id"] = None
-
-            if value == YesNo.NO:
-                # Go to section. Check condition after retake
-                data["section.check_condition"] = True
-                data["section.field_id"] = None
-                # Clear values of all dependable fields
+            if field.type == FieldType.CHOICE and field.choice.id == "yes_no":
                 section = deps.forms.get_section(section_id)
-                for f in section.fields:
-                    if f.depends_on == _field.id:
-                        data[f"form.data.{section_id}.{f.id}"] = None
+                if isinstance(section, Section):
+                    dep_fields = False
+                    for f in section.fields:
+                        # Clear values of all dependable fields
+                        if f.depends_on == field.id:
+                            dep_fields = True
+                            _key = f"form.data.{section_id}.{f.id}"
+                            if _key in data:
+                                del data[_key]
+
+                    if dep_fields and value == YesNo.YES:
+                        # Go to refill all empty fields
+                        data["form.section_step"] = 0
+                        await state.set_data(data)
+                        await self.wizard.goto("fill_form")
+                        return
 
             await state.set_data(data)
             await self.wizard.retake()
