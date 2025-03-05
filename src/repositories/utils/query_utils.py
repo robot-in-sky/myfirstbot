@@ -5,15 +5,11 @@ from sqlalchemy import ColumnElement, Select, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-def get_column(stmt: Select[Any], name: str) -> ColumnElement[Any]:
-    columns: dict[str, ColumnElement[Any]] = {}
-    from_clauses = stmt.get_final_froms()
-    for from_clause in from_clauses:
-        columns |= from_clause.columns
-    return columns.get(name)
+def get_column(stmt: Select[Any], name: str) -> ColumnElement[Any] | None:
+    return stmt.selected_columns.get(name)
 
 
-def match_types(values: Collection[Any], column: ColumnElement[Any]) -> list:
+def match_types(values: Collection[Any], column: ColumnElement[Any]) -> list[Any]:
     return list(map(column.type.python_type, values))
 
 
@@ -29,11 +25,12 @@ def apply_search(
     clauses = []
     for name in search_in_columns:
         column = get_column(stmt, name)
-        if column is None:
-            break
-        search = esc_spec_chars(search)
-        clause = column.ilike(f"%{search}%")
-        clauses.append(clause)
+        if column is not None:
+            search = esc_spec_chars(search)
+            clause = column.like(f"%{search}%")
+            clauses.append(clause)
+    if len(clauses) == 0:
+        return stmt
     return stmt.where(or_(*clauses))
 
 

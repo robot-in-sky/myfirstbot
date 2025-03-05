@@ -4,8 +4,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.repositories.orm_models import OrmBase
-from src.config import settings
+from src.orm_models import OrmBase
+from src.settings import AppSettings
 
 # This line is needed to IDE doesn't delete first import line.
 ENUM_FIX = alembic_postgresql_enum
@@ -25,7 +25,8 @@ target_metadata = OrmBase.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
-if not config.get_main_option("sqlalchemy.url"):
+if config.get_main_option("sqlalchemy.url") is None:
+    settings = AppSettings()
     config.set_main_option(
         "sqlalchemy.url",
         settings.db.url

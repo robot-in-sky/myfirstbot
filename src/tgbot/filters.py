@@ -2,7 +2,7 @@ from typing import Any
 
 from aiogram.filters import BaseFilter
 
-from src.entities.user import UserRole
+from src.entities.users import UserRole
 
 
 class IsAdmin(BaseFilter):

@@ -2,11 +2,10 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.order import OrderQuery
-from src.entities.user import User
+from src.entities.users import User
 from src.tgbot.callbacks import UserCallbackData
 from src.tgbot.filters import IsAdmin
-from src.tgbot.views.user.user import show_user
+from src.tgbot.views.users.user import show_user
 
 router = Router()
 
@@ -18,7 +17,9 @@ async def user_callback_handler(
         deps: Dependencies,
         current_user: User,
 ) -> None:
-    user = await deps.users(current_user).get(callback_data.id)
+    users = deps.get_admin_user_service(current_user)
+    user = await users.get_user(callback_data.id)
+    visa_forms =
     order_count = await deps.orders(current_user).get_count(OrderQuery(user_id=user.id))
     await query.answer()
     if isinstance(query.message, Message):

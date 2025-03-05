@@ -5,9 +5,9 @@ from aiogram.types import CallbackQuery, ForceReply, Message
 
 from src.deps import Dependencies
 from src.entities.order import OrderQueryPaged, OrderStatus
-from src.entities.user import User, UserRole
+from src.entities.users import User, UserRole
 from src.tgbot.callbacks import OrderSearchCallbackData, OrdersCallbackData
-from src.tgbot.views.order.orders import show_orders
+from src.tgbot.views.visas.app_forms import show_orders
 
 
 class SearchOrderScene(Scene, state="search_order"):
