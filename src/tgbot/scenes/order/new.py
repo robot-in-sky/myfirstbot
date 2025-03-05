@@ -5,12 +5,12 @@ from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.order.order import OrderAdd
-from src.entities.user.user import User
+from src.entities.users.user import User
 from src.services import OrderService
 from src.tgbot.scenes.order import ORDER_FIELDS
 from src.tgbot.utils.fields import validate_field_input
 from src.tgbot.views.common.field_input import show_field_input
-from src.tgbot.views.order.order import show_order
+from src.tgbot.views.visas.app_form import show_order
 
 WELCOME_TEXT = "Введите данные заказа"
 

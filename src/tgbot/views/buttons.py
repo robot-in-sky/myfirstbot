@@ -1,10 +1,24 @@
-NEW_ORDER = "➕ Создать заказ"
-MY_ORDERS = "📦 Мои заказы"
+APPLY_VISA = "➕ Оформить визу"
+MY_APP_FORMS = "🌐 Мои заявки"
 USERS = "👤 Пользователи"
-ORDERS = "📦 Все заказы"
+MANAGE_APP_FORMS = "🌐 Все заявки"
+
+CONTINUE = "✅ Продолжить"
 
 EDIT = "📝 Изменить"
-DUPLICATE = "📄 Копия"
+CONFIRM = "✅ OK"
+
+ADD = "➕ Добавить"
+RESET = "↩ Сброс"
+
+YES = "Да"
+NO = "Нет"
+
+ALL = "..."
+
+RECHECK = "📝 Проверить данные"
+SAVE = "💾 Сохранить"
+
 TRASH = "🗑️ Удалить"
 RESTORE = "✨ Восстановить"
 
@@ -15,7 +29,7 @@ REJECT = "↩ Вернуть"
 DONE = "🏁 Завершить"
 
 USER = "👤 Пользователь"
-USER_ORDERS = "📦 Заказы"
+USER_APP_FORMS = "🌐 Заявки"
 BLOCK = "🚫 Заблокировать"
 UNBLOCK ="🔓 Разблокировать"
 SET_ROLE = "🎭 Назначить роль"
@@ -41,13 +55,7 @@ EDITOR_DOWN = "▼"
 EDITOR_EDIT = "✏️"
 EDITOR_RESET = "✏️ ↩"
 
-YES = "Да"
-NO = "Нет"
-ALL = "..."
-CONFIRM = "✅ OK"
-ADD = "➕ Добавить"
-RESET = "↩ Сброс"
 
-CHECK_AGAIN = "📝 Проверить данные"
-SAVE = "💾 Сохранить"
+
+
 

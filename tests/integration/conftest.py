@@ -4,26 +4,25 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.config import Settings
-from src.definitions import ENVFILE_PATH
-
-from tests.utils.mocked_database import MockedDatabase
-
-
-@pytest.fixture(scope="module")
-def settings() -> Settings:
-    return Settings(_env_file=Path(ENVFILE_PATH).parent.joinpath(".env.test"))
+from src.config import ENV_FILE_PATH
+from src.infrastructure.database import DatabaseClient
+from src.settings import AppSettings
 
 
 @pytest.fixture(scope="module")
-def database(settings: Settings) -> MockedDatabase:
-    return MockedDatabase(settings.db)
+def settings() -> AppSettings:
+    return AppSettings(_env_file=Path(ENV_FILE_PATH).parent.joinpath(".env.test"))
+
+
+@pytest.fixture(scope="module")
+def db(settings: AppSettings) -> DatabaseClient:
+    return DatabaseClient(settings.db)
 
 
 @pytest_asyncio.fixture(scope="function")
-async def session(database: MockedDatabase) -> AsyncSession:
-    await database.clear()
-    async with database.get_session() as session:
+async def session(db: DatabaseClient) -> AsyncSession:
+    await db.clear()
+    async with db.get_session() as session:
         yield session
 
 

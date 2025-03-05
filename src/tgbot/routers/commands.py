@@ -4,9 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.user import User, UserRole
+from src.entities.users import User, UserRole
 from src.tgbot.views.menu import show_menu, signin_menu_kb
-from src.tgbot.views.user.user import user_role
+from src.tgbot.views.users.user import user_role
 
 router = Router()
 
@@ -15,22 +15,22 @@ router = Router()
 async def command_start_handler(message: Message, current_user: User, state: FSMContext) -> None:
     await state.clear()
     await message.answer(f"Приветствую, <b>{current_user.user_name}</b>!\n"
-                         "Это тестовая версия бота для управления заказами.\n\n"
-                         "<b>Пользователи</b> могут создавать заказы (заявки/запросы/анкеты).\n"
-                         "<b>Агенты/менеджеры</b> обрабатывают поступающие заказы.\n\n"
+                         "Это тестовая версия визового бота.\n\n"
+                         "<b>Пользователи</b> могут подавать заявки на визу.\n"
+                         "<b>Агенты</b> обрабатывают поступающие заявки.\n\n"
                          "В качестве кого вы хотите продолжить?",
                          reply_markup=signin_menu_kb())
 
 
 @router.callback_query(F.data.startswith("signin_as:"))
 async def signin_as_callback(query: CallbackQuery, deps: Dependencies, current_user: User) -> None:
-    users = deps.users(current_user)
+    users = deps.get_user_manage_service(current_user)
     match query.data:
         case "signin_as:agent":
-            await users.set_role(current_user.id, UserRole.AGENT)
+            await users.set_user_role(current_user.id, UserRole.AGENT)
         case "signin_as:user" | _:
-            await users.set_role(current_user.id, UserRole.USER)
-    current_user = await users.get(current_user.id)
+            await users.set_user_role(current_user.id, UserRole.USER)
+    current_user = await users.get_user(current_user.id)
     await query.answer()
     if isinstance(query.message, Message):
         await query.message.answer(f"Вы авторизованы как <b>{user_role(current_user.role)}</b>")
@@ -52,7 +52,7 @@ async def to_menu_handler(query: CallbackQuery, current_user: User,  state: FSMC
     if isinstance(query.message, Message):
         await show_menu(current_user=current_user,
                         message=query.message,
-                        replace_text=True)
+                        replace=True)
 
 
 @router.message(Command(commands="help"))

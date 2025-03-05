@@ -4,12 +4,12 @@ from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.user import User, UserQuery, UserQueryPaged
+from src.entities.users import User, UserQuery, UserQueryPaged
 from src.tgbot.callbacks import UserFilterCallbackData, UserSearchCallbackData, UsersCallbackData
 from src.tgbot.filters import IsAdmin
 from src.tgbot.scenes import SearchUserScene
 from src.tgbot.views.buttons import USERS
-from src.tgbot.views.user.users import show_user_filter, show_users, users_result_kb
+from src.tgbot.views.users.users import show_user_filter, show_users, users_result_kb
 
 router = Router()
 scene_registry = SceneRegistry(router)
@@ -20,7 +20,8 @@ async def users_button_handler(
         message: Message, deps: Dependencies, current_user: User) -> None:
     callback_data = UsersCallbackData()
     params = callback_data.model_dump(exclude_none=True)
-    result = await deps.users(current_user).get_many(UserQueryPaged(**params))
+    users = deps.get_admin_user_service(current_user)
+    result = await users.get_users(UserQueryPaged(**params))
     await show_users(result,
                      callback_data,
                      message=message)
@@ -34,7 +35,8 @@ async def users_callback_handler(
         current_user: User,
 ) -> None:
     params = callback_data.model_dump(exclude_none=True)
-    result = await deps.users(current_user).get_many(UserQueryPaged(**params))
+    users = deps.get_admin_user_service(current_user)
+    result = await users.get_users(UserQueryPaged(**params))
     await query.answer()
     if isinstance(query.message, Message):
         if callback_data.page:
@@ -62,13 +64,13 @@ async def user_filter_callback_handler(
 ) -> None:
     await query.answer()
     if isinstance(query.message, Message):
-        users = deps.users(current_user)
+        users = deps.get_admin_user_service(current_user)
         params = callback_data.model_dump(
             exclude_none=True,
             exclude={"role", "page", "per_page"},
         )
-        count_by_status = await users.get_count_by_role(UserQuery(**params))
-        total_count = await users.get_count(UserQuery(**params))
+        count_by_status = await users.get_user_count_by_role(UserQuery(**params))
+        total_count = await users.get_user_count(UserQuery(**params))
         await show_user_filter(count_by_status,
                                total_count,
                                callback_data,

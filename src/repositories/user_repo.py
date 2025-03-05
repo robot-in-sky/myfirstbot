@@ -1,5 +1,6 @@
 from datetime import datetime
 from math import ceil
+from uuid import UUID
 
 from pydantic import TypeAdapter
 from pytz import UTC
@@ -7,30 +8,28 @@ from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from src.entities.base import QueryCountItem, QueryResult
-from src.entities.user import (
+from src.entities.users import (
+    USER_SEARCH_BY,
     User,
     UserAdd,
     UserQuery,
     UserQueryPaged,
     UserRole,
-    UserSearchBy,
     UserUpdate,
 )
-from src.io.database import DatabaseClient
-from src.repositories.base import AbstractRepo
-from src.repositories.orm_models import OrmUser
+from src.infrastructure.database import DatabaseClient
+from src.orm_models import OrmUser
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
     apply_pagination,
     apply_search,
     apply_sorting,
-    get_column,
     get_row_count,
     match_types,
 )
 
 
-class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
+class UserRepo:
 
     def __init__(self, db: DatabaseClient) -> None:
         self.db = db
@@ -46,7 +45,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             return User.model_validate(result)
 
 
-    async def get(self, id_: int) -> User | None:
+    async def get(self, id_: UUID) -> User | None:
         stmt = select(OrmUser).where(OrmUser.id == id_)
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -61,7 +60,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             return User.model_validate(result) if result else None
 
 
-    async def update(self, id_: int, instance: UserUpdate) -> User | None:
+    async def update(self, id_: UUID, instance: UserUpdate) -> User | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
                  .values(**instance.model_dump(), updated_at=datetime.now(UTC))
                  .returning(OrmUser))
@@ -72,7 +71,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             return None
 
 
-    async def delete(self, id_: int) -> int | None:
+    async def delete(self, id_: UUID) -> UUID | None:
         stmt = delete(OrmUser).where(OrmUser.id == id_).returning(OrmUser.id)
         async with self.db.get_session() as session:
             if result := await session.scalar(stmt):
@@ -81,7 +80,7 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             return None
 
 
-    async def set_role(self, id_: int, role: UserRole) -> int | None:
+    async def set_role(self, id_: UUID, role: UserRole) -> UUID | None:
         stmt = (update(OrmUser).where(OrmUser.id == id_)
                  .values(role=role, updated_at=datetime.now(UTC))
                  .returning(OrmUser.id))
@@ -101,18 +100,19 @@ class UserRepo(AbstractRepo[User, UserAdd, UserUpdate]):
             stmt: Select[tuple[OrmUser]],
             query: UserQuery,
     ) -> Select[tuple[OrmUser]]:
+
         clauses = []
         if query.role is not None:
-            column = get_column(stmt, "role")
-            clauses.append(column == query.role)
+            clauses.append(OrmUser.role == query.role)
         if query.role__in is not None:
-            column = get_column(stmt, "role")
-            values = match_types(query.role__in, column)
-            clauses.append(column.in_(values))
-        stmt = stmt.where(and_(*clauses))
+            values = match_types(query.role__in, OrmUser.role)
+            clauses.append(OrmUser.role.in_(values))
+
+        if len(clauses) > 0:
+            stmt = stmt.where(and_(*clauses))
 
         if query.search is not None:
-            stmt = apply_search(stmt, query.search, list(map(str, UserSearchBy)))
+            stmt = apply_search(stmt, query.search, USER_SEARCH_BY)
 
         return stmt
 

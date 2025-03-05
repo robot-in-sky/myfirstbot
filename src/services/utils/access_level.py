@@ -2,11 +2,11 @@ from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
-from src.entities.user import UserRole
+from src.entities.users import UserRole
 from src.exceptions import AccessDeniedError
 
 if TYPE_CHECKING:
-    from src.entities.user.user import User
+    from src.entities.users.user import User
 
 
 def access_level(required: UserRole) -> Callable[..., Any]:

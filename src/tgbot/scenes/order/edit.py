@@ -7,14 +7,14 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from src.deps import Dependencies
 from src.entities.order import OrderUpdate
-from src.entities.user import User
+from src.entities.users import User
 from src.services import OrderService
 from src.tgbot.callbacks import EditorCallbackData, OrderCallbackData
 from src.tgbot.scenes.order import ORDER_FIELDS
 from src.tgbot.utils.fields import validate_field_input
 from src.tgbot.views.common.editor import editor_kb, editor_summary
 from src.tgbot.views.common.field_input import show_field_input
-from src.tgbot.views.order.order import show_order
+from src.tgbot.views.visas.app_form import show_order
 
 
 async def show_order_editor(

@@ -1,62 +1,57 @@
+from dataclasses import dataclass
+
 from aio_pika.patterns import JsonRPC
 
-from src.entities.user import User
-from src.io.database import DatabaseClient
-from src.io.redis import RedisClient
-from src.io.s3 import S3Client
-from src.services import AttachmentService, AuthService, FormService, OrderService, UserService
+from src.entities.users import User
+from src.infrastructure.database import DatabaseClient
+from src.infrastructure.redis import RedisClient
+from src.infrastructure.s3 import S3Client
+from src.services import (
+    AppFormManageService,
+    AttachmentService,
+    AuthService,
+    FormService,
+    MyAppFormsService,
+    MyAttachmentsService,
+    UserManageService,
+    VisaService,
+)
 from src.settings import AppSettings
 
 
+@dataclass(frozen=True)
 class Dependencies:
+    settings: AppSettings
+    db: DatabaseClient
+    redis: RedisClient
+    s3: S3Client
+    rpc: JsonRPC
 
-    def __init__(self, settings: AppSettings) -> None:
-        self._db = DatabaseClient(settings.db)
-        self._redis = RedisClient(settings.redis)
-        self._s3 = S3Client(settings.s3)
-        self._auth = AuthService(self._db)
-        self._attachments = AttachmentService(self._s3)
-        self._forms = FormService()
-        self._rpc = None
+    # Public services
+    @staticmethod
+    def get_visa_service() -> VisaService:
+        return VisaService()
 
-    def post_init(self, rpc: JsonRPC) -> None:
-        self._rpc = rpc
+    @staticmethod
+    def get_forms_service() -> FormService:
+        return FormService()
 
-    """
-    @property
-    def db(self) -> DatabaseClient:
-        return self._db
+    def get_auth_service(self) -> AuthService:
+        return AuthService(db=self.db)
 
-    @property
-    def redis(self) -> RedisClient:
-        return self._redis
+    def get_my_app_forms_service(self, current_user: User) -> MyAppFormsService:
+        return MyAppFormsService(db=self.db, current_user=current_user)
 
-    @property
-    def s3(self) -> S3Client:
-        return self._s3
-    """
+    def get_my_attachments_service(self, current_user: User) -> MyAttachmentsService:
+        return MyAttachmentsService(s3=self.s3, db=self.db, current_user=current_user)
 
-    @property
-    def rpc(self) -> JsonRPC:
-        if self._rpc is None:
-            message = "RPC is not initialized"
-            raise RuntimeError(message)
-        return self._rpc
 
-    @property
-    def attachments(self) -> AttachmentService:
-        return self._attachments
+    # Admin services
+    def get_user_manage_service(self, current_user: User) -> UserManageService:
+        return UserManageService(db=self.db, current_user=current_user)
 
-    @property
-    def auth(self) -> AuthService:
-        return self._auth
+    def get_app_form_manage_service(self, current_user: User) -> AppFormManageService:
+        return AppFormManageService(db=self.db, current_user=current_user)
 
-    @property
-    def forms(self) -> FormService:
-        return self._forms
-
-    def users(self, current_user: User) -> UserService:
-        return UserService(self._db, current_user)
-
-    def orders(self, current_user: User) -> OrderService:
-        return OrderService(self._db, current_user)
+    def get_attachment_service(self, current_user: User) -> AttachmentService:
+        return AttachmentService(s3=self.s3, current_user=current_user)

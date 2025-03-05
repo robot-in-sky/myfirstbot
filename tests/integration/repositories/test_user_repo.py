@@ -1,25 +1,27 @@
 import logging
+import uuid
 
 import pytest
 import pytest_asyncio
-from src.entities.visa.choices import UserRole
-from src.entities.user.user import User, UserAdd, UserQueryPaged, UserUpdate
+from src.entities.users import User, UserAdd, UserQueryPaged, UserRole, UserUpdate
 from src.exceptions import UniqueViolationError
+from src.infrastructure.database import DatabaseClient
+from src.orm_models import OrmBase
 from src.repositories import UserRepo
-
-from tests.utils.mocked_database import MockedDatabase
 
 logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture(autouse=True, scope="module")
-async def _module_setup(database: MockedDatabase) -> None:
-    await database.clear()
+async def _module_setup(db: DatabaseClient) -> None:
+    await db.add_uuid_extension()
+    await db.drop_tables_by_base(OrmBase)
+    await db.create_tables_by_base(OrmBase)
 
 
 @pytest_asyncio.fixture()
-async def repo(database: MockedDatabase) -> UserRepo:
-    return UserRepo(database)
+async def repo(db: DatabaseClient) -> UserRepo:
+    return UserRepo(db)
 
 
 class TestUserRepo:
@@ -72,11 +74,8 @@ class TestUserRepo:
             ))
 
 
-    @pytest.mark.parametrize("id_", [
-        -1, 0, int("0x7fffffff", 16),
-    ])
-    async def test_not_exists(self, repo: UserRepo, id_: int) -> None:
-        assert await repo.get(id_) is None
+    async def test_not_exists(self, repo: UserRepo) -> None:
+        assert await repo.get(uuid.uuid4()) is None
 
 
     async def test_get_by_telegram_id(self, repo: UserRepo) -> None:
@@ -87,7 +86,8 @@ class TestUserRepo:
 
 
     async def test_set_role(self, repo: UserRepo) -> None:
-        id_ = (await repo.get_many(UserQueryPaged())).items[0].id
+        # ID of first added item
+        id_ = (await repo.get_many(UserQueryPaged(sort="asc"))).items[0].id
         await repo.set_role(id_, UserRole.AGENT)
         role = (await repo.get(id_)).role
         assert role == UserRole.AGENT
@@ -124,6 +124,7 @@ class TestUserRepo:
                 assert isinstance(item, User)
         assert len(items) == expecting
 
+
     @pytest.mark.parametrize(("query", "expecting"), [
         (UserQueryPaged(page=1, per_page=2), (1, 2, 3, 2, 5)),
         (UserQueryPaged(page=2, per_page=2), (2, 2, 3, 2, 5)),
@@ -150,12 +151,17 @@ class TestUserRepo:
 
 
     @pytest.mark.parametrize(("query", "expecting"), [
-        (UserQueryPaged(sort_by="telegram_id"), (123456001, 123456005)),
+        (UserQueryPaged(sort_by="telegram_id"), (123456005, 123456001)),
+        (UserQueryPaged(sort_by="telegram_id", sort="asc"), (123456001, 123456005)),
         (UserQueryPaged(sort_by="telegram_id", sort="desc"), (123456005, 123456001)),
-        (UserQueryPaged(sort_by="chat_id"), (123456786, None)),
+        (UserQueryPaged(sort_by="chat_id"), (None, 123456786)),
+        (UserQueryPaged(sort_by="chat_id", sort="asc"), (123456786, None)),
         (UserQueryPaged(sort_by="chat_id", sort="desc"), (None, 123456786)),
-        (UserQueryPaged(sort_by="user_name"), ("Ivan Ivanov", "raj3456.bangalore")),
+        (UserQueryPaged(sort_by="user_name"), ("raj3456.bangalore", "Ivan Ivanov")),
+        (UserQueryPaged(sort_by="user_name", sort="asc"), ("Ivan Ivanov", "raj3456.bangalore")),
         (UserQueryPaged(sort_by="user_name", sort="desc"), ("raj3456.bangalore", "Ivan Ivanov")),
+        (UserQueryPaged(sort_by="role"), (UserRole.AGENT, UserRole.USER)),
+        (UserQueryPaged(sort_by="role", sort="asc"), (UserRole.USER, UserRole.AGENT)),
     ])
     async def test_sorting(self, repo: UserRepo, query: UserQueryPaged, expecting: tuple) -> None:
         items = (await repo.get_many(query)).items
@@ -164,7 +170,7 @@ class TestUserRepo:
 
 
     async def test_update(self, repo: UserRepo) -> None:
-        id_ = (await repo.get_many(UserQueryPaged())).items[0].id
+        id_ = (await repo.get_many(UserQueryPaged(sort="asc"))).items[0].id
         update = UserUpdate(
             user_name="Foo Bar",
             first_name="Foo",
@@ -172,19 +178,24 @@ class TestUserRepo:
             chat_id=888888888,
         )
         result = await repo.update(id_, update)
+        # Check result model fields
         for field in update.model_fields:
             assert getattr(result, field) == getattr(update, field)
+        # Check re-requested model fields
         updated = await repo.get(id_)
         for field in update.model_fields:
             assert getattr(updated, field) == getattr(update, field)
-        assert await repo.update(-1, update) is None
+        # Update non-existent
+        assert await repo.update(uuid.uuid4(), update) is None
 
 
     async def test_delete(self, repo: UserRepo) -> None:
-        initial = await repo.get_many(UserQueryPaged())
+        initial = await repo.get_many(UserQueryPaged(sort="asc"))
         id_ = initial.items[0].id
         result = await repo.delete(id_)
+        # Result should be ID
         assert result == id_
         final = await repo.get_many(UserQueryPaged())
         assert len(initial.items) - len(final.items) == 1
-        assert await repo.delete(-1) is None
+        # Delete non-existent
+        assert await repo.delete(uuid.uuid4()) is None

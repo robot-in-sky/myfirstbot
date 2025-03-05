@@ -4,7 +4,7 @@ from pathlib import Path
 
 from alembic.config import Config
 from sqlalchemy import URL, MetaData, engine_from_config, pool, text
-from src.definitions import ROOT_DIR
+from src.config import ROOT_DIR
 
 
 def get_alembic_config(
@@ -42,17 +42,17 @@ def get_alembic_config(
 
 def reset_db(config: Config) -> None:
 
-    connectable = engine_from_config(
+    engine = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
     metadata = MetaData()
-    metadata.reflect(bind=connectable)
-    metadata.drop_all(bind=connectable)
+    metadata.reflect(bind=engine)
+    metadata.drop_all(bind=engine)
 
     statement = """DROP TABLE IF EXISTS alembic_version"""
-    with connectable.connect() as connection:
-        connection.execute(text(statement))
-        connection.commit()
+    with engine.connect() as conn:
+        conn.execute(text(statement))
+        conn.commit()
