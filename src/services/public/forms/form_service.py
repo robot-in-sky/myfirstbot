@@ -616,17 +616,17 @@ class FormService:
         self._forms = [
             Form(id="ind_tour", name="Туристическая виза в Индию",
                  sections=[
-                     self.get_section("registration"),
+                     # self.get_section("registration"),
                      self.get_section("applicant_details"),
-                     self.get_section("passport_details"),
-                     self.get_section("address_details"),
-                     self.get_section("family_details"),
-                     self.get_section("details_of_visa_sought"),
-                     self.get_section("previous_visa_details"),
-                     self.get_section("visited_countries"),
-                     self.get_section("saarc_country_visits"),
-                     self.get_section("reference_details_home"),
-                     self.get_section("reference_details_ind"),
+                     # self.get_section("passport_details"),
+                     # self.get_section("address_details"),
+                     # self.get_section("family_details"),
+                     # self.get_section("details_of_visa_sought"),
+                     # self.get_section("previous_visa_details"),
+                     # self.get_section("visited_countries"),
+                     # self.get_section("saarc_country_visits"),
+                     # self.get_section("reference_details_home"),
+                     # self.get_section("reference_details_ind"),
                  ]),
         ]
 
@@ -641,7 +641,6 @@ class FormService:
 
     def get_form(self, id_: str) -> Form:
         return next(filter(lambda e: e.id == id_, self._forms))
-
 
     @staticmethod
     def validate_input(field: Field, text: str) -> str:

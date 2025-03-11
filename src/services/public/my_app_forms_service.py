@@ -7,6 +7,7 @@ from src.entities.visas import AppForm, AppFormAdd, AppFormQuery, AppFormQueryPa
 from src.exceptions import AccessDeniedError, InvalidStateError, NotFoundError
 from src.infrastructure.database import DatabaseClient
 from src.repositories import AppFormRepo
+from src.services.public.visa_service import VisaService
 from src.services.utils.access_level import access_level
 
 
@@ -14,6 +15,7 @@ class MyAppFormsService:
 
     def __init__(self, db: DatabaseClient, current_user: User) -> None:
         self._app_form_repo = AppFormRepo(db)
+        self._visa_service = VisaService()
         self.current_user = current_user
 
     def _log(self, app_form: AppForm, message: str) -> None:
@@ -22,27 +24,28 @@ class MyAppFormsService:
 
     async def get_my_forms(self, q: AppFormQueryPaged) -> QueryResult[AppForm]:
         q.user_id = self.current_user.id
-        q.status__not_in.add(AppFormStatus.TRASH)
+        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_many(q)
 
 
     async def get_my_forms_count(self, q: AppFormQuery) -> int:
         q.user_id = self.current_user.id
-        q.status__not_in.add(AppFormStatus.TRASH)
+        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_count(q)
 
 
     async def get_my_forms_count_by_status(self, q: AppFormQuery) -> list[QueryCountItem[AppFormStatus]]:
         q.user_id = self.current_user.id
-        q.status__not_in.add(AppFormStatus.TRASH)
+        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_count_by_status(q)
 
 
     @access_level(required=UserRole.USER)
     async def new_form(self, instance: AppFormAdd) -> AppForm:
-        form = await self._app_form_repo.add(instance)
-        self._log(form, "created")
-        return form
+        app_form = await self._app_form_repo.add(instance)
+        app_form.visa = self._visa_service.get_visa(app_form.visa_id)
+        self._log(app_form, "created")
+        return app_form
 
 
     def _check_ownership(self, app_form: AppForm) -> None:
@@ -59,6 +62,7 @@ class MyAppFormsService:
 
     async def get_form(self, id_: UUID) -> AppForm:
         if app_form := await self._app_form_repo.get(id_):
+            app_form.visa = self._visa_service.get_visa(app_form.visa_id)
             self._check_ownership(app_form)
             return app_form
         raise NotFoundError
@@ -67,6 +71,7 @@ class MyAppFormsService:
     @access_level(required=UserRole.USER)
     async def update_form(self, id_: UUID, instance: AppFormUpdate) -> AppForm:
         if app_form := await self._app_form_repo.update(id_, instance):
+            app_form.visa = self._visa_service.get_visa(app_form.visa_id)
             self._check_ownership(app_form)
             self._log(app_form, "updated")
             return app_form

@@ -150,3 +150,12 @@ class FormScene(Scene, state="form"):
             data["form.section_step"] = section_step + 1
             await state.set_data(data)
             await self.wizard.retake()
+
+
+    @on.message(F.text.startswith("/"))
+    async def save_and_exit(self, state: FSMContext) -> None:
+        data = await state.get_data()
+        if data.get("visa.app_form_id") is None:
+            await self.wizard.goto("apply_visa")
+        else:
+            await self.wizard.exit()

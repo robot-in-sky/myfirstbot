@@ -7,6 +7,7 @@ from src.entities.visas import AppForm, AppFormAdd, AppFormQuery, AppFormQueryPa
 from src.exceptions import InvalidStateError, NotFoundError
 from src.infrastructure.database import DatabaseClient
 from src.repositories.app_form_repo import AppFormRepo
+from src.services.public.visa_service import VisaService
 from src.services.utils.access_level import access_level
 
 
@@ -14,6 +15,7 @@ class AppFormManageService:
 
     def __init__(self, db: DatabaseClient, current_user: User) -> None:
         self._app_form_repo = AppFormRepo(db)
+        self._visa_service = VisaService()
         self.current_user = current_user
 
 
@@ -39,6 +41,7 @@ class AppFormManageService:
     @access_level(required=UserRole.AGENT)
     async def new_form(self, instance: AppFormAdd) -> AppForm:
         app_form = await self._app_form_repo.add(instance)
+        app_form.visa = self._visa_service.get_visa(app_form.visa_id)
         self._log(app_form, "created")
         return app_form
 
@@ -52,6 +55,7 @@ class AppFormManageService:
     @access_level(required=UserRole.AGENT)
     async def get_form(self, id_: UUID) -> AppForm:
         if app_form := await self._app_form_repo.get(id_):
+            app_form.visa = self._visa_service.get_visa(app_form.visa_id)
             return app_form
         raise NotFoundError
 
@@ -59,6 +63,7 @@ class AppFormManageService:
     @access_level(required=UserRole.AGENT)
     async def update_form(self, id_: UUID, instance: AppFormUpdate) -> AppForm:
         if app_form := await self._app_form_repo.update(id_, instance):
+            app_form.visa = self._visa_service.get_visa(app_form.visa_id)
             self._log(app_form, "updated")
             return app_form
         raise NotFoundError

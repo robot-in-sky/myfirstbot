@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile, Message
 
+from src.entities.forms import Form
 from src.entities.visas import Country, Visa, VisaType
 from src.services.public.forms import COUNTRY_OUTPUT
 from src.tgbot.views.buttons import BACK, CONTINUE, TO_MENU
@@ -11,7 +12,7 @@ VISA_COUNTRY_TEXT = ("<b>Виза какой страны вас интерес�
 
 VISA_TYPE_TEXT = "Выберите тип визы"
 
-VISA_TERMS_TEXT = ("\n\n Для подачи заявки необходимо:\n"
+VISA_TERMS_TEXT = ("Для подачи заявки необходимо:\n"
                    "📋 Ответить на вопросы анкеты\n"
                    "🪪 Предоставить фото/скан паспорта (загран)\n"
                    "💳 Оплатить полную стоимость визы\n\n"
@@ -102,21 +103,27 @@ def visa_type_kb(visas: Sequence[Visa]) -> InlineKeyboardMarkup:
 
 
 # VISA TERMS
-async def show_visa_terms_step(visa: Visa, message: Message) -> Message:
-    text = "<b>Оформление визы\n\n</b>".upper()
-    text += await visa_summary(visa)
-    text += VISA_TERMS_TEXT
+async def show_visa_terms_step(visa: Visa, form: Form, *, message: Message) -> Message:
+    text = "<b>Оформление визы</b>\n\n".upper()
+    text += (f"{visa_summary(visa)}"
+             f"{form_summary(form)}\n"
+             f"{VISA_TERMS_TEXT}")
     return await message.edit_text(text,
                                    reply_markup=visa_terms_kb())
 
 
-async def visa_summary(visa: Visa) -> str:
+def visa_summary(visa: Visa) -> str:
     return (f"<b>Страна</b>: {visa_country(visa.country)}\n"
             f"<b>Тип визы</b>: {visa_type(visa.type)}\n"
             f"<b>Срок действия</b>: {visa_period(visa.period)}\n"
             f"<b>Стоимость</b>: {visa.price:.0f}₽\n"
             f"<b>Срок подачи заявки</b>: {visa_period(visa.app_period)}\n"
-            f"<b>Срок обработки заявки</b>: {visa.proc_days_min}-{visa_period(f'{visa.proc_days_max}d')}")
+            f"<b>Срок обработки заявки</b>: {visa.proc_days_min}-{visa_period(f'{visa.proc_days_max}d')}\n")
+
+
+def form_summary(form: Form) -> str:
+    field_count = sum(len(s.fields) for s in form.sections)
+    return f"<b>Вопросов в анкете</b>: {field_count}\n"
 
 
 def visa_terms_kb() -> InlineKeyboardMarkup:
