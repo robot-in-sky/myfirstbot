@@ -1,218 +1,154 @@
-from aiogram import F, Router
+from aiogram import F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.scene import SceneRegistry, Scene
+from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
-from src.entities.order import OrderQuery, OrderQueryPaged
-from src.entities.users import User, UserRole
-from src.tgbot.callbacks import OrderFilterCallbackData, OrderSearchCallbackData, OrdersCallbackData
-from src.tgbot.scenes import SearchOrderScene
-from src.tgbot.views.buttons import MY_APP_FORMS, MANAGE_APP_FORMS
-from src.tgbot.views.visas.app_forms import orders_result_kb, show_order_filter, show_orders
+from src.entities.users import User
+from src.entities.visas import AppFormQuery, AppFormQueryPaged
+from src.tgbot.utils.helpers import sub_dict_by_prefix
+from src.tgbot.views.const import PER_PAGE_DEFAULT
+from src.tgbot.views.keyboards import back_kb
+from src.tgbot.views.menu import show_menu
+from src.tgbot.views.visas.app_form import show_app_form
+from src.tgbot.views.visas.app_forms import show_app_form_filter, show_app_forms
 
-router = Router()
-scene_registry = SceneRegistry(router)
-
-
-@router.message(F.text.in_({MY_APP_FORMS, MANAGE_APP_FORMS}))
-async def orders_button_handler(
-        message: Message,
-        deps: Dependencies,
-        current_user: User,
-) -> None:
-    callback_data = OrdersCallbackData()
-    params = callback_data.model_dump(exclude_none=True)
-    if message.text == MY_APP_FORMS or current_user.role < UserRole.AGENT:
-        params["user_id"] = current_user.id
-    result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
-    await show_orders(result,
-                      callback_data,
-                      current_user=current_user,
-                      message=message)
+SEARCH_TEXT = "Введите поисковую фразу"
 
 
-@router.callback_query(OrdersCallbackData.filter())
-async def orders_callback_handler(
-        query: CallbackQuery,
-        callback_data: OrdersCallbackData,
-        deps: Dependencies,
-        current_user: User,
-) -> None:
-    await query.answer()
-    params = callback_data.model_dump(exclude_none=True)
-    if current_user.role < UserRole.AGENT:
-        params["user_id"] = current_user.id
-    result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
-    if isinstance(query.message, Message):
-        if callback_data.page:
-            await query.message.edit_reply_markup(
-                reply_markup=orders_result_kb(result,
-                                              callback_data,
-                                              current_user=current_user))
-        else:
-            await show_orders(result,
-                              callback_data,
-                              current_user=current_user,
-                              message=query.message,
-                              replace_text=True)
-
-
-scene_registry.add(SearchOrderScene)
-router.callback_query.register(
-    SearchOrderScene.as_handler(), OrderSearchCallbackData.filter())
-
-
-@router.callback_query(OrderFilterCallbackData.filter())
-async def order_filter_callback_handler(
-        query: CallbackQuery,
-        callback_data: OrderFilterCallbackData,
-        deps: Dependencies,
-        current_user: User,
-) -> None:
-    await query.answer()
-    if isinstance(query.message, Message):
-        orders = deps.orders(current_user)
-        params = callback_data.model_dump(
-            exclude_none=True,
-            exclude={"status", "page", "per_page"},
-        )
-        if current_user.role < UserRole.AGENT:
-            params["user_id"] = current_user.id
-        count_by_status = await orders.get_count_by_status(OrderQuery(**params))
-        total_count = await orders.get_count(OrderQuery(**params))
-        await show_order_filter(count_by_status,
-                                total_count,
-                                callback_data,
-                                current_user=current_user,
-                                message=query.message,
-                                replace_text=True)
-
-
-class RepeaterScene(Scene, state="repeater"):
+class MyAppFormsScene(Scene, state="my_app_forms"):
 
     @on.message.enter()
     async def message_on_enter(self,
                                message: Message,
                                state: FSMContext,
                                deps: Dependencies, *,
-                               repeater_id: str | None = None,
-                               replace: bool = False) -> None:
+                               current_user: User) -> None:
 
         data = await state.get_data()
+        if isinstance(message, Message):
+            service = deps.get_my_app_forms_service(current_user)
+            if data.get("id") is not None:
+                app_form = await service.get_form(id_=data.get("id"))
+                await show_app_form(app_form,
+                                    message=message,
+                                    replace=True,
+                                    to_menu=False,
+                                    current_user=current_user)
 
-        if repeater_id is not None:
-            # Set defaults
-            data["repeater.id"] = repeater_id
-            data["repeater.item.step"] = 0
-            await state.set_data(data)
-
-        result = await deps.orders(current_user).get_many(OrderQueryPaged(**params))
-        if isinstance(query.message, Message):
-            await show_orders(result,
-                              callback_data,
-                              current_user=current_user,
-                              message=query.message,
-                              replace_text=True)
+            else:
+                params = sub_dict_by_prefix(data, prefix="query.")
+                params["per_page"] = PER_PAGE_DEFAULT
+                if data.get("state") == "filter":
+                    params = {k: params[k] for k in params if k not in {"status", "page", "per_page"}}
+                    print("get_my_forms_count_by_status", params)
+                    query = AppFormQuery(**params)
+                    count_by_status = await service.get_my_forms_count_by_status(query)
+                    total_count = await service.get_my_forms_count(query)
+                    await show_app_form_filter(count_by_status,
+                                               total_count,
+                                               status=params.get("status"),
+                                               search=params.get("search"),
+                                               user_id=current_user.id,
+                                               message=message,
+                                               replace=True,
+                                               current_user=current_user)
+                else:
+                    if params.get("status") == "all":
+                        params["status"] = None
+                    print("get_my_forms", params)
+                    query = AppFormQueryPaged(**params)
+                    result = await service.get_my_forms(query)
+                    replace = True
+                    if data.get("message_id") is not None:
+                        await message.chat.delete_message(data["message_id"])
+                        data["message_id"] = None
+                        await state.set_data(data)
+                        replace = False
+                    await show_app_forms(result,
+                                         status=params.get("status"),
+                                         search=params.get("search"),
+                                         user_id=current_user.id,
+                                         message=message,
+                                         replace=replace,
+                                         current_user=current_user)
 
 
     @on.callback_query.enter()
-    async def callback_query_on_enter(self,  # noqa: PLR0913
+    async def callback_query_on_enter(self,
                                       query: CallbackQuery,
                                       state: FSMContext,
                                       deps: Dependencies, *,
-                                      repeater_id: str | None = None,
-                                      replace: bool = False) -> None:
+                                      current_user: User) -> None:
         await query.answer()
         if isinstance(query.message, Message):
-            await self.message_on_enter(query.message,
-                                        state, deps,
-                                        repeater_id=repeater_id,
-                                        replace=replace)
+            await self.message_on_enter(query.message, state, deps,
+                                        current_user=current_user)
 
 
     @on.callback_query(F.data)
-    async def repeater_action_callback(self,
-                                       query: CallbackQuery,
-                                       state: FSMContext) -> None:
+    async def app_forms_action_callback(self,
+                                        query: CallbackQuery,
+                                        state: FSMContext, *,
+                                        current_user: User) -> None:
         await query.answer()
-        if isinstance(query.message, Message) and query.data.startswith("repeater:"):
-                _, action = query.data.split(":")
-                data = await state.get_data()
-                repeater_id = data["repeater.id"]
-                match action:
+        if isinstance(query.message, Message):
+            match query.data:
+                case query.data if query.data.startswith("action:"):
+                    _, action = query.data.split(":")
+                    if action == "filter":
+                        await state.update_data({"state": "filter"})
+                        await self.wizard.retake()
 
-                    case "add":
-                        step_key = f"form.data.{repeater_id}.step"
-                        data[step_key] = data[step_key] + 1
-                        item_step_key = f"form.data.{repeater_id}.item_step"
-                        data[item_step_key] = 0
-                        await state.set_data(data)
-                        await self.wizard.retake(replace=True)
+                    elif action == "search":
+                        data = await state.get_data()
+                        if data.get("query.search") is not None:
+                            data["query.search"] = None
+                            data["state"] = None
+                            await state.set_data(data)
+                            await self.wizard.retake()
+                        else:
+                            await query.message.answer(SEARCH_TEXT)
+                            data["state"] = "search"
+                            data["message_id"] = query.message.message_id
+                            await state.set_data(data)
 
-                    case "reset":
-                        # Reset data to default
-                        data = remove_keys_by_prefix(data, prefix=f"form.data.{repeater_id}.")
-                        await state.set_data(data)
-                        await self.wizard.retake(repeater_id=repeater_id, replace=True)
+                case query.data if query.data.startswith("page:"):
+                    _, page = query.data.split(":")
+                    await state.update_data({"query.page": page, "state": None})
+                    await self.wizard.retake()
 
-                    case "confirm":
-                        # Remove keyboard and show confirmation
-                        await query.message.edit_reply_markup(reply_markup=None)
-                        await show_repeater_completed(query.message)
-                        await asyncio.sleep(0.3)
-                        # Switch form step
-                        data["form.form_step"] = data["form.form_step"] + 1
-                        data["form.section_step"] = 0
-                        await state.set_data(data)
-                        # Go back to the form scene
-                        await self.wizard.goto("fill_form")
+                case query.data if query.data.startswith("filter:status:"):
+                    _, _, status = query.data.split(":")
+                    await state.update_data({"query.status": status, "state": None})
+                    await self.wizard.retake()
+
+                case query.data if query.data.startswith("app_form:"):
+                    _, id_ = query.data.split(":")
+                    await state.update_data({"id": id_, "state": None})
+                    await self.wizard.retake()
+
+                case "back":
+                    await state.update_data({"id": None, "state": None})
+                    await self.wizard.retake()
+
+                case "to_menu":
+                    await state.set_data({})
+                    await self.wizard.exit()
+                    await show_menu(message=query.message,
+                                    current_user=current_user,
+                                    replace=True)
+
 
 
     @on.message(F.text)
-    async def process_input(self,  # noqa: PLR0912
+    async def process_input(self,
                             message: Message,
-                            state: FSMContext,
-                            deps: Dependencies) -> None:
-
+                            state: FSMContext) -> None:
         if message.text:
             data = await state.get_data()
-            repeater_id = data["repeater.id"]
-            repeater = deps.forms.get_section(repeater_id)
-            if not isinstance(repeater, Repeater):
-                return
-
-            step_key = f"form.data.{repeater_id}.step"
-            item_step_key = f"form.data.{repeater_id}.item_step"
-            item_step = data.get(item_step_key, 0)
-
-            if step_key not in data:
-                field = repeater.condition_field
-            else:
-                try:
-                    field = repeater.repeater_fields[item_step]
-                except IndexError:
-                    return
-
-            if field.type == FieldType.CHOICE and message.text == ALL:
-                await show_all_options(field, message=message)
-                return
-
-            try:
-                value = deps.forms.validate_input(field, message.text)
-            except ValidationError as error:
-                await message.answer(str(error))
-                return
-
-            if step_key not in data:
-                if value == YesNo.YES:
-                    data[step_key] = 0
-                else:
-                    data[step_key] = -1
-            else:
-                step = data[step_key]
-                data[f"form.data.{repeater_id}.{step}.{field.id}"] = value
-                data[item_step_key] = item_step + 1
-
-            await state.set_data(data)
-            await self.wizard.retake()
+            if data.get("state") == "search":
+                data["query.search"] = message.text
+                data["state"] = None
+                await state.set_data(data)
+                await self.wizard.retake()

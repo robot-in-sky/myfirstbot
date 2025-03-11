@@ -7,7 +7,7 @@ from src.entities.users import User, UserRole
 from src.tgbot.utils.helpers import cut_string
 from src.tgbot.views.buttons import BACK, FILTER_CHECKMARK
 from src.tgbot.views.const import BUTTON_TEXT_MAX_LEN, COLUMN_DELIMITER
-from src.tgbot.views.keyboards import filter_buttons, pagination_buttons
+from src.tgbot.views.keyboards import bottom_buttons, pagination_buttons
 
 from .user import user_role
 
@@ -44,7 +44,7 @@ def users_result_kb(
                     callback_data=f"user:{user.id}",
                         )] for user in result.items]
     keyboard.append(pagination_buttons(result))
-    keyboard.append(filter_buttons(filter_=filter_, search=search))
+    keyboard.append(bottom_buttons(filter_=filter_, search=search))
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 

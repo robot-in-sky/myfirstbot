@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.entities.users import User
-from src.entities.visas import AppForm, AppFormStatus
+from src.entities.visas import AppForm, AppFormStatus, Visa
 from src.tgbot.views import buttons
 from src.tgbot.views.const import DATE_TIME_FORMAT
 from src.tgbot.views.users.user import is_admin
@@ -15,6 +15,7 @@ async def show_app_form(app_form: AppForm, *,
                         to_menu: bool = False) -> Message:
     text = app_form_summary(app_form)
     reply_markup = app_form_actions_kb(app_form, current_user=current_user, to_menu=to_menu)
+    # await message.answer(str(app_form.data))
     if replace:
         await message.edit_text(text, reply_markup=reply_markup)
         return message
@@ -31,24 +32,36 @@ def app_form_status(status: AppFormStatus) -> str:
     }.get(status, f"{status}")
 
 
-def app_form_summary(app_form: AppForm) -> str:
-    applicant = "-"
+def app_form_applicant_data(app_form: AppForm) -> dict[str, str] | None:
     if app_form.data:
-        given_name = app_form.data.get("passport_details.given_name")
-        surname = app_form.data.get("passport_details.surname")
+        given_name = app_form.data.get("form.data.applicant_details.given_name")
+        surname = app_form.data.get("form.data.applicant_details.surname")
+        birth_date = app_form.data.get("form.data.applicant_details.birth_date")
+        birth_year = birth_date.split("-")[0]
         if given_name and surname:
-            applicant = f"{surname} {given_name}"
+            return {"given_name": given_name,
+                    "surname": surname,
+                    "birth_year": birth_year}
+    return None
+
+
+def app_form_summary(app_form: AppForm) -> str:
+    applicant = ""
+    if data := app_form_applicant_data(app_form):
+        applicant = ("<b>Заявитель</b>:\n"
+                     f"{data["given_name"]} {data["surname"]} ({data["birth_year"]})\n\n")
+
+    summary = ""
+    if isinstance(app_form.visa, Visa):
+        summary = f"{visa_summary(app_form.visa)}\n"
 
     return ("<b>Заявка на получение визы</b>\n"
             f"От: @{app_form.user.user_name}\n\n"
-            f"{visa_summary(app_form.visa)}\n\n"
-            f"Заявитель:\n"
-            f"<code>{applicant}</code>\n\n"
-            f"Создана:\n"
-            f"{app_form.created_at.strftime(DATE_TIME_FORMAT)}\n\n"
-            f"Последнее изменение:\n"
-            f"{app_form.updated_at.strftime(DATE_TIME_FORMAT)}"
-            f"Статус: {app_form_status(app_form.status)}")
+            f"{applicant}"
+            f"{summary}"
+            f"<b>Создана</b>: {app_form.created_at.strftime(DATE_TIME_FORMAT)}\n"
+            f"<b>Последнее изменение</b>: {app_form.updated_at.strftime(DATE_TIME_FORMAT)}\n"
+            f"<b>Статус</b>: {app_form_status(app_form.status)}")
 
 
 def app_form_actions_kb(app_form: AppForm, *,
