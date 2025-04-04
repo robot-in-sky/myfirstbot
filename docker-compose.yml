@@ -3,6 +3,7 @@ volumes:
   pgdb-data:
   pgadmin-data:
   redis-data:
+  rabbitmq-data:
 services:
   pgdb:
     image: postgres:15-alpine
