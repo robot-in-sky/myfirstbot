@@ -8,7 +8,7 @@ FORM_RECHECK_TEXT = "📝 Проверяем всё с начала"
 
 def form_check_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=buttons.RECHECK, callback_data="form:recheck")],
+        [InlineKeyboardButton(text=buttons.FORM_RECHECK, callback_data="form:recheck")],
         [InlineKeyboardButton(text=buttons.SAVE, callback_data="form:save")]])
 
 

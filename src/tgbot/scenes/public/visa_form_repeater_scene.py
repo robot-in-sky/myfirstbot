@@ -1,4 +1,5 @@
 import asyncio
+from uuid import UUID
 
 from aiogram import F
 from aiogram.fsm.context import FSMContext
@@ -7,6 +8,8 @@ from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.forms import FieldType, Repeater, YesNo
+from src.entities.users import User
+from src.entities.visas import AppFormUpdate
 from src.exceptions import ValidationError
 from src.tgbot.utils.helpers import remove_keys_by_prefix, sub_dict_by_prefix
 from src.tgbot.views.buttons import ALL
@@ -19,7 +22,7 @@ from src.tgbot.views.forms.repeater import (
 from src.tgbot.views.forms.section import show_check_section
 
 
-class RepeaterScene(Scene, state="repeater"):
+class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
 
     @on.message.enter()
     async def message_on_enter(self,  # noqa: PLR0913
@@ -102,7 +105,9 @@ class RepeaterScene(Scene, state="repeater"):
     @on.callback_query(F.data)
     async def repeater_action_callback(self,
                                        query: CallbackQuery,
-                                       state: FSMContext) -> None:
+                                       state: FSMContext, *,
+                                       deps: Dependencies,
+                                       current_user: User) -> None:
         await query.answer()
         if isinstance(query.message, Message) and query.data.startswith("repeater:"):
                 _, action = query.data.split(":")
@@ -133,8 +138,12 @@ class RepeaterScene(Scene, state="repeater"):
                         data["form.form_step"] = data["form.form_step"] + 1
                         data["form.section_step"] = 0
                         await state.set_data(data)
+                        # Autosave
+                        service = deps.get_my_app_forms_service(current_user)
+                        id_ = UUID(data["visa.app_form_id"])
+                        await service.update_form(id_, AppFormUpdate(data=data))
                         # Go back to the form scene
-                        await self.wizard.goto("form")
+                        await self.wizard.goto("visa_form")
 
 
     @on.message(F.text)

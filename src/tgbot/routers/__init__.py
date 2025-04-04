@@ -1,9 +1,7 @@
-from .commands import router as _commands
-from .errors import router as _errors
-from .visa import router as _visas
+from .base_router import router as _base_router
+from .public_router import router as _public_router
 
 routers = (
-    _commands,
-    _errors,
-    _visas,
+    _base_router,
+    _public_router,
 )

@@ -11,7 +11,7 @@ from src.tgbot.views.forms.field import show_all_options, show_field_input
 from src.tgbot.views.forms.form import FORM_RECHECK_TEXT, show_form_done_message
 
 
-class FormScene(Scene, state="form"):
+class VisaFormScene(Scene, state="visa_form"):
 
     @on.message.enter()
     async def message_on_enter(self,  # noqa: PLR0912, C901
@@ -51,13 +51,13 @@ class FormScene(Scene, state="form"):
                 await state.set_data(data)
 
             if isinstance(section, Repeater):
-                await self.wizard.goto("repeater", repeater_id=section.id)
+                await self.wizard.goto("visa_form_repeater", repeater_id=section.id)
 
             elif isinstance(section, Section):
                 try:
                     field = section.fields[section_step]
                 except IndexError:
-                    await self.wizard.goto("section", section_id=section.id)
+                    await self.wizard.goto("visa_form_section", section_id=section.id)
                 else:
 
                     key = f"form.data.{section.id}.{field.id}"
@@ -92,13 +92,6 @@ class FormScene(Scene, state="form"):
                                         form_id=form_id)
 
 
-    async def show_field_or_repeater(self, field: Field | Repeater, *, message: Message) -> None:
-        if isinstance(field, Field):
-            await show_field_input(field, message=message)
-        elif isinstance(field, Repeater):
-            await self.wizard.goto("repeater", repeater_id=field.id)
-
-
     @on.callback_query(F.data)
     async def form_data_update_callback(self, query: CallbackQuery, state: FSMContext) -> None:
         await query.answer()
@@ -112,6 +105,7 @@ class FormScene(Scene, state="form"):
                     await self.wizard.retake()
 
                 elif action == "save":
+                    await state.update_data({"form.completed": True})
                     await query.message.delete()
                     await self.wizard.goto("apply_visa")
 
@@ -150,12 +144,3 @@ class FormScene(Scene, state="form"):
             data["form.section_step"] = section_step + 1
             await state.set_data(data)
             await self.wizard.retake()
-
-
-    @on.message(F.text.startswith("/"))
-    async def save_and_exit(self, state: FSMContext) -> None:
-        data = await state.get_data()
-        if data.get("visa.app_form_id") is None:
-            await self.wizard.goto("apply_visa")
-        else:
-            await self.wizard.exit()

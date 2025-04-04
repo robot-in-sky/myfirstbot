@@ -24,19 +24,22 @@ class MyAppFormsService:
 
     async def get_my_forms(self, q: AppFormQueryPaged) -> QueryResult[AppForm]:
         q.user_id = self.current_user.id
-        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
+        q.status__not_in = q.status__not_in or set()
+        q.status__not_in.add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_many(q)
 
 
     async def get_my_forms_count(self, q: AppFormQuery) -> int:
         q.user_id = self.current_user.id
-        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
+        q.status__not_in = q.status__not_in or set()
+        q.status__not_in.add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_count(q)
 
 
     async def get_my_forms_count_by_status(self, q: AppFormQuery) -> list[QueryCountItem[AppFormStatus]]:
         q.user_id = self.current_user.id
-        q.status__not_in = (q.status__not_in or set()).add(AppFormStatus.TRASH)
+        q.status__not_in = q.status__not_in or set()
+        q.status__not_in.add(AppFormStatus.TRASH)
         return await self._app_form_repo.get_count_by_status(q)
 
 
@@ -55,8 +58,8 @@ class MyAppFormsService:
 
 
     @staticmethod
-    def _check_status(app_form: AppForm, status: AppFormStatus) -> None:
-        if app_form.status != status:
+    def _check_status(app_form: AppForm, status__in: list[AppFormStatus]) -> None:
+        if app_form.status not in status__in:
             raise InvalidStateError
 
 
@@ -73,8 +76,20 @@ class MyAppFormsService:
         if app_form := await self._app_form_repo.update(id_, instance):
             app_form.visa = self._visa_service.get_visa(app_form.visa_id)
             self._check_ownership(app_form)
+            self._check_status(app_form, [AppFormStatus.DRAFT])
             self._log(app_form, "updated")
             return app_form
+        raise NotFoundError
+
+
+    @access_level(required=UserRole.USER)
+    async def save_form(self, id_: UUID) -> UUID:
+        if app_form := await self._app_form_repo.get(id_):
+            self._check_ownership(app_form)
+            self._check_status(app_form, [AppFormStatus.DRAFT])
+            if await self._app_form_repo.set_status(id_, AppFormStatus.SAVED):
+                self._log(app_form, "submitted")
+                return app_form.id
         raise NotFoundError
 
 
@@ -82,7 +97,7 @@ class MyAppFormsService:
     async def submit_form(self, id_: UUID) -> UUID:
         if app_form := await self._app_form_repo.get(id_):
             self._check_ownership(app_form)
-            self._check_status(app_form, AppFormStatus.DRAFT)
+            self._check_status(app_form, [AppFormStatus.SAVED])
             if await self._app_form_repo.set_status(id_, AppFormStatus.PENDING):
                 self._log(app_form, "submitted")
                 return app_form.id
@@ -93,7 +108,7 @@ class MyAppFormsService:
     async def return_form(self, id_: UUID) -> UUID:
         if app_form := await self._app_form_repo.get(id_):
             self._check_ownership(app_form)
-            self._check_status(app_form, AppFormStatus.PENDING)
+            self._check_status(app_form, [AppFormStatus.PENDING])
             if await self._app_form_repo.set_status(id_, AppFormStatus.DRAFT):
                 self._log(app_form, "returned")
                 return app_form.id
@@ -104,7 +119,7 @@ class MyAppFormsService:
     async def trash_form(self, id_: UUID) -> UUID:
         if app_form := await self._app_form_repo.get(id_):
             self._check_ownership(app_form)
-            self._check_status(app_form, AppFormStatus.DRAFT)
+            self._check_status(app_form, [AppFormStatus.DRAFT, AppFormStatus.SAVED])
             if await self._app_form_repo.set_status(id_, AppFormStatus.TRASH):
                 self._log(app_form, "trashed")
                 return app_form.id

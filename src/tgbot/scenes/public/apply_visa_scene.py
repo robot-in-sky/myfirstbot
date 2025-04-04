@@ -1,6 +1,8 @@
 import asyncio
 from uuid import UUID
 
+from aio_pika import MessageProcessError
+from aio_pika.patterns.rpc import JsonRPCError
 from aiogram import Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
@@ -12,13 +14,15 @@ from src.deps import Dependencies
 from src.entities.users import User
 from src.entities.visas import AppFormAdd, AppFormUpdate, Country
 from src.entities.visas.passport import PassportDetails, PassportFiles
-from src.tgbot.utils.helpers import sub_dict_by_prefix
 from src.tgbot.views.menu import show_menu
 from src.tgbot.views.visas.app_form import show_app_form
-from src.tgbot.views.visas.visa_app import (
+from src.tgbot.views.visas.apply_visa import (
     CHECKED_TEXT,
+    CORNER_DETECTION_ERROR_TEXT,
+    IMAGE_MISMATCH_ERROR_TEXT,
     PASSPORT_TEXT,
     START_TEXT,
+    TEXT_RECOGNITION_ERROR_TEXT,
     WAITING_TEXT,
     show_check_passport_step,
     show_country_step,
@@ -39,7 +43,9 @@ class ApplyVisaScene(Scene, state="apply_visa"):
                                require_passport: bool = True) -> None:
 
         data = await state.get_data()
+        service = deps.get_my_app_forms_service(current_user)
         visa_service = deps.get_visa_service()
+        form_service = deps.get_forms_service()
 
         if data.get("visa.country") is None:
             countries = visa_service.get_countries()
@@ -53,13 +59,11 @@ class ApplyVisaScene(Scene, state="apply_visa"):
         elif data.get("visa.terms_accepted") is None:
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)
-            service = deps.get_forms_service()
-            form = service.get_form(visa.form_id)
+            form = form_service.get_form(visa.form_id)
             await show_visa_terms_step(visa, form, message=message)
 
         elif data.get("visa.app_form_id") is None:
             await message.edit_reply_markup(reply_markup=None)
-            service = deps.get_my_app_forms_service(current_user)
             app_form = await service.new_form(
                                 AppFormAdd(user_id=current_user.id,
                                            country=data["visa.country"],
@@ -81,24 +85,19 @@ class ApplyVisaScene(Scene, state="apply_visa"):
                 data["visa.passport_expecting"] = False
                 await state.set_data(data)
                 await self.wizard.retake()
+            id_ = UUID(data["visa.app_form_id"])
+            await service.update_form(id_, AppFormUpdate(data=data))
 
-        elif data.get("form.form_step") is None:
+        elif data.get("form.completed") is None:
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)
-            await self.wizard.goto("form", form_id=visa.form_id)
+            await self.wizard.goto("visa_form", form_id=visa.form_id)
 
         else:
-            service = deps.get_my_app_forms_service(current_user)
             id_ = UUID(data["visa.app_form_id"])
-            # visa_data = sub_dict_by_prefix(data, prefix="visa.")
-            # form_data = sub_dict_by_prefix(data, prefix="form.data.")
-            # saved_data = visa_data | form_data
-            app_form = await service.update_form(id_, AppFormUpdate(data=data))
-            await show_app_form(app_form,
-                                current_user=current_user,
-                                message=message,
-                                replace=False)
-            await self.wizard.exit()
+            await service.update_form(id_, AppFormUpdate(data=data))
+            await service.save_form(id_)
+            await self.wizard.goto("my_app_form", id_=data["visa.app_form_id"], back=False)
 
 
 
@@ -119,39 +118,32 @@ class ApplyVisaScene(Scene, state="apply_visa"):
     @on.callback_query(F.data)
     async def visa_data_update_callback(self,
                                         query: CallbackQuery,
-                                        state: FSMContext, *,
-                                        current_user: User) -> None:
+                                        state: FSMContext) -> None:
         await query.answer()
         if isinstance(query.message, Message):
+            match query.data:
+                case "back":
+                    await state.update_data({"visa.terms_accepted": None})
+                    await self.wizard.retake()
 
-            if query.data == "back":
-                await state.update_data({"visa.terms_accepted": None})
-                await self.wizard.retake()
+                case "continue":
+                    await state.update_data({"visa.terms_accepted": True})
+                    await self.wizard.retake()
 
-            elif query.data == "to_menu":
-                await self.wizard.exit()
-                await show_menu(current_user=current_user,
-                                message=query.message,
-                                replace=True)
+                case query.data if query.data.startswith("visa:"):
+                    _, key, value = query.data.split(":")
+                    await state.update_data({f"visa.{key}": value})
+                    await self.wizard.retake()
 
-            elif query.data == "continue":
-                await state.update_data({"visa.terms_accepted": True})
-                await self.wizard.retake()
-
-            elif query.data.startswith("visa:"):
-                _, key, value = query.data.split(":")
-                await state.update_data({f"visa.{key}": value})
-                await self.wizard.retake()
-
-            elif query.data.startswith("passport:"):
-                _, checked = query.data.split(":")
-                if checked == "retry":
-                    await state.update_data({"visa.passport_expecting": None})
-                    await query.message.delete()
-                if checked == "ok":
-                    await query.message.edit_reply_markup(reply_markup=None)
-                    await query.message.answer(CHECKED_TEXT)
-                await self.wizard.retake()
+                case query.data if query.data.startswith("passport:"):
+                    _, checked = query.data.split(":")
+                    if checked == "retry":
+                        await state.update_data({"visa.passport_expecting": None})
+                        await query.message.delete()
+                    if checked == "ok":
+                        await query.message.edit_reply_markup(reply_markup=None)
+                        await query.message.answer(CHECKED_TEXT)
+                    await self.wizard.retake()
 
 
     @on.message(F.photo)
@@ -172,7 +164,21 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             attachment_service = deps.get_my_attachments_service(current_user)
             await attachment_service.add_bytes(attachment_id, PassportFiles.SOURCE, data)
             # aio_pika.exceptions.MessageProcessError
-            result_dict = await deps.rpc.proxy.recognize_passport(id_=str(attachment_id))
+            try:
+                result_dict = await deps.rpc.proxy.recognize_passport(id_=str(attachment_id))
+            except JsonRPCError as e:
+                error_type = e.args[1]["error"]["type"]
+                await wait_message.delete()
+                match error_type:
+                    case "ImageMismatchError":
+                        await message.answer(IMAGE_MISMATCH_ERROR_TEXT)
+                    case "CornerDetectionError":
+                        await message.answer(CORNER_DETECTION_ERROR_TEXT)
+                    case "TextRecognitionError":
+                        await message.answer(TEXT_RECOGNITION_ERROR_TEXT)
+                    case _:
+                        raise
+                return
             scanned = await attachment_service.get_bytes(attachment_id, PassportFiles.SCANNED)
             # Recognition end
             await wait_message.delete()
@@ -192,7 +198,7 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             output = "\n".join(lines)
             await message.answer(output)
             """
-            birth_place = str(details.birth_place).replace("ГОР.", "").strip().upper()
+            birth_place = str(details.birth_place).replace("ГОР.", "").replace("Г.", "").strip().upper()
             birth_place = translit(birth_place, "ru", reversed=True)
             await state.update_data({
                 "visa.passport_expecting": False,
@@ -209,21 +215,3 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             })
             await show_check_passport_step(
                 photo=BufferedInputFile(scanned, PassportFiles.SCANNED), message=message)
-
-
-    @on.message.leave()
-    async def message_on_leave(self, state: FSMContext) -> None:
-        print("LEAVE!!!")
-        await state.set_data({})
-
-
-    @on.message.exit()
-    async def message_on_exit(self, state: FSMContext) -> None:
-        print("EXIT!!!")
-        await state.set_data({})
-
-
-    @on.callback_query.exit()
-    async def callback_query_on_exit(self, query: CallbackQuery, state: FSMContext) -> None:
-        await query.answer()
-        await self.message_on_exit(state)

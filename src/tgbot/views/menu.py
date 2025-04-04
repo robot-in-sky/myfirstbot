@@ -4,6 +4,8 @@ from src.entities.users import User, UserRole
 from src.tgbot.views import buttons
 from src.tgbot.views.users.user import user_role
 
+MAIN_MENU_TEXT = ("Это тестовая версия визового бота\n\n"
+                  "Главное меню")
 
 def signin_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
@@ -15,7 +17,7 @@ def signin_menu_kb() -> InlineKeyboardMarkup:
 async def show_menu(*, message: Message,
                     current_user: User,
                     replace: bool = False) -> Message:
-    text = "Главное меню"
+    text = MAIN_MENU_TEXT
     reply_markup = main_menu_kb(current_user)
     if replace:
         await message.edit_text(text, reply_markup=reply_markup)

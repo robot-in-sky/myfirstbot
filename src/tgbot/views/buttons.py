@@ -10,14 +10,18 @@ CONFIRM = "✅ OK"
 
 ADD = "➕ Добавить"
 RESET = "↩ Сброс"
+SAVE = "💾 Сохранить"
 
 YES = "Да"
 NO = "Нет"
 
 ALL = "..."
 
-RECHECK = "📝 Проверить данные"
-SAVE = "💾 Сохранить"
+FORM_RECHECK = "📝 Проверить данные"
+FORM_CONTINUE = "📝 Продолжить"
+DOWNLOAD_PDF = "⬇️ Скачать PDF"
+APPLY_MORE = "➕ Добавить ещё заявку"
+GO_TO_PAYMENT = "💳 Перейти к оплате"
 
 TRASH = "🗑️ Удалить"
 RESTORE = "✨ Восстановить"
@@ -49,13 +53,3 @@ FILTER_CHECKMARK = "✓"
 
 SEARCH = "🔍 Поиск"
 SEARCH_RESET = "🔍 ×"
-
-EDITOR_UP = "▲"
-EDITOR_DOWN = "▼"
-EDITOR_EDIT = "✏️"
-EDITOR_RESET = "✏️ ↩"
-
-
-
-
-
