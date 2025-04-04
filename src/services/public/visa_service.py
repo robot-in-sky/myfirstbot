@@ -1,6 +1,4 @@
-from typing import Set
-
-from src.entities.visas import Visa, VisaType, Country
+from src.entities.visas import Visa, VisaType
 from src.entities.visas.enums.country import Country
 
 
