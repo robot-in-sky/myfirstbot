@@ -14,7 +14,7 @@ services:
       POSTGRES_PASSWORD: ${DB__PASSWORD}
       POSTGRES_DB: ${DB__DATABASE}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB__PORT}:5432"
   pgadmin:
     image: dpage/pgadmin4
     environment:
