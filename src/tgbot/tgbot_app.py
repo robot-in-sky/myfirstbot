@@ -23,7 +23,7 @@ class TgBotApplication:
         self.bot = Bot(token=tgbot_settings.token,
                        default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-        redis_database = tgbot_settings.redis_storage.database
+        redis_database = tgbot_settings.redis.database
         if redis_database is None:
             redis_database = redis_settings.database
 
@@ -34,8 +34,8 @@ class TgBotApplication:
                       db=redis_database)
 
         storage = RedisStorage(redis=redis,
-                               state_ttl=tgbot_settings.redis_storage.state_ttl,
-                               data_ttl=tgbot_settings.redis_storage.data_ttl,
+                               state_ttl=tgbot_settings.redis.state_ttl,
+                               data_ttl=tgbot_settings.redis.data_ttl,
                                key_builder=DefaultKeyBuilder(with_destiny=True))
 
         self.dp = Dispatcher(storage=storage,
