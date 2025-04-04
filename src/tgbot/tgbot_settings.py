@@ -9,4 +9,4 @@ class RedisStorageSettings(BaseModel):
 
 class TgBotSettings(BaseModel):
     token: str
-    redis_storage: RedisStorageSettings = RedisStorageSettings()
+    redis: RedisStorageSettings = RedisStorageSettings()

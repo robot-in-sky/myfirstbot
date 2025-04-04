@@ -8,9 +8,7 @@ from src.entities.users import User
 from src.entities.visas import AppFormQuery, AppFormQueryPaged
 from src.tgbot.utils.helpers import sub_dict_by_prefix
 from src.tgbot.views.const import PER_PAGE_DEFAULT
-from src.tgbot.views.keyboards import back_kb
 from src.tgbot.views.menu import show_menu
-from src.tgbot.views.visas.app_form import show_app_form
 from src.tgbot.views.visas.app_forms import show_app_form_filter, show_app_forms
 
 SEARCH_TEXT = "Введите поисковую фразу"
@@ -28,50 +26,41 @@ class MyAppFormsScene(Scene, state="my_app_forms"):
         data = await state.get_data()
         if isinstance(message, Message):
             service = deps.get_my_app_forms_service(current_user)
-            if data.get("id") is not None:
-                app_form = await service.get_form(id_=data.get("id"))
-                await show_app_form(app_form,
-                                    message=message,
-                                    replace=True,
-                                    to_menu=False,
-                                    current_user=current_user)
-
+            params = sub_dict_by_prefix(data, prefix="query.")
+            params["per_page"] = PER_PAGE_DEFAULT
+            if data.get("state") == "filter":
+                params = {k: params[k] for k in params if k not in {"status", "page", "per_page"}}
+                # print("get_my_forms_count_by_status", params)
+                query = AppFormQuery(**params)
+                count_by_status = await service.get_my_forms_count_by_status(query)
+                total_count = await service.get_my_forms_count(query)
+                await show_app_form_filter(count_by_status,
+                                           total_count,
+                                           status=params.get("status"),
+                                           search=params.get("search"),
+                                           user_id=current_user.id,
+                                           message=message,
+                                           replace=True,
+                                           current_user=current_user)
             else:
-                params = sub_dict_by_prefix(data, prefix="query.")
-                params["per_page"] = PER_PAGE_DEFAULT
-                if data.get("state") == "filter":
-                    params = {k: params[k] for k in params if k not in {"status", "page", "per_page"}}
-                    print("get_my_forms_count_by_status", params)
-                    query = AppFormQuery(**params)
-                    count_by_status = await service.get_my_forms_count_by_status(query)
-                    total_count = await service.get_my_forms_count(query)
-                    await show_app_form_filter(count_by_status,
-                                               total_count,
-                                               status=params.get("status"),
-                                               search=params.get("search"),
-                                               user_id=current_user.id,
-                                               message=message,
-                                               replace=True,
-                                               current_user=current_user)
-                else:
-                    if params.get("status") == "all":
-                        params["status"] = None
-                    print("get_my_forms", params)
-                    query = AppFormQueryPaged(**params)
-                    result = await service.get_my_forms(query)
-                    replace = True
-                    if data.get("message_id") is not None:
-                        await message.chat.delete_message(data["message_id"])
-                        data["message_id"] = None
-                        await state.set_data(data)
-                        replace = False
-                    await show_app_forms(result,
-                                         status=params.get("status"),
-                                         search=params.get("search"),
-                                         user_id=current_user.id,
-                                         message=message,
-                                         replace=replace,
-                                         current_user=current_user)
+                if params.get("status") == "all":
+                    params["status"] = None
+                # print("get_my_forms", params)
+                query = AppFormQueryPaged(**params)
+                result = await service.get_my_forms(query)
+                replace = True
+                if data.get("message_id") is not None:
+                    await message.chat.delete_message(data["message_id"])
+                    data["message_id"] = None
+                    await state.set_data(data)
+                    replace = False
+                await show_app_forms(result,
+                                     status=params.get("status"),
+                                     search=params.get("search"),
+                                     user_id=current_user.id,
+                                     message=message,
+                                     replace=replace,
+                                     current_user=current_user)
 
 
     @on.callback_query.enter()
@@ -89,8 +78,7 @@ class MyAppFormsScene(Scene, state="my_app_forms"):
     @on.callback_query(F.data)
     async def app_forms_action_callback(self,
                                         query: CallbackQuery,
-                                        state: FSMContext, *,
-                                        current_user: User) -> None:
+                                        state: FSMContext) -> None:
         await query.answer()
         if isinstance(query.message, Message):
             match query.data:
@@ -125,20 +113,12 @@ class MyAppFormsScene(Scene, state="my_app_forms"):
 
                 case query.data if query.data.startswith("app_form:"):
                     _, id_ = query.data.split(":")
-                    await state.update_data({"id": id_, "state": None})
-                    await self.wizard.retake()
+                    await state.update_data({"state": None})
+                    await self.wizard.goto("my_app_form", id_=id_)
 
                 case "back":
-                    await state.update_data({"id": None, "state": None})
+                    await state.update_data({"state": None})
                     await self.wizard.retake()
-
-                case "to_menu":
-                    await state.set_data({})
-                    await self.wizard.exit()
-                    await show_menu(message=query.message,
-                                    current_user=current_user,
-                                    replace=True)
-
 
 
     @on.message(F.text)

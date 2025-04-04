@@ -11,8 +11,8 @@ from src.tgbot.views.const import COLUMN_DELIMITER
 from src.tgbot.views.keyboards import bottom_buttons, pagination_buttons
 from src.tgbot.views.users.user import is_admin
 
-from .app_form import app_form_status, app_form_applicant_data
-from .visa_app import visa_country
+from .app_form import app_form_applicant_data, app_form_status
+from .apply_visa import visa_country
 
 
 async def show_app_forms(  # noqa: PLR0913
@@ -45,9 +45,9 @@ async def show_app_forms(  # noqa: PLR0913
 def get_app_forms_title(user_id: int | None, current_user: User) -> str:
     if user_id:
         if user_id == current_user.id:
-            return "Мои заказы"
-        return f"Заказы пользователя {user_id}"
-    return "Заказы"
+            return "Мои заявки"
+        return f"Заявки от {user_id}"
+    return "Заявки"
 
 
 def app_form_result_kb(result: QueryResult[AppForm], *,

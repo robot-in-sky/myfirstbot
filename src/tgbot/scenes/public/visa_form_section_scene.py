@@ -1,12 +1,15 @@
 import asyncio
+from uuid import UUID
 
-from aiogram import Bot, F
+from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.forms import FieldType, Section, YesNo
+from src.entities.users import User
+from src.entities.visas import AppFormUpdate
 from src.exceptions import ValidationError
 from src.tgbot.utils.helpers import sub_dict_by_prefix
 from src.tgbot.views.buttons import ALL
@@ -19,7 +22,7 @@ from src.tgbot.views.forms.section import (
 )
 
 
-class SectionScene(Scene, state="section"):
+class VisaFormSectionScene(Scene, state="visa_form_section"):
 
     @on.message.enter()
     async def message_on_enter(self,
@@ -83,7 +86,7 @@ class SectionScene(Scene, state="section"):
                                        query: CallbackQuery,
                                        state: FSMContext, *,
                                        deps: Dependencies,
-                                       bot: Bot) -> None:
+                                       current_user: User) -> None:
         await query.answer()
         if isinstance(query.message, Message):
 
@@ -94,10 +97,7 @@ class SectionScene(Scene, state="section"):
 
                     case "confirm":
                         # Remove section keyboard
-                        await bot.edit_message_reply_markup(
-                            chat_id=query.from_user.id,
-                            message_id=query.message.message_id,
-                            reply_markup=None)
+                        await query.message.edit_reply_markup(reply_markup=None)
                         await show_section_completed(query.message)
                         await asyncio.sleep(0.3)
                         data["section.section_id"] = None
@@ -105,8 +105,12 @@ class SectionScene(Scene, state="section"):
                         data["form.form_step"] = data["form.form_step"] + 1
                         data["form.section_step"] = 0
                         await state.set_data(data)
+                        # Autosave
+                        service = deps.get_my_app_forms_service(current_user)
+                        id_ = UUID(data["visa.app_form_id"])
+                        await service.update_form(id_, AppFormUpdate(data=data))
                         # Go back to form scene
-                        await self.wizard.goto("form")
+                        await self.wizard.goto("visa_form")
 
                     case "edit":
                         section_id = data["section.section_id"]

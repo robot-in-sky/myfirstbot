@@ -5,16 +5,16 @@ from src.entities.visas import AppForm, AppFormStatus, Visa
 from src.tgbot.views import buttons
 from src.tgbot.views.const import DATE_TIME_FORMAT
 from src.tgbot.views.users.user import is_admin
-from src.tgbot.views.visas.visa_app import visa_summary
+from src.tgbot.views.visas.apply_visa import visa_summary
 
 
 async def show_app_form(app_form: AppForm, *,
                         current_user: User,
                         message: Message,
                         replace: bool = False,
-                        to_menu: bool = False) -> Message:
+                        back: bool = True) -> Message:
     text = app_form_summary(app_form)
-    reply_markup = app_form_actions_kb(app_form, current_user=current_user, to_menu=to_menu)
+    reply_markup = app_form_actions_kb(app_form, current_user=current_user, back=back)
     # await message.answer(str(app_form.data))
     if replace:
         await message.edit_text(text, reply_markup=reply_markup)
@@ -24,11 +24,12 @@ async def show_app_form(app_form: AppForm, *,
 
 def app_form_status(status: AppFormStatus) -> str:
     return {
-        AppFormStatus.TRASH: "Удалён",
-        AppFormStatus.DRAFT: "Черновик",
+        AppFormStatus.TRASH: "Удалёно",
+        AppFormStatus.DRAFT: "Заполняется",
+        AppFormStatus.SAVED: "Ожидает оплаты",
         AppFormStatus.PENDING: "На проверке",
         AppFormStatus.ACCEPTED: "В работе",
-        AppFormStatus.COMPLETED: "Завершён",
+        AppFormStatus.COMPLETED: "Завершёно",
     }.get(status, f"{status}")
 
 
@@ -66,15 +67,19 @@ def app_form_summary(app_form: AppForm) -> str:
 
 def app_form_actions_kb(app_form: AppForm, *,
                         current_user: User,
-                        to_menu: bool = False) -> InlineKeyboardMarkup:
+                        back: bool = True) -> InlineKeyboardMarkup:
     keyboard = []
-    if app_form.status == AppFormStatus.DRAFT:
-        keyboard += [[InlineKeyboardButton(text=buttons.TRASH, callback_data="trash_ask"),
-                      InlineKeyboardButton(text=buttons.EDIT, callback_data="edit"),
-                      InlineKeyboardButton(text=buttons.SUBMIT, callback_data="submit")]]
-
-    if not is_admin(current_user) and app_form.status == AppFormStatus.PENDING:
-        keyboard += [[InlineKeyboardButton(text=buttons.RETURN, callback_data="return")]]
+    match app_form.status:
+        case AppFormStatus.DRAFT:
+            keyboard += [[InlineKeyboardButton(text=buttons.TRASH,
+                                               callback_data="action:trash_ask"),
+                          InlineKeyboardButton(text=buttons.FORM_CONTINUE,
+                                               callback_data="action:continue")]]
+        case AppFormStatus.SAVED:
+            keyboard += [[InlineKeyboardButton(text=buttons.TRASH,
+                                               callback_data="action:trash_ask"),
+                          InlineKeyboardButton(text=buttons.DOWNLOAD_PDF,
+                                               callback_data="action:download_pdf")]]
 
     if is_admin(current_user):
         keyboard += [[InlineKeyboardButton(text=buttons.USER, callback_data=f"user:{app_form.user_id}")]]
@@ -90,9 +95,9 @@ def app_form_actions_kb(app_form: AppForm, *,
                 keyboard += [[InlineKeyboardButton(text=buttons.RESTORE, callback_data="restore"),
                               InlineKeyboardButton(text=buttons.TRASH, callback_data="delete_ask")]]
 
-    if to_menu:
-        keyboard += [[InlineKeyboardButton(text=buttons.TO_MENU, callback_data="to_menu")]]
-    else:
+    if back:
         keyboard += [[InlineKeyboardButton(text=buttons.BACK, callback_data="back")]]
+    else:
+        keyboard += [[InlineKeyboardButton(text=buttons.TO_MENU, callback_data="to_menu")]]
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

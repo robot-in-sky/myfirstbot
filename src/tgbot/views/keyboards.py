@@ -13,7 +13,7 @@ from src.tgbot.views.buttons import (
     PAGE_PREV,
     SEARCH,
     SEARCH_RESET,
-    TO_MENU,
+    TO_MENU, YES, NO,
 )
 
 
@@ -56,4 +56,10 @@ def cancel_kb() -> InlineKeyboardMarkup:
 def ok_cancel_kb() -> InlineKeyboardMarkup:
     keyboard = [[InlineKeyboardButton(text=CANCEL, callback_data="ok"),
                  InlineKeyboardButton(text=OK, callback_data="cancel")]]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def yes_no_kb() -> InlineKeyboardMarkup:
+    keyboard = [[InlineKeyboardButton(text=YES, callback_data="yes"),
+                 InlineKeyboardButton(text=NO, callback_data="no")]]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

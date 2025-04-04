@@ -1,11 +1,11 @@
 from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, ErrorEvent, Message
 
 from src.deps import Dependencies
 from src.entities.users import User, UserRole
-from src.tgbot.views.menu import show_menu, signin_menu_kb
+from src.tgbot.views.menu import main_menu_kb, show_menu, signin_menu_kb
 from src.tgbot.views.users.user import user_role
 
 router = Router()
@@ -15,13 +15,12 @@ router = Router()
 async def command_start_handler(message: Message, current_user: User, state: FSMContext) -> None:
     await state.clear()
     await message.answer(f"Приветствую, <b>{current_user.user_name}</b>!\n"
-                         "Это тестовая версия визового бота.\n\n"
-                         "<b>Пользователи</b> могут подавать заявки на визу.\n"
-                         "<b>Агенты</b> обрабатывают поступающие заявки.\n\n"
-                         "В качестве кого вы хотите продолжить?",
-                         reply_markup=signin_menu_kb())
+                         "Это тестовая версия визового бота\n\n"
+                         "Главное меню",
+                         reply_markup=main_menu_kb(current_user))
 
 
+"""
 @router.callback_query(F.data.startswith("signin_as:"))
 async def signin_as_callback(query: CallbackQuery, deps: Dependencies, current_user: User) -> None:
     users = deps.get_user_manage_service(current_user)
@@ -36,7 +35,7 @@ async def signin_as_callback(query: CallbackQuery, deps: Dependencies, current_u
         await query.message.answer(f"Вы авторизованы как <b>{user_role(current_user.role)}</b>")
         await show_menu(current_user=current_user,
                         message=query.message)
-
+"""
 
 @router.message(Command(commands="menu"))
 async def command_menu_handler(message: Message, current_user: User, state: FSMContext) -> None:
@@ -59,6 +58,29 @@ async def to_menu_handler(query: CallbackQuery, current_user: User,  state: FSMC
 async def help_handler(message: types.Message, state: FSMContext) -> Message:
     await state.clear()
     return await message.answer("Здесь будет раздел помощи")
+
+
+"""
+@router.error()
+async def error_handler(event: ErrorEvent) -> None:
+    if event.update.callback_query:
+        await event.update.callback_query.answer()
+        username = event.update.callback_query.from_user.username
+        message = event.update.callback_query.message
+    else:
+        username = event.update.message.from_user.username
+        message = event.update.message
+    if isinstance(message, Message):
+        await message.answer("💁‍♂️ Упс... Что-то пошло не так")
+        # logging.critical(f"{type(event.exception)} [@{username}]: {event.exception}")
+        logging.critical(event.exception)
+"""
+
+
+@router.callback_query(F.data == "_")
+async def do_nothing_callback_handler(query: CallbackQuery) -> None:
+    await query.answer()
+
 
 """
 @router.message(F.photo)
