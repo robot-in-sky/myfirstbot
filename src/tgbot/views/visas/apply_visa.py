@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile, Message
 
-from src.entities.forms import Form
+from src.entities.forms import Form, Section, Repeater
 from src.entities.visas import Country, Visa, VisaType
 from src.services.public.forms import COUNTRY_OUTPUT
 from src.tgbot.views.buttons import BACK, CONTINUE, TO_MENU
@@ -134,7 +134,8 @@ def visa_summary(visa: Visa) -> str:
 
 
 def form_summary(form: Form) -> str:
-    field_count = sum(len(s.fields) for s in form.sections)
+    field_count = sum(len(s.fields) for s in form.sections if isinstance(s, Section))
+    field_count += sum(1 for s in form.sections if isinstance(s, Repeater))
     return f"<b>Вопросов в анкете</b>: {field_count}\n"
 
 
