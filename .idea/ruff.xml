@@ -5,8 +5,8 @@
     <option name="disableOnSaveOutsideOfProject" value="false" />
     <option name="globalRuffExecutablePath" value="C:\Python312\Scripts\ruff.exe" />
     <option name="globalRuffLspExecutablePath" value="C:\Python312\Scripts\ruff-lsp.exe" />
-    <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff" />
-    <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\.venv\bin\ruff-lsp" />
+    <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\recognizer\.venv\bin\ruff" />
+    <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\recognizer\.venv\bin\ruff-lsp" />
     <option name="ruffConfigPath" value="\\wsl$\Ubuntu-22.04\home\robot\projects\myfirstbot\pyproject.toml" />
     <option name="useRuffLsp" value="true" />
   </component>

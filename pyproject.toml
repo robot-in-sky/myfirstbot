@@ -3,7 +3,6 @@ name = "myfirstbot"
 version = "0.1.0"
 description = "My first telegram bot"
 authors = ["robot-in-sky <d.rabotinskiy@gmail.com>"]
-license = "MIT License"
 readme = "README.md"
 packages = []
 
@@ -19,7 +18,7 @@ alembic-postgresql-enum = "^1.2.0"
 psycopg = {extras = ["binary"], version = "^3.1.18"}
 pytz = "^2024.1"
 aio-pika = "^9.5.4"
-aiobotocore = "^2.17.0"
+aiobotocore = "2.17.0"
 uuid7 = "^0.1.0"
 transliterate = "^1.10.2"
 
