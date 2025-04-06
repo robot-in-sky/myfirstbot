@@ -90,6 +90,7 @@ services:
       S3__ACCESS_KEY: ${S3__ACCESS_KEY}
       S3__SECRET_KEY: ${S3__SECRET_KEY}
       DEFAULT_ADMINS: ${DEFAULT_ADMINS}
+      LOG__LEVEL: ${LOG__LEVEL}
     depends_on:
       - pgdb
       - redis
