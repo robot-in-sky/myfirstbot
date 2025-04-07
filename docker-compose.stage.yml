@@ -21,19 +21,19 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${DB_ADMIN__EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${DB_ADMIN__PASSWORD}
-      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
-      PGADMIN_LISTEN_PORT: 5050
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      - ./deploy/pgadmin/servers.json.template:/pgadmin4/servers.json.template
     restart: unless-stopped
     ports:
-      - "${DB_ADMIN__PORT}:5050"
+      - "${DB_ADMIN__PORT}:80"
+    entrypoint: /pgadmin4/entrypoint.sh
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
       - redis-data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     environment:
       REDIS_PASSWORD: ${REDIS__PASSWORD}
       REDIS_PORT: 6379
