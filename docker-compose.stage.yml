@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
     ports:
       - "${DB_ADMIN__PORT}:80"
-    # entrypoint: /pgadmin4/entrypoint.sh
+    entrypoint: /pgadmin4/entrypoint.sh
   redis:
     image: redis:7-alpine
     restart: unless-stopped
