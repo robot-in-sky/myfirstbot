@@ -23,12 +23,12 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${DB_ADMIN__PASSWORD}
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./deploy/pgadmin/servers.json.template:/pgadmin4/servers.json.template
-      - ./deploy/pgadmin/entrypoint.sh:/pgadmin4/entrypoint.sh
+      # - ./deploy/pgadmin/servers.json.template:/pgadmin4/servers.json.template
+      # - ./deploy/pgadmin/entrypoint.sh:/pgadmin4/entrypoint.sh
     restart: unless-stopped
     ports:
       - "${DB_ADMIN__PORT}:80"
-    entrypoint: /pgadmin4/entrypoint.sh
+    # entrypoint: /pgadmin4/entrypoint.sh
   redis:
     image: redis:7-alpine
     restart: unless-stopped
