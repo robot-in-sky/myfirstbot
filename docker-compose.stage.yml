@@ -53,9 +53,7 @@ services:
       - "${AMQP__PORT}:5672"
       - "${AMQP_ADMIN__PORT}:15672"
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/robot-in-sky/myfirstbot:master
     restart: always
     environment:
       DB__HOST: pgdb
@@ -84,9 +82,7 @@ services:
       - redis
       - rabbitmq
   recognizer:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/robot-in-sky/recognizer:master
     restart: always
     environment:
       AMQP__HOST: rabbitmq
