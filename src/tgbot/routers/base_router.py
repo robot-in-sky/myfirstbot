@@ -76,7 +76,7 @@ async def error_handler(event: ErrorEvent) -> None:
     if isinstance(message, Message):
         await message.answer("💁‍♂️ <b>Упс... Что-то пошло не так</b>\n\n"
                              "Введите команду /start, если необходим перезапуск бота")
-        logger.error(f"User @{username} got an error")
+        logger.error(f"User @{username} received an error")
         logger.critical("Critical error caused by %s", event.exception, exc_info=True)
 
 
