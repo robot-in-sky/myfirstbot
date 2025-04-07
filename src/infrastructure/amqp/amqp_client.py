@@ -10,6 +10,7 @@ class AMQPClient:
 
 
     async def get_connection(self) -> aio_pika.abc.AbstractRobustConnection:
+        # TODO: Handle AMQPConnectionError
         return await aio_pika.connect_robust(
             url=self.settings.url,
             reconnect_interval=self.settings.reconnect_interval)
