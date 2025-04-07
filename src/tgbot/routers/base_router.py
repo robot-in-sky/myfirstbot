@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -9,6 +11,7 @@ from src.tgbot.views.menu import main_menu_kb, show_menu, signin_menu_kb
 from src.tgbot.views.users.user import user_role
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart())
@@ -60,7 +63,7 @@ async def help_handler(message: types.Message, state: FSMContext) -> Message:
     return await message.answer("Здесь будет раздел помощи")
 
 
-"""
+
 @router.error()
 async def error_handler(event: ErrorEvent) -> None:
     if event.update.callback_query:
@@ -71,10 +74,11 @@ async def error_handler(event: ErrorEvent) -> None:
         username = event.update.message.from_user.username
         message = event.update.message
     if isinstance(message, Message):
-        await message.answer("💁‍♂️ Упс... Что-то пошло не так")
-        # logging.critical(f"{type(event.exception)} [@{username}]: {event.exception}")
-        logging.critical(event.exception)
-"""
+        await message.answer("💁‍♂️ <b>Упс... Что-то пошло не так</b>\n\n"
+                             "Введите команду /start, если необходим перезапуск бота")
+        logger.error(f"User @{username} got an error")
+        logger.critical("Critical error caused by %s", event.exception, exc_info=True)
+
 
 
 @router.callback_query(F.data == "_")
