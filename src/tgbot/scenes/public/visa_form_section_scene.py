@@ -168,7 +168,7 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
                         # Go to refill all empty fields
                         data["form.section_step"] = 0
                         await state.set_data(data)
-                        await self.wizard.goto("fill_form")
+                        await self.wizard.goto("visa_form")
                         return
 
             await state.set_data(data)
