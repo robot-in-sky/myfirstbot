@@ -1,46 +1,50 @@
 version: '3.8'
 volumes:
-  pgdb-data:
-  pgadmin-data:
-  redis-data:
-  rabbitmq-data:
+  pgdb_data:
+  pgadmin_data:
+  redis_data:
+  rabbitmq_data:
 services:
   pgdb:
     image: postgres:15-alpine
     restart: unless-stopped
     volumes:
-      - pgdb-data:/var/lib/postgresql/data
+      - pgdb_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DB__USERNAME}
       POSTGRES_PASSWORD: ${DB__PASSWORD}
       POSTGRES_DB: ${DB__DATABASE}
     ports:
-      - "${DB__PORT}:5432"
+      - "${DB__PORT:-5432}:5432"
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${DB_ADMIN__EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${DB_ADMIN__PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN__EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN__PASSWORD}
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
-      # - ./deploy/pgadmin/servers.json.template:/pgadmin4/servers.json.template
-      # - ./deploy/pgadmin/entrypoint.sh:/pgadmin4/entrypoint.sh
+      - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
     ports:
-      - "${DB_ADMIN__PORT}:80"
-    # entrypoint: /pgadmin4/entrypoint.sh
+      - "${PGADMIN__PORT:-5050}:80"
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
-      - redis-data:/data
-      - ./deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis_data:/data
     environment:
       REDIS_PASSWORD: ${REDIS__PASSWORD}
       REDIS_PORT: 6379
-      REDIS_DATABASES: 8
+      REDIS_DATABASES: 4
+    command: >
+      sh -c "
+        exec redis-server
+          --bind 0.0.0.0
+          --port $REDIS_PORT
+          --requirepass $REDIS_PASSWORD
+          --databases $REDIS_DATABASES
+      "
     ports:
-      - "${REDIS__PORT}:6379"
+      - "${REDIS__PORT:-6379}:6379"
   rabbitmq:
     image: rabbitmq:3.12-management
     restart: unless-stopped
@@ -49,27 +53,27 @@ services:
       RABBITMQ_DEFAULT_PASS: ${AMQP__PASSWORD}
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit disk_free_limit 262144
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
     ports:
-      - "${AMQP__PORT}:5672"
-      - "${AMQP_ADMIN__PORT}:15672"
+      - "${AMQP__PORT:-5672}:5672"
+      - "${AMQP_MGMT__PORT:-15672}:15672"
   bot:
     image: ghcr.io/robot-in-sky/myfirstbot:master
     restart: always
     environment:
       DB__HOST: pgdb
-      DB__PORT: ${DB__PORT}
+      DB__PORT: ${DB__PORT:-5432}
       DB__USERNAME: ${DB__USERNAME}
       DB__PASSWORD: ${DB__PASSWORD}
       DB__DATABASE: ${DB__DATABASE}
       REDIS__HOST: redis
-      REDIS__PORT: ${REDIS__PORT}
+      REDIS__PORT: ${REDIS__PORT:-6379}
       REDIS__USERNAME: ${REDIS__USERNAME}
       REDIS__PASSWORD: ${REDIS__PASSWORD}
       REDIS__DATABASE: ${REDIS__DATABASE}
       TGBOT__TOKEN: ${TGBOT__TOKEN}
       AMQP__HOST: rabbitmq
-      AMQP__PORT:  ${AMQP__PORT}
+      AMQP__PORT:  ${AMQP__PORT:-5672}
       AMQP__USERNAME: ${AMQP__USERNAME}
       AMQP__PASSWORD: ${AMQP__PASSWORD}
       S3__URL: ${S3__URL}
@@ -77,7 +81,7 @@ services:
       S3__ACCESS_KEY: ${S3__ACCESS_KEY}
       S3__SECRET_KEY: ${S3__SECRET_KEY}
       DEFAULT_ADMINS: ${DEFAULT_ADMINS}
-      LOG__LEVEL: ${LOG__LEVEL}
+      LOG__LEVEL: ${LOG__LEVEL:-INFO}
     depends_on:
       - pgdb
       - redis
@@ -87,13 +91,13 @@ services:
     restart: always
     environment:
       AMQP__HOST: rabbitmq
-      AMQP__PORT: ${AMQP__PORT}
+      AMQP__PORT: ${AMQP__PORT:-5672}
       AMQP__USERNAME: ${AMQP__USERNAME}
       AMQP__PASSWORD: ${AMQP__PASSWORD}
       S3__URL: ${S3__URL}
       S3__BUCKET_NAME: ${S3__BUCKET_NAME}
       S3__ACCESS_KEY: ${S3__ACCESS_KEY}
       S3__SECRET_KEY: ${S3__SECRET_KEY}
-      LOG__LEVEL: ${LOG__LEVEL}
+      LOG__LEVEL: ${LOG__LEVEL:-INFO}
     depends_on:
       - rabbitmq
