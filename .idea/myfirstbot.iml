@@ -4,7 +4,6 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="jdk" jdkName="Python 3.12.1 WSL (Ubuntu-22.04): (/home/robot/projects/myfirstbot/.venv/bin/python3.12)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="recognizer" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
