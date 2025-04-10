@@ -10,9 +10,9 @@ services:
     volumes:
       - pgdb_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: pgpassword
-      POSTGRES_DB: botdb
+      POSTGRES_USER: ${DB__USERNAME}
+      POSTGRES_PASSWORD: ${DB__PASSWORD}
+      POSTGRES_DB: ${DB__DATABASE}
     ports:
       - "5432:5432"
   redis:
