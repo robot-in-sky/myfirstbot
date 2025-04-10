@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/myfirstbot.iml" filepath="$PROJECT_DIR$/.idea/myfirstbot.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../recognizer/.idea/recognizer.iml" filepath="$PROJECT_DIR$/../recognizer/.idea/recognizer.iml" />
     </modules>
   </component>
 </project>
