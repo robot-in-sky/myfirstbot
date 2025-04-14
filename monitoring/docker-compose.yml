@@ -10,6 +10,8 @@ services:
       - ./promtail/config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     privileged: true
+    depends_on:
+      - loki
 
   loki:
     image: grafana/loki:latest
@@ -17,8 +19,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki/config.yml:/etc/loki/config.yml
-    command: -config.file=/etc/loki/config.yml
+      - ./loki/config.yml:/etc/loki/local-config.yaml
 
   grafana:
     image: grafana/grafana:latest
@@ -31,6 +32,8 @@ services:
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
 
 volumes:
   grafana_data:
