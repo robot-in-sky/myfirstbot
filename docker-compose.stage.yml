@@ -86,6 +86,10 @@ services:
       - pgdb
       - redis
       - rabbitmq
+    logging:
+      driver: json-file
+      options:
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
   recognizer:
     image: ghcr.io/robot-in-sky/recognizer:master
     restart: always
@@ -101,3 +105,7 @@ services:
       LOG__LEVEL: ${LOG__LEVEL:-INFO}
     depends_on:
       - rabbitmq
+    logging:
+      driver: json-file
+      options:
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
