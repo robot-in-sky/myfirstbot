@@ -27,8 +27,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA__USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA__USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD:-admin}
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana_data:/var/lib/grafana
