@@ -7,7 +7,7 @@ services:
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./monitoring/promtail/config.yml:/etc/promtail/config.yml
+      - ./promtail/config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     privileged: true
     depends_on:
@@ -19,7 +19,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./monitoring/loki/config.yml:/etc/loki/local-config.yaml
+      - ./loki/config.yml:/etc/loki/local-config.yaml
 
   grafana:
     image: grafana/grafana:latest
@@ -30,7 +30,7 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA__USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD}
     volumes:
-      - ./monitoring/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
