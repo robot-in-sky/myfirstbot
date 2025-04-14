@@ -37,8 +37,8 @@ def app_form_applicant_data(app_form: AppForm) -> dict[str, str] | None:
     if app_form.data:
         given_name = app_form.data.get("form.data.applicant_details.given_name")
         surname = app_form.data.get("form.data.applicant_details.surname")
-        birth_date = app_form.data.get("form.data.applicant_details.birth_date")
-        birth_year = birth_date.split("-")[0]
+        birth_date = app_form.data.get("form.data.applicant_details.birth_date", "")
+        birth_year = birth_date.split("-")[0] if "-" in birth_date else None
         if given_name and surname:
             return {"given_name": given_name,
                     "surname": surname,
