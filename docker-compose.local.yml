@@ -5,7 +5,7 @@ volumes:
   rabbitmq_data:
 services:
   pgdb:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     restart: unless-stopped
     volumes:
       - pgdb_data:/var/lib/postgresql/data
@@ -23,7 +23,7 @@ services:
     ports:
       - "6379:6379"
   rabbitmq:
-    image: rabbitmq:3.12-management
+    image: rabbitmq:4-management-alpine
     restart: unless-stopped
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
