@@ -4,6 +4,8 @@ volumes:
   pgadmin_data:
   redis_data:
   rabbitmq_data:
+  grafana_data:
+
 services:
   pgdb:
     image: postgres:15-alpine
@@ -16,6 +18,7 @@ services:
       POSTGRES_DB: ${DB__DATABASE}
     ports:
       - "${DB__PORT:-5432}:5432"
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -26,6 +29,7 @@ services:
     restart: unless-stopped
     ports:
       - "${PGADMIN__PORT:-5050}:80"
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -45,6 +49,7 @@ services:
       "
     ports:
       - "${REDIS__PORT:-6379}:6379"
+
   rabbitmq:
     image: rabbitmq:3.12-management
     restart: unless-stopped
@@ -57,6 +62,7 @@ services:
     ports:
       - "${AMQP__PORT:-5672}:5672"
       - "${AMQP_MGMT__PORT:-15672}:15672"
+
   bot:
     image: ghcr.io/robot-in-sky/myfirstbot:master
     restart: always
@@ -90,6 +96,7 @@ services:
       driver: json-file
       options:
         tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+
   recognizer:
     image: ghcr.io/robot-in-sky/recognizer:master
     restart: always
@@ -109,3 +116,36 @@ services:
       driver: json-file
       options:
         tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+
+  promtail:
+    image: grafana/promtail:latest
+    ports:
+      - "9080:9080"
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail/config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    privileged: true
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/config.yml:/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA__USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD}
+    volumes:
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
