@@ -1,3 +1,8 @@
+version: '3.8'
+
+volumes:
+  grafana_data:
+
 services:
   promtail:
     image: grafana/promtail:latest
@@ -7,7 +12,7 @@ services:
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./promtail/config.yml:/etc/promtail/config.yml
+      - ./promtail-config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     privileged: true
     depends_on:
@@ -19,7 +24,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki/config.yml:/etc/loki/local-config.yaml
+      - ./loki-config.yml:/etc/loki/local-config.yaml
 
   grafana:
     image: grafana/grafana:latest
@@ -34,6 +39,3 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
-
-volumes:
-  grafana_data:

@@ -1,4 +1,5 @@
 version: '3.8'
+
 volumes:
   pgdb_data:
   pgadmin_data:
@@ -9,6 +10,7 @@ volumes:
 services:
   pgdb:
     image: postgres:17-alpine
+    container_name: pgdb
     restart: unless-stopped
     volumes:
       - pgdb_data:/var/lib/postgresql/data
@@ -21,6 +23,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN__EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN__PASSWORD}
@@ -32,6 +35,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -52,6 +56,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
+    container_name: rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${AMQP__USERNAME}
@@ -65,6 +70,7 @@ services:
 
   bot:
     image: ghcr.io/robot-in-sky/myfirstbot:dev
+    container_name: bot
     restart: always
     environment:
       DB__HOST: pgdb
@@ -92,14 +98,10 @@ services:
       - pgdb
       - redis
       - rabbitmq
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "5"
 
   recognizer:
     image: ghcr.io/robot-in-sky/recognizer:dev
+    container_name: recognizer
     restart: always
     environment:
       AMQP__HOST: rabbitmq
@@ -113,8 +115,3 @@ services:
       LOG__LEVEL: ${LOG__LEVEL:-INFO}
     depends_on:
       - rabbitmq
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "5"
