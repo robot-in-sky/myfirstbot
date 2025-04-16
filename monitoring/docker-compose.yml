@@ -4,6 +4,31 @@ volumes:
   grafana_data:
 
 services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+    privileged: true
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - cadvisor
+    restart: unless-stopped
+
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
@@ -17,6 +42,7 @@ services:
     privileged: true
     depends_on:
       - loki
+    restart: unless-stopped
 
   loki:
     image: grafana/loki:latest
@@ -25,6 +51,7 @@ services:
       - "3100:3100"
     volumes:
       - ./loki-config.yml:/etc/loki/local-config.yaml
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -39,3 +66,5 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki
+      - prometheus
+    restart: unless-stopped
