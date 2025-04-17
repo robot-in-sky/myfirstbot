@@ -12,8 +12,7 @@ RUN apt-get update  \
     && apt-get clean
 WORKDIR $APP_DIR
 COPY pyproject.toml poetry.lock ./
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
-RUN pip install --no-cache-dir -r requirements.txt
-RUN rm pyproject.toml poetry.lock
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-interaction --no-root
 COPY src/ ./src
-CMD ["python", "src/main.py"]
+CMD ["poetry", "run", "python", "src/main.py"]
