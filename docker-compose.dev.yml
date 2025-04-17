@@ -40,7 +40,6 @@ services:
       REDIS_PASSWORD: ${REDIS__PASSWORD}
     volumes:
       - redis_data:/data
-    command: ["sh", "-c", "exec redis-server --requirepass \"$REDIS_PASSWORD\""]
     ports:
       - "${REDIS__PORT:-6379}:6379"
 
