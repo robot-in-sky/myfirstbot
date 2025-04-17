@@ -40,15 +40,13 @@ services:
       - redis_data:/data
     environment:
       REDIS_PASSWORD: ${REDIS__PASSWORD}
-      REDIS_PORT: 6379
-      REDIS_DATABASES: 4
     command: >
       sh -c "
         exec redis-server
           --bind 0.0.0.0
-          --port $REDIS_PORT
+          --port 6379
           --requirepass $REDIS_PASSWORD
-          --databases $REDIS_DATABASES
+          --databases 4
       "
     ports:
       - "${REDIS__PORT:-6379}:6379"
