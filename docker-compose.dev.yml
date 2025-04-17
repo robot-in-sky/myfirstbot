@@ -36,16 +36,11 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS__PASSWORD}
     volumes:
       - redis_data:/data
-    command: >
-      sh -c "
-        exec redis-server
-          --bind 0.0.0.0
-          --port ${REDIS__PORT}
-          --requirepass ${REDIS__PASSWORD}
-          --databases 4
-      "
+    command: ["sh", "-c", "exec redis-server --requirepass \"$REDIS_PASSWORD\""]
     ports:
       - "${REDIS__PORT:-6379}:6379"
 
