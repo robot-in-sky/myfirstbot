@@ -80,6 +80,8 @@ cython_debug/
 .idea/
 .git/
 .github/
+deploy/
+monitoring/
 tests/
 LICENSE
 README.md
