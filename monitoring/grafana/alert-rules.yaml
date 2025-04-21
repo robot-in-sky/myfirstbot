@@ -1,0 +1,158 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: Alerts
+      folder: Loki
+      interval: 10s
+      rules:
+        - uid: dejll76tiggzka
+          title: Container error
+          condition: C
+          data:
+            - refId: A
+              queryType: instant
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: P8E80F9AEF21F6940
+              model:
+                datasource:
+                    type: loki
+                    uid: P8E80F9AEF21F6940
+                editorMode: code
+                expr: sum by (container_name) (count_over_time({container_name=~"bot|recognizer|pgdb|redis|rabbitmq"} |~ "ERROR|FATAL|CRITICAL" [1m]))
+                instant: true
+                intervalMs: 30000
+                maxDataPoints: 43200
+                queryType: instant
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 10s
+          annotations:
+            description: |-
+                Container "{{ $labels.container_name }}" gave an error.
+                Check the log.
+            summary: Container error
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-telegram
+    - orgId: 1
+      name: Alerts
+      folder: cAdvisor
+      interval: 10s
+      rules:
+        - uid: bejl7jbzdtczkd
+          title: Container is missing
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 300
+                to: 0
+              datasourceUid: PBFA97CFB590B2093
+              model:
+                adhocFilters: []
+                datasource:
+                    type: prometheus
+                    uid: PBFA97CFB590B2093
+                editorMode: code
+                exemplar: false
+                expr: max by(name) (time() - container_last_seen{name=~".+"})
+                instant: false
+                interval: ""
+                intervalMs: 30000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: true
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 60
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: ae3c41d7-cea5-4cca-a918-5708706b4d1a
+          panelId: 15
+          noDataState: NoData
+          execErrState: Error
+          for: 10s
+          annotations:
+            __dashboardUid__: ae3c41d7-cea5-4cca-a918-5708706b4d1a
+            __panelId__: "15"
+            description: |-
+                Container "{{ $labels.name }}" has not been seen in the last 1 minute.
+                Possible crash or network issue.
+            summary: Missing container
+          isPaused: false
+          notification_settings:
+            receiver: grafana-default-telegram

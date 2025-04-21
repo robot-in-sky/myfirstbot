@@ -5,7 +5,7 @@ volumes:
 
 services:
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.52.0
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.9.1
     container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.3.0
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -44,10 +44,11 @@ services:
       - "9090"
     depends_on:
       - cadvisor
+      - node-exporter
     restart: unless-stopped
 
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:2.9.14
     container_name: promtail
     expose:
       - "9080"
@@ -62,7 +63,7 @@ services:
     restart: unless-stopped
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.14
     container_name: loki
     expose:
       - "3100"
@@ -71,7 +72,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.0
     container_name: grafana
     ports:
       - "13000:3000"
@@ -79,8 +80,13 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA__USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD:-admin}
     volumes:
-      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/alert-rules.yaml:/etc/grafana/provisioning/alerting/alert-rules.yaml
+      - ./grafana/notification-policies.yaml:/etc/grafana/provisioning/alerting/notification-policies.yaml
+      - ./grafana/contact-points.yaml:/etc/grafana/provisioning/alerting/contact-points.yaml
     depends_on:
       - loki
       - prometheus
