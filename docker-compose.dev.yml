@@ -17,11 +17,11 @@ services:
       POSTGRES_USER: ${DB__USERNAME}
       POSTGRES_PASSWORD: ${DB__PASSWORD}
       POSTGRES_DB: ${DB__DATABASE}
-    ports:
-      - "${DB__PORT:-5432}:5432"
+    expose:
+      - "5432"
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:latest
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN__EMAIL}
@@ -30,18 +30,18 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
     ports:
-      - "${PGADMIN__PORT:-5050}:80"
+      - "5050:80"
 
   redis:
-    image: redis:7-alpine
+    image: bitnami/redis:7.4
     container_name: redis
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS__PASSWORD}
     volumes:
       - redis_data:/data
-    ports:
-      - "${REDIS__PORT:-6379}:6379"
+    expose:
+      - "6379"
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
@@ -53,9 +53,10 @@ services:
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit disk_free_limit 262144
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    expose:
+      - "5672"
     ports:
-      - "${AMQP__PORT:-5672}:5672"
-      - "${AMQP_MGMT__PORT:-15672}:15672"
+      - "25672:15672"
 
   bot:
     image: ghcr.io/robot-in-sky/myfirstbot:dev
@@ -63,18 +64,18 @@ services:
     restart: always
     environment:
       DB__HOST: pgdb
-      DB__PORT: ${DB__PORT:-5432}
+      DB__PORT: 5432
       DB__USERNAME: ${DB__USERNAME}
       DB__PASSWORD: ${DB__PASSWORD}
       DB__DATABASE: ${DB__DATABASE}
       REDIS__HOST: redis
-      REDIS__PORT: ${REDIS__PORT:-6379}
+      REDIS__PORT: 6379
       REDIS__USERNAME: ${REDIS__USERNAME}
       REDIS__PASSWORD: ${REDIS__PASSWORD}
       REDIS__DATABASE: ${REDIS__DATABASE}
       TGBOT__TOKEN: ${TGBOT__TOKEN}
       AMQP__HOST: rabbitmq
-      AMQP__PORT:  ${AMQP__PORT:-5672}
+      AMQP__PORT:  5672
       AMQP__USERNAME: ${AMQP__USERNAME}
       AMQP__PASSWORD: ${AMQP__PASSWORD}
       S3__URL: ${S3__URL}
@@ -94,7 +95,7 @@ services:
     restart: always
     environment:
       AMQP__HOST: rabbitmq
-      AMQP__PORT: ${AMQP__PORT:-5672}
+      AMQP__PORT: 5672
       AMQP__USERNAME: ${AMQP__USERNAME}
       AMQP__PASSWORD: ${AMQP__PASSWORD}
       S3__URL: ${S3__URL}

@@ -13,8 +13,8 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     privileged: true
     restart: unless-stopped
 
@@ -30,8 +30,8 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    ports:
-      - "9100:9100"
+    expose:
+      - "9100"
     privileged: true
     restart: unless-stopped
 
@@ -40,8 +40,8 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     depends_on:
       - cadvisor
     restart: unless-stopped
@@ -49,8 +49,8 @@ services:
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
-    ports:
-      - "9080:9080"
+    expose:
+      - "9080"
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -64,8 +64,8 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
-    ports:
-      - "3100:3100"
+    expose:
+      - "3100"
     volumes:
       - ./loki-config.yml:/etc/loki/local-config.yaml
     restart: unless-stopped
@@ -74,7 +74,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "13000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA__USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD:-admin}
