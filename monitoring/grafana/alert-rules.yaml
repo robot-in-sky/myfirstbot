@@ -1,12 +1,12 @@
 apiVersion: 1
 groups:
     - orgId: 1
-      name: Alerts
+      name: Logs monitoring
       folder: Loki
       interval: 30s
       rules:
         - uid: bejng9czhgcg0d
-          title: Container error (copy)
+          title: Container error
           condition: C
           data:
             - refId: A
@@ -56,14 +56,13 @@ groups:
           for: 30s
           annotations:
             description: |-
-                Container "{{ $labels.container_name }}" gave an error.
-                Check the log.
+                Error found in "{{ $labels.container_name }}" logs within the last 3 minutes.
             summary: Container error
           isPaused: false
           notification_settings:
             receiver: grafana-default-telegram
     - orgId: 1
-      name: Alerts
+      name: Container monitoring
       folder: cAdvisor
       interval: 30s
       rules:
