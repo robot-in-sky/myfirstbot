@@ -15,9 +15,11 @@ scrape_configs:
     refresh_interval: 5s
   relabel_configs:
   - source_labels: [__meta_docker_container_name]
-    # regex: '/(.*)' # removes the leading slash
+    regex: '/(.*)' # removes the leading slash
     target_label: container_name
-    # replacement: '$1'
+    replacement: '$1'
+  - source_labels: [ __meta_docker_container_name ]
+    target_label: service_name
   - source_labels: [__meta_docker_container_id]
     target_label: __path__
     replacement: /var/lib/docker/containers/$1/*-json.log
