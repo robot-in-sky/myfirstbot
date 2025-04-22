@@ -84,8 +84,8 @@
     "list": [
       {
         "current": {
-          "text": "",
-          "value": ""
+          "text": "pgdb",
+          "value": "pgdb"
         },
         "datasource": {
           "type": "loki",
