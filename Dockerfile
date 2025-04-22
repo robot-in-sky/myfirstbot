@@ -5,7 +5,6 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_VERSION=1.8.5 \
     POETRY_HOME="/opt/poetry" \
     APP_DIR="/app"
-
 ENV PATH="$POETRY_HOME/bin:$PATH" \
     PYTHONPATH=${APP_DIR}
 
