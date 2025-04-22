@@ -40,18 +40,14 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    expose:
-      - "9090"
     depends_on:
-      - cadvisor
-      - node-exporter
+      - cadvisor1
+      - node-exporter2
     restart: unless-stopped
 
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
-    expose:
-      - "9080"
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -65,8 +61,6 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
-    expose:
-      - "3100"
     volumes:
       - ./loki-config.yml:/etc/loki/local-config.yaml
     restart: unless-stopped
