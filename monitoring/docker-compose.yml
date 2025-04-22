@@ -80,7 +80,7 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA__USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__PASSWORD:-admin}
       - ALERT_BOT_TOKEN=${ALERT_BOT_TOKEN:-your_bot_token}
-      - ALERT_BOT_CHATID="${ALERT_BOT_CHATID:-your_chat_id}"
+      - ALERT_BOT_CHATID=${ALERT_BOT_CHATID:-your_chat_id}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/dashboards:/var/lib/grafana/dashboards
