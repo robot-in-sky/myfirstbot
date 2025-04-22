@@ -6,6 +6,9 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     APP_DIR="/app"
 
+ENV PATH="$POETRY_HOME/bin:$PATH" \
+    PYTHONPATH=${APP_DIR}
+
 RUN pip install --upgrade pip
 RUN pip install "poetry==${POETRY_VERSION}"
 RUN apt-get update  \
