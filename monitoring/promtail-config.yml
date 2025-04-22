@@ -15,6 +15,7 @@ scrape_configs:
     refresh_interval: 5s
   relabel_configs:
   - source_labels: [__meta_docker_container_name]
+    regex: '/(.*)' # removes the leading slash
     target_label: container_name
   - source_labels: [__meta_docker_container_id]
     target_label: __path__
