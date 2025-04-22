@@ -5,6 +5,10 @@ on:
     branches:
       - 'master'
       - 'dev'
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'pyproject.toml'
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
