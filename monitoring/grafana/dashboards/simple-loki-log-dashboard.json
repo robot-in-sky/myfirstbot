@@ -84,8 +84,8 @@
     "list": [
       {
         "current": {
-          "text": "pgdb",
-          "value": "pgdb"
+          "text": "grafana",
+          "value": "grafana"
         },
         "datasource": {
           "type": "loki",
