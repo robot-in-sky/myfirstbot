@@ -84,8 +84,8 @@
     "list": [
       {
         "current": {
-          "text": "grafana",
-          "value": "grafana"
+          "text": "",
+          "value": ""
         },
         "datasource": {
           "type": "loki",
