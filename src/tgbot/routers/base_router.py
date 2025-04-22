@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, ErrorEvent, Message
 
 from src.deps import Dependencies
 from src.entities.users import User, UserRole
+from src.exceptions import AppError
 from src.tgbot.views.menu import main_menu_kb, show_menu, signin_menu_kb
 from src.tgbot.views.users.user import user_role
 
@@ -62,6 +63,12 @@ async def help_handler(message: types.Message, state: FSMContext) -> Message:
     await state.clear()
     return await message.answer("Здесь будет раздел помощи")
 
+
+@router.message(Command(commands="error"))
+async def raise_error_handler(message: types.Message) -> None:
+    await message.answer("Сгенерирована ошибка для теста")
+    err = "Fake error"
+    raise AppError(err)
 
 
 @router.error()

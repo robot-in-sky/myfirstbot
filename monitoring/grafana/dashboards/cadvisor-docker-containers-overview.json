@@ -1017,7 +1017,7 @@
           "refId": "A"
         }
       ],
-      "title": "Container is down (more than 1 minute)",
+      "title": "Container is up (more than 1 minute)",
       "type": "status-history"
     }
   ],

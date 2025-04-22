@@ -3,10 +3,10 @@ groups:
     - orgId: 1
       name: Alerts
       folder: Loki
-      interval: 10s
+      interval: 30s
       rules:
-        - uid: dejll76tiggzka
-          title: Container error
+        - uid: bejng9czhgcg0d
+          title: Container error (copy)
           condition: C
           data:
             - refId: A
@@ -20,7 +20,7 @@ groups:
                     type: loki
                     uid: P8E80F9AEF21F6940
                 editorMode: code
-                expr: sum by (container_name) (count_over_time({container_name=~"bot|recognizer|pgdb|redis|rabbitmq"} |~ "ERROR|FATAL|CRITICAL" [1m]))
+                expr: sum by (container_name) (count_over_time({container_name=~".+", container_name!~"/cadvisor|/node-exporter|/prometheus|/promtail|/loki|/grafana", container_name!~".*portainer.*"} |~ "ERROR|FATAL|CRITICAL" [1m]))
                 instant: true
                 intervalMs: 30000
                 maxDataPoints: 43200
@@ -51,9 +51,9 @@ groups:
                 maxDataPoints: 43200
                 refId: C
                 type: threshold
-          noDataState: NoData
+          noDataState: OK
           execErrState: Error
-          for: 10s
+          for: 30s
           annotations:
             description: |-
                 Container "{{ $labels.container_name }}" gave an error.
@@ -65,7 +65,7 @@ groups:
     - orgId: 1
       name: Alerts
       folder: cAdvisor
-      interval: 10s
+      interval: 30s
       rules:
         - uid: bejl7jbzdtczkd
           title: Container is missing
@@ -83,7 +83,7 @@ groups:
                     uid: PBFA97CFB590B2093
                 editorMode: code
                 exemplar: false
-                expr: max by(name) (time() - container_last_seen{name=~".+"})
+                expr: max by(name) (time() - container_last_seen{name=~".+", name!~".*portainer.*"})
                 instant: false
                 interval: ""
                 intervalMs: 30000
@@ -143,9 +143,9 @@ groups:
                 type: threshold
           dashboardUid: ae3c41d7-cea5-4cca-a918-5708706b4d1a
           panelId: 15
-          noDataState: NoData
+          noDataState: KeepLast
           execErrState: Error
-          for: 10s
+          for: 30s
           annotations:
             __dashboardUid__: ae3c41d7-cea5-4cca-a918-5708706b4d1a
             __panelId__: "15"
