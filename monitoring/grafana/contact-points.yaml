@@ -16,7 +16,7 @@ contactPoints:
                 {{- range . }}
                 ⚠️ {{ .Annotations.summary }}
                 {{ .Annotations.description }}
-                {{- end }}
+                {{ end }}
                 {{- end }}
                 {{ template "telegram.default.message" . }}
             parse_mode: None

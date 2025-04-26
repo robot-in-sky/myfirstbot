@@ -216,6 +216,7 @@ IND_PLACES_TRANSLATIONS = {
     "ОРИССА": "ODISHA",
     "ПОНДИШЕРРИ": "PONDICHERRY",
     "ЗАПАДНАЯ БЕНГАЛИЯ": "WEST BENGAL",
+    "ХИМАЧАЛ": "HIMACHAL",
 }
 
 def format_ind_places(text: str) -> str:
