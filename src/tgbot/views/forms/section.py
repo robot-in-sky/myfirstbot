@@ -3,6 +3,7 @@ from typing import Any
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 
 from src.entities.forms import FieldType, Section
+from src.entities.forms.enums.others import Others
 from src.tgbot.views import buttons
 
 from .field import render_value
@@ -31,11 +32,13 @@ async def show_section_completed(message: Message) -> Message:
 def section_summary(section: Section, data: dict[str, Any]) -> str:
     lines = []
     for field in section.fields:
-        if field.hidden:
-            continue
-        value = data.get(field.id, None)
+        value = data.get(field.id)
         if value is None:
             continue
+        if field.hidden:
+            is_other = field.depends_on and data.get(field.depends_on) in Others
+            if not is_other:
+                continue
         value_output = render_value(field, value)
         sep = "\n" if field.type == FieldType.STR else " "
         line = f"<b>{field.name}</b>:{sep}{value_output}\n"

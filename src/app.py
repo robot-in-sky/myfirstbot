@@ -2,11 +2,11 @@ import logging
 
 from aio_pika.patterns import JsonRPC
 
+from src.clients.amqp import AMQPClient
+from src.clients.database import DatabaseClient
+from src.clients.redis import RedisClient
+from src.clients.s3 import S3Client
 from src.deps import Dependencies
-from src.infrastructure.amqp import AMQPClient
-from src.infrastructure.database import DatabaseClient
-from src.infrastructure.redis import RedisClient
-from src.infrastructure.s3 import S3Client
 from src.settings import AppSettings, LogSettings
 from src.tgbot.tgbot_app import TgBotApplication
 

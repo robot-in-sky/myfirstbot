@@ -7,7 +7,7 @@ from aiogram.fsm.strategy import FSMStrategy
 from redis.asyncio.client import Redis
 
 from src.deps import Dependencies
-from src.infrastructure.redis import RedisSettings
+from src.clients.redis import RedisSettings
 
 from .commands import set_commands
 from .middlewares import CurrentUserMiddleware

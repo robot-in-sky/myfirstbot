@@ -1,8 +1,8 @@
 from src.entities.forms import Choice, Field, FieldType, Form, Repeater, Section
 
-from .field_validators import apply_validators, validate_choice_input, validate_date_input
-
 from . import choices
+from .field_formatters import format_value
+from .field_validators import apply_validators, validate_choice_input, validate_date_input
 
 
 class FormService:
@@ -155,8 +155,14 @@ class FormService:
             Field(id="birth_place",
                   name="Место рождения",
                   input_text="<b>Место рождения</b>:\n"
-                             "Укажите название города или региона на английском",
-                  examples=["Saint Petersburg", "Almaty", "Sverdlovsk oblast"],
+                             "Укажите название города или региона. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Москва",
+                            "Санкт-Петербург",
+                            "Башкортостан",
+                            "Свердловская область",
+                            "Sverdlovsk region"],
+                  formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
             Field(id="national_id_no",
@@ -170,6 +176,16 @@ class FormService:
                   input_text="Укажите религиозную принадлежность",
                   type=FieldType.CHOICE,
                   choice=self.get_choice("religion_ind")),
+
+            Field(id="religion_other",
+                  name="Религия (другое)",
+                  input_text="<b>Религия (другое)</b>:\n"
+                             "Укажите религиозную принадлежность на английском. "
+                             "Можно указать <code>No</code>",
+                  examples=["Ezid", "Agnostic", "No"],
+                  validators=["str20", "eng_chars_digits_spaces"],
+                  depends_on="religion_ind",
+                  hidden=True),
 
             Field(id="education_ind",
                   name="Образование",
@@ -201,8 +217,14 @@ class FormService:
             Field(id="passport_issue_place",
                   name="Место выдачи",
                   input_text="<b>Место выдачи паспорта</b>:\n"
-                             "Введите название города или региона на английском",
-                  examples=["Moscow", "Saint Petersburg", "Almaty"],
+                             "Введите название города или региона. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Москва",
+                            "Санкт-Петербург",
+                            "Башкортостан",
+                            "Свердловская область",
+                            "Sverdlovsk region"],
+                  formatter="place_ru",
                   validators=["str20", "eng_chars_digits_spaces"]),
 
             Field(id="passport_issue_date",
@@ -228,23 +250,37 @@ class FormService:
             Field(id="city",
                   name="Город",
                   input_text="<b>Город проживания</b>:\n"
-                             "Укажите название на английском\n"
-                             "Можно указать областной центр",
-                  examples=["Moscow", "Saint Petersburg", "Almaty"],
+                             "Можно указать областной центр\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Москва",
+                            "Нижний Тагил",
+                            "Алматы",
+                            "Almaty"],
+                  formatter="place_ru",
                   validators=["str35", "eng_chars_digits_spaces"]),
 
             Field(id="state",
                   name="Регион",
                   input_text="<b>Регион проживания</b>:\n"
-                             "Укажите название на английском",
-                  examples=["Moscow", "Leningrad oblast", "Altay region"],
+                             "Укажите название региона\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Башкортостан",
+                            "Свердловская область",
+                            "Sverdlovsk region",
+                            "Москва",
+                            "Санкт-Петербург"],
+                  formatter="place_ru",
                   validators=["str35", "eng_chars_digits_spaces"]),
 
             Field(id="address",
                   name="Адрес",
                   input_text="<b>Адрес проживания</b>:\n"
-                             "Введите адрес проживания на английском",
-                  examples=["Lenina st. 69, apt. 420"],
+                             "Введите адрес проживания. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Lenina st. 41, apt. 88",
+                            "д. Луч, ул. Фонарей, 69",
+                            "ул. Весёлая, 4-20"],
+                  formatter="address_ru",
                   validators=["str35", "address"]),
 
             Field(id="zipcode",
@@ -263,7 +299,10 @@ class FormService:
             Field(id="father_name",
                   name="Имя отца",
                   input_text="<b>Имя отца</b>:\n"
-                             "Введите имя на английском",
+                             "Введите имя. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Иван", "Сергей", "Nikolay"],
+                  formatter="text_ru",
                   validators=["str50", "eng_chars_spaces"]),
 
             Field(id="father_nationality",
@@ -281,14 +320,23 @@ class FormService:
             Field(id="father_birth_place",
                   name="Место рождения отца",
                   input_text="<b>Укажите место рождения отца</b>:\n"
-                             "Только название города или региона на английском",
-                  examples=["Saint Petersburg", "Almaty", "Sverdlovsk oblast"],
+                             "Только название города или региона. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Москва",
+                            "Санкт-Петербург",
+                            "Башкортостан",
+                            "Свердловская область",
+                            "Sverdlovsk region"],
+                  formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
             Field(id="mother_name",
                   name="Имя матери",
                   input_text="<b>Имя матери</b>:\n"
-                             "Введите имя матери на английском",
+                             "Введите имя. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Вера", "Надежда", "Lyubov"],
+                  formatter="text_ru",
                   validators=["str50", "eng_chars_spaces"]),
 
             Field(id="mother_nationality",
@@ -306,8 +354,14 @@ class FormService:
             Field(id="mother_birth_place",
                   name="Место рождения матери",
                   input_text="<b>Место рождения матери</b>:\n"
-                             "Укажите название города или региона на английском",
-                  examples=["Saint Petersburg", "Almaty", "Sverdlovsk oblast"],
+                             "Укажите название города или региона. Можно на русском\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Москва",
+                            "Санкт-Петербург",
+                            "Башкортостан",
+                            "Свердловская область",
+                            "Sverdlovsk region"],
+                  formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
             Field(id="martial_status",
@@ -320,9 +374,12 @@ class FormService:
 
             Field(id="places_to_be_visited",
                   name="Места посещения",
-                  input_text="<b>Планируемые места посещения в Индии</b>\n"
-                             "Перечислите названия штатов или городов на английском через запятую",
-                  examples=["Delhi, Goa, Varanasi"],
+                  input_text="<b>Планируемые места посещения в Индии</b>\n\n"
+                             "Перечислите названия штатов или городов через запятую\n\n"
+                             "Желательно, использовать оригинальные названия на английском",
+                  examples=["Goa, Varanasi, Rishikesh",
+                            "Дели, Агра, Джайпур"],
+                  formatter="places_ind",
                   validators=["str50", "address"]),
 
             Field(id="exit_point",
@@ -343,16 +400,19 @@ class FormService:
             Field(id="prev_visit_address1",
                   name="Предыдущий адрес 1",
                   input_text="<b>Предыдущий адрес</b>:\n"
-                             "Укажите город и штат, где вы проживали в Индии (на английском)\n\n"
+                             "Укажите город и штат, где вы проживали в Индии\n\n"
+                             "Желательно, использовать оригинальные названия на английском. "
                              "Для Гоа можно просто указать <code>Goa</code>",
-                  examples=["Goa", "Rishikesh, Uttarakhand", "Mumbai"],
+                  examples=["Гоа", "Goa", "Mumbai", "Rishikesh, Uttarakhand"],
+                  formatter="places_ind",
                   validators=["str35", "address"],
                   depends_on="old_visa_cond"),
 
             Field(id="prev_visit_address2",
                   name="Предыдущий адрес 2",
                   input_text="<b>Предыдущий адрес</b>:\n"
-                             "Укажите адрес или название отеля (на английском)\n\n",
+                             "Укажите адрес или название отеля на английском\n\n"
+                             "Можно посмотреть на google-картах",
                   examples=["God's Gift Guest House, Arambol"],
                   validators=["str35", "address"],
                   depends_on="old_visa_cond"),
@@ -360,9 +420,12 @@ class FormService:
             Field(id="visited_cities",
                   name="Посещённые города",
                   input_text="<b>Ранее посещённые города в Индии</b>\n"
-                             "Перечислите названия городов на английском через запятую\n\n"
-                             "Места Гоа можно не указывать, просто укажите <code>Goa</code>",
-                  examples=["Delhi, Goa, Varanasi"],
+                             "Перечислите названия городов через запятую\n\n"
+                             "Места Гоа можно не указывать, просто укажите <code>Goa</code>."
+                             "Желательно, использовать оригинальные названия на английском",
+                  examples=["Goa, Varanasi, Rishikesh",
+                            "Дели, Агра, Джайпур"],
+                  formatter="places_ind",
                   validators=["str75", "address"],
                   depends_on="old_visa_cond"),
 
@@ -418,11 +481,11 @@ class FormService:
 
             Field(id="_saarc_country_visit_cond",
                   name="Посещения стран SAARC за 3 года",
-                  input_text="<b>Были ли посещения стран SAARC за последние 3 года (кроме Индии)?</b>\n\n"
-                             "<b>SAARC</b> – Южно-Азиатская ассоциация регионального сотрудничества\n\n"
+                  input_text="<b>SAARC</b> – Южно-Азиатская ассоциация регионального сотрудничества\n\n"
                              "Кроме Индии, к странам SAARC относятся:\n\n"
                              f"{choices.saarc_visit.SAARC_LIST_TEXT}\n\n"
-                             f"Для каждой страны необходимо указать год и количество посещений, "
+                             "<b>Были ли посещения стран SAARC за последние 3 года (кроме Индии)?</b>\n\n"
+                             f"Для каждой страны необходимо будет указать год и количество посещений, "
                              f"если были несколько раз за год",
                   type=FieldType.CHOICE,
                   choice=self.get_choice("yes_no"),
@@ -446,21 +509,26 @@ class FormService:
                   type=FieldType.CHOICE,
                   choice=self.get_choice("saarc_visit_num")),
 
-            # Reference Name in India
+            # References
 
             Field(id="ref_name_home",
                   name="Имя",
                   input_text="<b>Контактное лицо</b>:\n"
-                             "Укажите <b>имя</b> на английском\n\n"
+                             "Укажите имя. Можно на русском\n\n"
                              "Контактное лицо – представитель, друг или родственник в стране проживания",
+                  examples=["Владимир", "Светлана", "Semyon"],
+                  formatter="text_ru",
                   validators=["str50", "eng_chars_spaces"]),
 
             Field(id="ref_address_home",
                   name="Адрес",
                   input_text="<b>Контактное лицо</b>:\n"
-                             "Укажите <b>адрес</b> на английском\n"
-                             "Можно указать любой адрес, это формальность",
-                  examples=["Perm, Kurt Cobain st. 14-88"],
+                             "Укажите <b>адрес</b>. Можно указать любой адрес, это формальность\n\n"
+                             "Текст будет автоматически преобразован в английский",
+                  examples=["Lenina st. 41, apt. 88",
+                            "д. Луч, ул. Фонарей, 69",
+                            "ул. Весёлая, 4-20"],
+                  formatter="address_ru",
                   validators=["str200", "address"]),
 
             Field(id="ref_phone_home",
@@ -472,10 +540,10 @@ class FormService:
             Field(id="ref_name_ind",
                   name="Имя",
                   input_text="<b>Представитель в Индии</b>:\n"
-                             "Укажите <b>имя</b> на английском\n\n"
+                             "Укажите имя на английском\n"
                              "Обычно указывается имя владельца гест-хауса\n\n"
-                             "Это формальность, можно указать вместо имени <code>Owner</code>",
-                  examples=["Ashish", "Raju", "Rahul"],
+                             'Можно указать вместо имени <code>Owner</code> ("владелец")',
+                  examples=["Owner", "Ashish", "Raju"],
                   validators=["str50", "eng_chars_spaces"]),
 
             Field(id="ref_address_ind",
@@ -496,23 +564,25 @@ class FormService:
         ]
 
         self._sections = [
-            Section(id="registration",
-                    name="Вводные данные",
+            Section(id="__passport_details__",
+                    name="Данные паспорта",
                     fields=[
                         self.get_field("nationality"),
-                        self.get_field("entry_port"),
-                        self.get_field("arrival_date"),
-                    ]),
-
-            Section(id="applicant_details",
-                    name="Данные заявителя",
-                    fields=[
+                        self.get_field("passport_no"),
                         self.get_field("surname"),
                         self.get_field("given_name"),
                         self.get_field("gender"),
                         self.get_field("birth_date"),
                         self.get_field("birth_country"),
                         self.get_field("birth_place"),
+                        self.get_field("passport_issue_place"),
+                        self.get_field("passport_issue_date"),
+                        self.get_field("passport_expiry_date"),
+                    ]),
+
+            Section(id="applicant_details",
+                    name="Данные заявителя",
+                    fields=[
                         self.get_field("national_id_no"),
                         self.get_field("_prev_surname_cond"),
                         self.get_field("prev_surname"),
@@ -522,15 +592,7 @@ class FormService:
                         self.get_field("prev_nationality"),
                         self.get_field("education_ind"),
                         self.get_field("religion_ind"),
-                    ]),
-
-            Section(id="passport_details",
-                    name="Загранпаспорт",
-                    fields=[
-                        self.get_field("passport_no"),
-                        self.get_field("passport_issue_place"),
-                        self.get_field("passport_issue_date"),
-                        self.get_field("passport_expiry_date"),
+                        self.get_field("religion_other"),
                     ]),
 
             Section(id="address_details",
@@ -558,9 +620,11 @@ class FormService:
                         self.get_field("mother_birth_place"),
                     ]),
 
-            Section(id="details_of_visa_sought",
-                    name="Дополнительные данные",
+            Section(id="visa_details",
+                    name="Текущий визит в Индию",
                     fields=[
+                        self.get_field("entry_port"),
+                        self.get_field("arrival_date"),
                         self.get_field("places_to_be_visited"),
                         self.get_field("exit_point"),
                     ]),
@@ -587,7 +651,7 @@ class FormService:
                      ]),
 
             Repeater(id="saarc_country_visits",
-                     name="Страны SAARC",
+                     name="Посещёния стран SAARC",
                      description="Перечислите посещения стран SAARC за последние 3 года",
                      condition_field=self.get_field("_saarc_country_visit_cond"),
                      repeater_fields=[
@@ -616,12 +680,11 @@ class FormService:
         self._forms = [
             Form(id="ind_tour", name="Туристическая виза в Индию",
                  sections=[
-                     self.get_section("registration"),
+                     self.get_section("__passport_details__"),
                      self.get_section("applicant_details"),
-                     self.get_section("passport_details"),
                      self.get_section("address_details"),
                      self.get_section("family_details"),
-                     self.get_section("details_of_visa_sought"),
+                     self.get_section("visa_details"),
                      self.get_section("previous_visa_details"),
                      self.get_section("visited_countries"),
                      self.get_section("saarc_country_visits"),
@@ -633,7 +696,7 @@ class FormService:
     def get_choice(self, id_: str) -> Choice:
         return next(filter(lambda e: e.id == id_, self._choices))
 
-    def get_field(self, id_: str) -> Field | Repeater:
+    def get_field(self, id_: str) -> Field:
         return next(filter(lambda e: e.id == id_, self._fields))
 
     def get_section(self, id_: str) -> Section | Repeater:
@@ -643,7 +706,7 @@ class FormService:
         return next(filter(lambda e: e.id == id_, self._forms))
 
     @staticmethod
-    def validate_input(field: Field, text: str) -> str:
+    def format_and_validate_input(field: Field, text: str) -> str:
         value = text.strip()
         match field.type:
             case FieldType.DATE:
@@ -653,6 +716,7 @@ class FormService:
                 choice_value = validate_choice_input(field, value)
                 value = str(choice_value)
             case _:
+                value = format_value(value, field.formatter)
                 validators = field.validators or []
                 apply_validators(value, validators)
         return value

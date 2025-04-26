@@ -12,10 +12,12 @@ contactPoints:
             disable_notification: false
             disable_web_page_preview: false
             message: |-
-                {{ define "__text_alert_list" }}{{ range . }}
+                {{- define "__text_alert_list" }}
+                {{- range . }}
                 ⚠️ {{ .Annotations.summary }}
                 {{ .Annotations.description }}
-                {{ end }}{{ end }}
+                {{- end }}
+                {{- end }}
                 {{ template "telegram.default.message" . }}
             parse_mode: None
             protect_content: false

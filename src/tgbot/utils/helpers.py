@@ -34,3 +34,7 @@ def get_key_by_value(mapping: dict[Any, Any], value: str, default: str | None = 
         return next(filter(lambda i: i[1] == value, mapping.items()))[0]
     except StopIteration:
         return default
+
+
+def maybe_stringify(string: Any) -> str | None:
+    return str(string) if string is not None else None

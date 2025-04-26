@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.forms import FieldType, Section, YesNo
+from src.entities.forms.enums.others import Others
 from src.entities.users import User
 from src.entities.visas import AppFormUpdate
 from src.exceptions import ValidationError
@@ -143,7 +144,7 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
                 return
 
             try:
-                value = form_service.validate_input(field, message.text)
+                value = form_service.format_and_validate_input(field, message.text)
             except ValidationError as error:
                 await message.answer(str(error))
                 return
@@ -152,7 +153,7 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
             data[key] = value
             data["section.field_id"] = None
 
-            if field.type == FieldType.CHOICE and field.choice.id == "yes_no":
+            if field.type == FieldType.CHOICE:
                 section = form_service.get_section(section_id)
                 if isinstance(section, Section):
                     dep_fields = False
@@ -164,7 +165,7 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
                             if _key in data:
                                 del data[_key]
 
-                    if dep_fields and value == YesNo.YES:
+                    if dep_fields and (value == YesNo.YES or value in Others):
                         # Go to refill all empty fields
                         data["form.section_step"] = 0
                         await state.set_data(data)

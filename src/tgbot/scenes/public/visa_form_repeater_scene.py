@@ -177,7 +177,7 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
                 return
 
             try:
-                value = form_service.validate_input(field, message.text)
+                value = form_service.format_and_validate_input(field, message.text)
             except ValidationError as error:
                 await message.answer(str(error))
                 return

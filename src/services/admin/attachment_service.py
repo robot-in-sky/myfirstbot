@@ -1,7 +1,7 @@
 from uuid import UUID
 
+from src.clients.s3 import S3Client
 from src.entities.users import User, UserRole
-from src.infrastructure.s3 import S3Client
 from src.services.utils.access_level import access_level
 
 

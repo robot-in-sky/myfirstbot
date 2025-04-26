@@ -1,11 +1,11 @@
 import logging
 from uuid import UUID
 
+from src.clients.database import DatabaseClient
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.users import User, UserRole
 from src.entities.visas import AppForm, AppFormAdd, AppFormQuery, AppFormQueryPaged, AppFormStatus, AppFormUpdate
 from src.exceptions import InvalidStateError, NotFoundError
-from src.infrastructure.database import DatabaseClient
 from src.repositories.app_form_repo import AppFormRepo
 from src.services.public.visa_service import VisaService
 from src.services.utils.access_level import access_level

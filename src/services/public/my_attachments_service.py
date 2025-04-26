@@ -1,9 +1,9 @@
 from uuid import UUID
 
+from src.clients.database import DatabaseClient
+from src.clients.s3 import S3Client
 from src.entities.users import User
 from src.exceptions import AccessDeniedError
-from src.infrastructure.database import DatabaseClient
-from src.infrastructure.s3 import S3Client
 from src.repositories import AppFormRepo
 
 

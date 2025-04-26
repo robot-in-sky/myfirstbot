@@ -1,7 +1,7 @@
 import logging
 
+from src.clients.database import DatabaseClient
 from src.entities.users import User, UserAdd, UserUpdate
-from src.infrastructure.database import DatabaseClient
 from src.repositories import UserRepo
 
 

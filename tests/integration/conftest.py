@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.clients.database import DatabaseClient
 from src.config import ENV_FILE_PATH
-from src.infrastructure.database import DatabaseClient
 from src.settings import AppSettings
 
 

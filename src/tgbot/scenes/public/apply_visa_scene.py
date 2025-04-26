@@ -1,28 +1,29 @@
 import asyncio
 from uuid import UUID
 
-from aio_pika import MessageProcessError
 from aio_pika.patterns.rpc import JsonRPCError
 from aiogram import Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
-from transliterate import translit
 from uuid_extensions import uuid7
 
 from src.deps import Dependencies
 from src.entities.users import User
 from src.entities.visas import AppFormAdd, AppFormUpdate, Country
 from src.entities.visas.passport import PassportDetails, PassportFiles
-from src.tgbot.views.menu import show_menu
-from src.tgbot.views.visas.app_form import show_app_form
+from src.services.utils.translate import format_place_name
+from src.tgbot.utils.helpers import maybe_stringify
 from src.tgbot.views.visas.apply_visa import (
     CHECKED_TEXT,
     CORNER_DETECTION_ERROR_TEXT,
     IMAGE_MISMATCH_ERROR_TEXT,
+    IMAGE_ONLY_ONE_TEXT,
+    OCR_ERROR_TEXT,
+    OCR_SUCCESS_TEXT,
+    OCR_WARNING_TEXT,
     PASSPORT_TEXT,
     START_TEXT,
-    TEXT_RECOGNITION_ERROR_TEXT,
     WAITING_TEXT,
     show_check_passport_step,
     show_country_step,
@@ -35,7 +36,7 @@ from src.tgbot.views.visas.apply_visa import (
 class ApplyVisaScene(Scene, state="apply_visa"):
 
     @on.message.enter()
-    async def message_on_enter(self,  # noqa: PLR0913
+    async def message_on_enter(self,  # noqa: PLR0913, PLR0915
                                message: Message,
                                state: FSMContext, *,
                                deps: Dependencies,
@@ -89,6 +90,12 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             await service.update_form(id_, AppFormUpdate(data=data))
 
         elif data.get("form.completed") is None:
+            await asyncio.sleep(0.3)
+            if data["visa.ocr_success"] == "True":
+                await message.answer(OCR_SUCCESS_TEXT)
+            else:
+                await message.answer(OCR_WARNING_TEXT)
+            await asyncio.sleep(0.3)
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)
             await self.wizard.goto("visa_form", form_id=visa.form_id)
@@ -153,13 +160,16 @@ class ApplyVisaScene(Scene, state="apply_visa"):
                             bot: Bot,
                             deps: Dependencies,
                             current_user: User) -> None:
+        if message.media_group_id:
+            await message.answer(IMAGE_ONLY_ONE_TEXT)
+            return
         data = await state.get_data()
         expecting = data.get("visa.passport_expecting")
         if message.photo and expecting:
             wait_message = await message.answer(WAITING_TEXT)
             photo = await bot.download(message.photo[-1])
             data = bytes(photo.read())
-            # Recognition start
+            # OCR start
             attachment_id = uuid7()
             attachment_service = deps.get_my_attachments_service(current_user)
             await attachment_service.add_bytes(attachment_id, PassportFiles.SOURCE, data)
@@ -175,12 +185,12 @@ class ApplyVisaScene(Scene, state="apply_visa"):
                     case "CornerDetectionError":
                         await message.answer(CORNER_DETECTION_ERROR_TEXT)
                     case "TextRecognitionError":
-                        await message.answer(TEXT_RECOGNITION_ERROR_TEXT)
+                        await message.answer(OCR_ERROR_TEXT)
                     case _:
                         raise
                 return
             scanned = await attachment_service.get_bytes(attachment_id, PassportFiles.SCANNED)
-            # Recognition end
+            # OCR end
             await wait_message.delete()
             details = PassportDetails(**result_dict["details"])
             """
@@ -198,20 +208,23 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             output = "\n".join(lines)
             await message.answer(output)
             """
-            birth_place = str(details.birth_place).replace("ГОР.", "").replace("Г.", "").strip().upper()
-            birth_place = translit(birth_place, "ru", reversed=True)
-            await state.update_data({
+            birth_place = format_place_name(details.birth_place) if details.birth_place is not None else None
+            details_dict = {
                 "visa.passport_expecting": False,
-                "form.data.registration.nationality": str(details.country).lower(),
-                "form.data.applicant_details.surname": str(details.surname).upper(),
-                "form.data.applicant_details.given_name": str(details.given_name).upper(),
-                "form.data.applicant_details.gender": str(details.gender).lower(),
-                "form.data.applicant_details.birth_date": str(details.birth_date),
-                "form.data.applicant_details.birth_place": birth_place,
-                "form.data.applicant_details.birth_country": str(details.country).lower(),
-                "form.data.passport_details.passport_no": str(details.passport_no).upper(),
-                "form.data.passport_details.passport_issue_date": str(details.issue_date),
-                "form.data.passport_details.passport_expiry_date": str(details.expiry_date),
-            })
+                "form.data.__passport_details__.nationality": maybe_stringify(details.country),
+                "form.data.__passport_details__.passport_no": maybe_stringify(details.passport_no),
+                "form.data.__passport_details__.surname": maybe_stringify(details.surname),
+                "form.data.__passport_details__.given_name": maybe_stringify(details.given_name),
+                "form.data.__passport_details__.gender": maybe_stringify(details.gender),
+                "form.data.__passport_details__.birth_date": maybe_stringify(details.birth_date),
+                "form.data.__passport_details__.birth_country": maybe_stringify(details.country),
+                "form.data.__passport_details__.birth_place": birth_place,
+                "form.data.__passport_details__.passport_issue_place": birth_place,
+                "form.data.__passport_details__.passport_issue_date": maybe_stringify(details.issue_date),
+                "form.data.__passport_details__.passport_expiry_date": maybe_stringify(details.expiry_date),
+            }
+            details_dict["visa.ocr_success"] = None not in details_dict.values()
+            details_dict = {k: str(v) for k, v in details_dict.items() if v is not None}
+            await state.update_data(details_dict)
             await show_check_passport_step(
                 photo=BufferedInputFile(scanned, PassportFiles.SCANNED), message=message)

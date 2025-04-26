@@ -1,10 +1,10 @@
 import logging
 from uuid import UUID
 
+from src.clients.database import DatabaseClient
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.users import User, UserQuery, UserQueryPaged, UserRole
 from src.exceptions import NotFoundError
-from src.infrastructure.database import DatabaseClient
 from src.repositories import UserRepo
 from src.services.utils.access_level import access_level
 

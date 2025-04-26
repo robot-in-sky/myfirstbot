@@ -12,6 +12,7 @@ class Field:
     examples: list[str] | None = None
     type: FieldType = FieldType.STR
     choice: Choice | None = None
+    formatter: str | None = None
     validators: list[str] | None = None
     hidden: bool = False
     depends_on: str | None = None

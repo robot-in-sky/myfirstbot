@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.deps import Dependencies
 from src.entities.forms import Field, FieldType, Repeater, Section, YesNo
+from src.entities.forms.enums.others import Others
 from src.exceptions import ValidationError
 from src.tgbot.views.buttons import ALL
 from src.tgbot.views.forms.field import show_all_options, show_field_input
@@ -66,7 +67,7 @@ class VisaFormScene(Scene, state="visa_form"):
                             cond_field = form_service.get_field(field.depends_on)
                             cond_key = f"form.data.{section.id}.{cond_field.id}"
                             cond_value = data.get(cond_key, YesNo.NO)
-                            if cond_value == YesNo.YES:
+                            if cond_value == YesNo.YES or cond_value in Others:
                                 await show_field_input(field, message=message)
                                 return
                         else:
@@ -135,7 +136,7 @@ class VisaFormScene(Scene, state="visa_form"):
                 return
 
             try:
-                value = form_service.validate_input(field, message.text)
+                value = form_service.format_and_validate_input(field, message.text)
             except ValidationError as error:
                 await message.answer(str(error))
                 return

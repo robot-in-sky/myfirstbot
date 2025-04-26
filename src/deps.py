@@ -2,10 +2,10 @@ from dataclasses import dataclass
 
 from aio_pika.patterns import JsonRPC
 
+from src.clients.database import DatabaseClient
+from src.clients.redis import RedisClient
+from src.clients.s3 import S3Client
 from src.entities.users import User
-from src.infrastructure.database import DatabaseClient
-from src.infrastructure.redis import RedisClient
-from src.infrastructure.s3 import S3Client
 from src.services import (
     AppFormManageService,
     AttachmentService,

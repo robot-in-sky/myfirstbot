@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from math import ceil
 from uuid import UUID
 
 from pydantic import TypeAdapter
-from pytz import UTC
 from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
+from src.clients.database import DatabaseClient
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.visas import AppFormStatus
 from src.entities.visas.app_form import (
@@ -16,7 +16,6 @@ from src.entities.visas.app_form import (
     AppFormQueryPaged,
     AppFormUpdate,
 )
-from src.infrastructure.database import DatabaseClient
 from src.orm_models import OrmAppForm
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (

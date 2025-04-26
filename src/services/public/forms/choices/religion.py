@@ -31,8 +31,8 @@ RELIGION_IND_OUTPUT = {
     ReligionInd.ISLAM: "Ислам",
     ReligionInd.JAINISM: "Джайнизм",
     ReligionInd.JUDAISM: "Иудаизм",
-    ReligionInd.OTHERS: "Другое",
     ReligionInd.PARSI: "Парсизм",
     ReligionInd.SIKH: "Сикхизм",
     ReligionInd.ZOROASTRIAN: "Зороастризм",
+    ReligionInd.OTHERS: "Другое",
 }

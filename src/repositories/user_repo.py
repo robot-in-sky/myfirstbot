@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from math import ceil
 from uuid import UUID
 
 from pydantic import TypeAdapter
-from pytz import UTC
 from sqlalchemy import Select, and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
+from src.clients.database import DatabaseClient
 from src.entities.base import QueryCountItem, QueryResult
 from src.entities.users import (
     USER_SEARCH_BY,
@@ -17,7 +17,6 @@ from src.entities.users import (
     UserRole,
     UserUpdate,
 )
-from src.infrastructure.database import DatabaseClient
 from src.orm_models import OrmUser
 from src.repositories.utils import exception_mapper
 from src.repositories.utils.query_utils import (
