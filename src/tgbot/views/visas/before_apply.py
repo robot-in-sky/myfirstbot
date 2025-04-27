@@ -1,7 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from src.tgbot.views.keyboards import yes_no_kb
-
 USE_DRAFT_STEP_TEXT = ("<b>У Вас есть незавершённые анкеты</b>\n\n"
                        "Продолжить заполнение существующей анкеты?")
 
