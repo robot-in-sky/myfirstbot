@@ -8,7 +8,6 @@ from aiogram.types import CallbackQuery, Message
 from src.deps import Dependencies
 from src.entities.users import User
 from src.tgbot.views.keyboards import yes_no_kb
-from src.tgbot.views.menu import show_menu
 from src.tgbot.views.visas.app_form import show_app_form
 
 TRASH_APP_FORM_TEXT = "Вы действительно хотите удалить заявку?"

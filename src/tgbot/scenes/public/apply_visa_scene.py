@@ -91,10 +91,12 @@ class ApplyVisaScene(Scene, state="apply_visa"):
 
         elif data.get("form.completed") is None:
             await asyncio.sleep(0.3)
-            if data["visa.ocr_success"] == "True":
+            if data.get("visa.ocr_success") == "True":
                 await message.answer(OCR_SUCCESS_TEXT)
-            else:
+            elif data.get("visa.ocr_success") == "False":
                 await message.answer(OCR_WARNING_TEXT)
+            data["visa.ocr_success"] = None
+            await state.set_data(data)
             await asyncio.sleep(0.3)
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)

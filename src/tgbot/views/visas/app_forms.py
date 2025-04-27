@@ -12,7 +12,7 @@ from src.tgbot.views.keyboards import bottom_buttons, pagination_buttons
 from src.tgbot.views.users.user import is_admin
 
 from .app_form import app_form_applicant_data, app_form_status
-from .apply_visa import visa_country
+from .apply_visa import get_flag
 
 
 async def show_app_forms(  # noqa: PLR0913
@@ -67,11 +67,10 @@ def app_form_item_text(app_form: AppForm, *, current_user: User) -> str:
     columns = []
     if is_admin(current_user):
         columns.append(str(app_form.user_id))
-    country = visa_country(app_form.country)
-    columns.append(country)
+    flag = get_flag(app_form.country)
+    columns.append(flag)
     if data := app_form_applicant_data(app_form):
         applicant = f"{data["given_name"]} {data["surname"][0]}."
-        # applicant = f"{data["surname"]} {data["given_name"]}"
         columns.append(applicant)
     status = app_form_status(app_form.status)
     columns.append(status)

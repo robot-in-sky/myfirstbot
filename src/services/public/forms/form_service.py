@@ -157,11 +157,11 @@ class FormService:
                   input_text="<b>Место рождения</b>:\n"
                              "Укажите название города или региона. Можно на русском\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["Москва",
-                            "Санкт-Петербург",
-                            "Башкортостан",
+                  examples=["Санкт-Петербург",
+                            "Республика Башкортостан",
                             "Свердловская область",
-                            "Sverdlovsk region"],
+                            "Краснодарский край",
+                            "Chelyabinsk region"],
                   formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
@@ -221,9 +221,9 @@ class FormService:
                              "Текст будет автоматически преобразован в английский",
                   examples=["Москва",
                             "Санкт-Петербург",
-                            "Башкортостан",
                             "Свердловская область",
-                            "Sverdlovsk region"],
+                            "Краснодарский край",
+                            "Chelyabinsk region"],
                   formatter="place_ru",
                   validators=["str20", "eng_chars_digits_spaces"]),
 
@@ -253,22 +253,25 @@ class FormService:
                              "Можно указать областной центр\n\n"
                              "Текст будет автоматически преобразован в английский",
                   examples=["Москва",
-                            "Нижний Тагил",
                             "Алматы",
-                            "Almaty"],
+                            "Нижний Тагил",
+                            "Dubai"],
                   formatter="place_ru",
                   validators=["str35", "eng_chars_digits_spaces"]),
 
             Field(id="state",
                   name="Регион",
                   input_text="<b>Регион проживания</b>:\n"
-                             "Укажите название региона\n\n"
-                             "Текст будет автоматически преобразован в английский",
-                  examples=["Башкортостан",
-                            "Свердловская область",
-                            "Sverdlovsk region",
-                            "Москва",
-                            "Санкт-Петербург"],
+                             "Укажите название региона. Можно на русском.\n\n"
+                             "Текст будет автоматически преобразован в английский\n\n"
+                             "Обратите внимание:\n"
+                             "<code>Москва</code>, <code>Санкт-Петербург</code> "
+                             "и <code>Севастополь</code> — это города федерального значения.\n"
+                             "Вместо региона указываем название города",
+                  examples=["Костанайская область",
+                            "Краснодарский край",
+                            "Севастополь",
+                            "Antalya"],
                   formatter="place_ru",
                   validators=["str35", "eng_chars_digits_spaces"]),
 
@@ -277,9 +280,9 @@ class FormService:
                   input_text="<b>Адрес проживания</b>:\n"
                              "Введите адрес проживания. Можно на русском\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["Lenina st. 41, apt. 88",
-                            "д. Луч, ул. Фонарей, 69",
-                            "ул. Весёлая, 4-20"],
+                  examples=["ул.Красных Фонарей, 4-21",
+                            "с.Калиновка, ул.Азина, 77",
+                            "Lenina st. 41, apt. 88"],
                   formatter="address_ru",
                   validators=["str35", "address"]),
 
@@ -301,7 +304,7 @@ class FormService:
                   input_text="<b>Имя отца</b>:\n"
                              "Введите имя. Можно на русском\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["Иван", "Сергей", "Nikolay"],
+                  examples=["Иван", "Юрий", "Nikolay"],
                   formatter="text_ru",
                   validators=["str50", "eng_chars_spaces"]),
 
@@ -324,9 +327,9 @@ class FormService:
                              "Текст будет автоматически преобразован в английский",
                   examples=["Москва",
                             "Санкт-Петербург",
-                            "Башкортостан",
                             "Свердловская область",
-                            "Sverdlovsk region"],
+                            "Краснодарский край",
+                            "Chelyabinsk region"],
                   formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
@@ -358,9 +361,9 @@ class FormService:
                              "Текст будет автоматически преобразован в английский",
                   examples=["Москва",
                             "Санкт-Петербург",
-                            "Башкортостан",
                             "Свердловская область",
-                            "Sverdlovsk region"],
+                            "Краснодарский край",
+                            "Chelyabinsk region"],
                   formatter="place_ru",
                   validators=["str50", "eng_chars_digits_spaces"]),
 
@@ -375,9 +378,10 @@ class FormService:
             Field(id="places_to_be_visited",
                   name="Места посещения",
                   input_text="<b>Планируемые места посещения в Индии</b>\n\n"
-                             "Перечислите названия штатов или городов через запятую\n\n"
-                             "Желательно, использовать оригинальные названия на английском",
-                  examples=["Goa, Varanasi, Rishikesh",
+                             "Перечислите названия штатов/городов через запятую\n\n"
+                             "Желательно использовать оригинальные названия на английском",
+                  examples=["Mumbai, Varanasi, Rishikesh",
+                            "Goa, Hampi, Kerala",
                             "Дели, Агра, Джайпур"],
                   formatter="places_ind",
                   validators=["str50", "address"]),
@@ -400,10 +404,9 @@ class FormService:
             Field(id="prev_visit_address1",
                   name="Предыдущий адрес 1",
                   input_text="<b>Предыдущий адрес</b>:\n"
-                             "Укажите город и штат, где вы проживали в Индии\n\n"
-                             "Желательно, использовать оригинальные названия на английском. "
-                             "Для Гоа можно просто указать <code>Goa</code>",
-                  examples=["Гоа", "Goa", "Mumbai", "Rishikesh, Uttarakhand"],
+                             "Укажите город/штат, где вы проживали в Индии\n\n"
+                             "Желательно использовать оригинальные названия на английском\n\n",
+                  examples=["Goa", "Mumbai", "Rishikesh, Uttarakhand", "Manali, Himachal Pradesh"],
                   formatter="places_ind",
                   validators=["str35", "address"],
                   depends_on="old_visa_cond"),
@@ -412,7 +415,7 @@ class FormService:
                   name="Предыдущий адрес 2",
                   input_text="<b>Предыдущий адрес</b>:\n"
                              "Укажите адрес или название отеля на английском\n\n"
-                             "Можно посмотреть на google-картах",
+                             "Адрес можно посмотреть на <a href='https://www.google.com/maps/'>Google-картах</a>",
                   examples=["God's Gift Guest House, Arambol"],
                   validators=["str35", "address"],
                   depends_on="old_visa_cond"),
@@ -420,10 +423,11 @@ class FormService:
             Field(id="visited_cities",
                   name="Посещённые города",
                   input_text="<b>Ранее посещённые города в Индии</b>\n"
-                             "Перечислите названия городов через запятую\n\n"
-                             "Места Гоа можно не указывать, просто укажите <code>Goa</code>."
-                             "Желательно, использовать оригинальные названия на английском",
-                  examples=["Goa, Varanasi, Rishikesh",
+                             "Перечислите названия городов/штатов через запятую\n\n"
+                             "Места Гоа можно не указывать, просто укажите <code>Goa</code>\n\n"
+                             "Желательно использовать оригинальные названия на английском",
+                  examples=["Mumbai, Varanasi, Rishikesh",
+                            "Goa, Hampi, Kerala",
                             "Дели, Агра, Джайпур"],
                   formatter="places_ind",
                   validators=["str75", "address"],
@@ -433,7 +437,7 @@ class FormService:
                   name="Номер предыдущей визы",
                   input_text="<b>Предыдущая виза</b>:\n"
                              "Укажите номер визы\n\n"
-                             "Номер указан на штампе или вклейке в паспорте\n",
+                             "Номер указан на штампе или вклейке в паспорте",
                   examples=["VI7654321"],
                   validators=["str10", "eng_chars_digits_spaces"],
                   depends_on="old_visa_cond"),
@@ -513,52 +517,43 @@ class FormService:
 
             Field(id="ref_name_home",
                   name="Имя",
-                  input_text="<b>Контактное лицо</b>:\n"
+                  input_text="<b>Контактное лицо (дома)</b>:\n"
                              "Укажите имя. Можно на русском\n\n"
                              "Контактное лицо – представитель, друг или родственник в стране проживания",
-                  examples=["Владимир", "Светлана", "Semyon"],
+                  examples=["Владимир", "Кайрат", "Svetlana"],
                   formatter="text_ru",
                   validators=["str50", "eng_chars_spaces"]),
 
             Field(id="ref_address_home",
                   name="Адрес",
-                  input_text="<b>Контактное лицо</b>:\n"
-                             "Укажите <b>адрес</b>. Можно указать любой адрес, это формальность\n\n"
+                  input_text="<b>Контактное лицо (дома)</b>:\n"
+                             "Укажите адрес. Можно указать любой адрес, это формальность\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["Lenina st. 41, apt. 88",
-                            "д. Луч, ул. Фонарей, 69",
-                            "ул. Весёлая, 4-20"],
+                  examples=["г.Краснозаводск, ул.Инженерной Мысли, 33"],
                   formatter="address_ru",
                   validators=["str200", "address"]),
 
             Field(id="ref_phone_home",
                   name="Номер телефона",
-                  input_text="<b>Контактное лицо</b>:\n"
-                             "Укажите <b>номер телефона</b> в формате <code>+7XXXXXXXXXX</code>",
+                  input_text="<b>Контактное лицо (дома)</b>:\n"
+                             "Укажите номер телефона в формате <code>+7XXXXXXXXXX</code>",
                   validators=["str15", "phone"]),
-
-            Field(id="ref_name_ind",
-                  name="Имя",
-                  input_text="<b>Представитель в Индии</b>:\n"
-                             "Укажите имя на английском\n"
-                             "Обычно указывается имя владельца гест-хауса\n\n"
-                             'Можно указать вместо имени <code>Owner</code> ("владелец")',
-                  examples=["Owner", "Ashish", "Raju"],
-                  validators=["str50", "eng_chars_spaces"]),
 
             Field(id="ref_address_ind",
                   name="Адрес",
                   input_text="<b>Представитель в Индии</b>:\n"
-                             "Укажите <b>адрес</b> на английском\n\n"
-                             "Адрес гест-хауса можно посмотреть на google-картах",
+                             "Укажем в качестве принимающей стороны отель/гест-хаус, "
+                             "в котором планируется размещение\n\n"
+                             "Укажите название и адрес отеля на английском\n\n"
+                             "Адрес можно посмотреть на <a href='https://www.google.com/maps/'>Google-картах</a>",
                   examples=["Ivon Guest House, Girkarwado, Arambol, Pernem, Goa 403524"],
                   validators=["str200", "address"]),
 
             Field(id="ref_phone_ind",
                   name="Номер телефона",
                   input_text="<b>Представитель в Индии</b>:\n"
-                             "Укажите <b>номер телефона</b> в формате <code>+91XXXXXXXXXX</code>\n\n"
-                             "Номер гест-хауса также можно посмотреть на google-картах",
+                             "Укажите номер телефона отеля в формате <code>+91XXXXXXXXXX</code>\n\n"
+                             "Номер телефона можно также посмотреть на <a href='https://www.google.com/maps/'>Google-картах</a>",
                   validators=["str15", "phone"]),
 
         ]
@@ -671,7 +666,6 @@ class FormService:
             Section(id="reference_details_ind",
                     name="Представитель в Индии",
                     fields=[
-                        self.get_field("ref_name_ind"),
                         self.get_field("ref_address_ind"),
                         self.get_field("ref_phone_ind"),
                     ]),

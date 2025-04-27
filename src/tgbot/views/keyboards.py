@@ -8,12 +8,14 @@ from src.tgbot.views.buttons import (
     CANCEL,
     FILTER,
     FILTER_CHECKED,
+    NO,
     OK,
     PAGE_NEXT,
     PAGE_PREV,
     SEARCH,
     SEARCH_RESET,
-    TO_MENU, YES, NO,
+    TO_MENU,
+    YES,
 )
 
 

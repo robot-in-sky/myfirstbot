@@ -64,11 +64,15 @@ async def show_country_step(countries: Sequence[Country], *,
                                     reply_markup=visa_country_kb(countries))
 
 
-def visa_country(country: Country) -> str:
-    flag = {
+def get_flag(country: Country) -> str:
+    return {
         Country.IND: "🇮🇳",
         Country.VNM: "🇻🇳",
     }.get(country, "")
+
+
+def visa_country(country: Country) -> str:
+    flag = get_flag(country)
     output = COUNTRY_OUTPUT.get(country, country)
     return f"{flag} {output}" if flag else output
 

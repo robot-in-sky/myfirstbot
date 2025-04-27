@@ -48,19 +48,19 @@ async def show_field_input(field: Field,
 
     if field.examples:
         if len(field.examples) == 1:
-            text += f"\n\n{EXAMPLE_TEXT}: {render_value(field, field.examples[0])}"
+            text += f"\n\n{EXAMPLE_TEXT}:\n{render_value(field, field.examples[0])}"
         elif len(field.examples) > 1:
             examples_output = "\n".join([f"• {render_value(field, e)}" for e in field.examples])
             text += f"\n\n{EXAMPLES_TEXT}:\n{examples_output}"
 
     if value is not None:
         output_value = render_value(field, value)
-        text += f"\n\n{CURRENT_VALUE_TEXT}: {output_value}"
+        text += f"\n\n{CURRENT_VALUE_TEXT}:\n{output_value}"
 
     keyboard = field_input_kb(field)
     if replace:
         await message.delete()
-    return await message.answer(text, reply_markup=keyboard)
+    return await message.answer(text, reply_markup=keyboard, disable_web_page_preview=True)
 
 
 async def show_all_options(field: Field, message: Message) -> Message:

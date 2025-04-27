@@ -169,21 +169,23 @@ def normalize_name(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
-def remove_city_prefix(text: str) -> str:
-    text = re.sub(r"^(гор\.|г\.|с\.|село\.|дер\.|д\.)\s*", "", text, flags=re.IGNORECASE)
-    return re.sub(r"(\s)(гор\.|г\.|с\.|село\.|дер\.|д\.)\s*", r"\1", text, flags=re.IGNORECASE)
+def remove_settlement_prefix(text: str) -> str:
+    text = re.sub(r"^(гор\.|г\.|с\.|село\.|дер\.|д\.|пгт\.|п\.)\s*", "", text, flags=re.IGNORECASE)
+    return re.sub(r"(\s)(гор\.|г\.|с\.|село\.|дер\.|д\.|пгт\.|п\.)\s*", r"\1", text, flags=re.IGNORECASE)
 
 
 def format_address(text: str) -> str:
-    text = remove_city_prefix(text)
+    text = remove_settlement_prefix(text)
     text = re.sub(r"^(ул\.)\s*", "st. ", text, flags=re.IGNORECASE)
     text = re.sub(r"(\s)(ул\.)\s*", r"\1st. ", text, flags=re.IGNORECASE)
     text = re.sub(r"^(просп\.)\s*", "ave. ", text, flags=re.IGNORECASE)
     text = re.sub(r"(\s)(просп\.)\s*", r"\1ave. ", text, flags=re.IGNORECASE)
+    text = re.sub(r"^(бул\.)\s*", "blvd. ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(\s)(бул\.)\s*", r"\1blvd. ", text, flags=re.IGNORECASE)
     text = re.sub(r"^(пер\.)\s*", "lane. ", text, flags=re.IGNORECASE)
     text = re.sub(r"(\s)(пер\.)\s*", r"\1lane. ", text, flags=re.IGNORECASE)
-    text = re.sub(r"^(кв\.)\s*", "apt. ", text, flags=re.IGNORECASE)
     text = re.sub(r"(\s)(кв\.)\s*", r"\1apt. ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(\s)(корп\.)\s*", r"\1bl. ", text, flags=re.IGNORECASE)
     return translit(text).strip()
 
 
@@ -192,7 +194,7 @@ def format_place_name(text: str) -> str:
     for k, v in REGIONS_TRANSLATIONS.items():
         if k in normalized_name:
             return v.title()
-    text = remove_city_prefix(text)
+    text = remove_settlement_prefix(text)
     return translit(text).strip()
 
 

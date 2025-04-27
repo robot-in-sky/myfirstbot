@@ -15,7 +15,6 @@ async def show_app_form(app_form: AppForm, *,
                         back: bool = True) -> Message:
     text = app_form_summary(app_form)
     reply_markup = app_form_actions_kb(app_form, current_user=current_user, back=back)
-    # await message.answer(str(app_form.data))
     if replace:
         await message.edit_text(text, reply_markup=reply_markup)
         return message
@@ -35,9 +34,9 @@ def app_form_status(status: AppFormStatus) -> str:
 
 def app_form_applicant_data(app_form: AppForm) -> dict[str, str] | None:
     if app_form.data:
-        given_name = app_form.data.get("form.data.applicant_details.given_name")
-        surname = app_form.data.get("form.data.applicant_details.surname")
-        birth_date = app_form.data.get("form.data.applicant_details.birth_date", "")
+        given_name = app_form.data.get("form.data.__passport_details__.given_name")
+        surname = app_form.data.get("form.data.__passport_details__.surname")
+        birth_date = app_form.data.get("form.data.__passport_details__.birth_date", "")
         birth_year = birth_date.split("-")[0] if "-" in birth_date else None
         if given_name and surname:
             return {"given_name": given_name,
