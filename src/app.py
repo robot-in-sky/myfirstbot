@@ -2,13 +2,13 @@ import logging
 
 from aio_pika.patterns import JsonRPC
 
-from src.clients.amqp import AMQPClient
-from src.clients.database import DatabaseClient
-from src.clients.redis import RedisClient
-from src.clients.s3 import S3Client
-from src.deps import Dependencies
-from src.settings import AppSettings, LogSettings
-from src.tgbot.tgbot_app import TgBotApplication
+from clients.amqp import AMQPClient
+from clients.database import DatabaseClient
+from clients.redis import RedisClient
+from clients.s3 import S3Client
+from interfaces.tgbot import TgBotApplication
+from interfaces.tgbot.tgbot_deps import TgBotDependencies
+from settings import AppSettings, LogSettings
 
 
 class Application:
@@ -33,11 +33,11 @@ class Application:
         channel = await connection.channel()
         rpc = await JsonRPC.create(channel)
 
-        self.deps = Dependencies(settings=self.settings,
-                                 db=db,
-                                 redis=RedisClient(self.settings.redis),
-                                 s3=S3Client(self.settings.s3),
-                                 rpc=rpc)
+        self.deps = TgBotDependencies(settings=self.settings,
+                                      db=db,
+                                      redis=RedisClient(self.settings.redis),
+                                      s3=S3Client(self.settings.s3),
+                                      rpc=rpc)
 
         try:
             await self.tgbot.start(self.deps)

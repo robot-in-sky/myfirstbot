@@ -4,8 +4,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.orm_models import OrmBase
-from src.settings import AppSettings
+from core.orm_models import OrmBase
+from settings import AppSettings
 
 # This line is needed to IDE doesn't delete first import line.
 ENUM_FIX = alembic_postgresql_enum

@@ -1,10 +1,10 @@
-from src.clients.amqp import AMQPSettings
-from src.clients.database import DatabaseSettings
-from src.clients.redis import RedisSettings
-from src.clients.s3 import S3Settings
-from src.settings.app_settings_base import AppSettingsBase
-from src.settings.log_settings import LogSettings
-from src.tgbot.tgbot_settings import TgBotSettings
+from .amqp_settings import AMQPSettings
+from settings.base.app_settings_base import AppSettingsBase
+from .database_settings import DatabaseSettings
+from .log_settings import LogSettings
+from .redis_settings import RedisSettings
+from .s3_settings import S3Settings
+from .tgbot_settings import TgBotSettings
 
 
 class AppSettings(AppSettingsBase):

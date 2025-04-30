@@ -3,11 +3,12 @@ import uuid
 
 import pytest
 import pytest_asyncio
-from src.clients.database import DatabaseClient
-from src.entities.users import User, UserAdd, UserQueryPaged, UserRole, UserUpdate
-from src.exceptions import UniqueViolationError
-from src.orm_models import OrmBase
-from src.repositories import UserRepo
+
+from clients.database import DatabaseClient
+from core.entities.users import User, UserAdd, UserQueryPaged, UserRole, UserUpdate
+from core.exceptions import UniqueViolationError
+from core.orm_models import OrmBase
+from core.repositories import UserRepo
 
 logger = logging.getLogger(__name__)
 

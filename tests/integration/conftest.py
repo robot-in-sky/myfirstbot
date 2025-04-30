@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.clients.database import DatabaseClient
-from src.config import ENV_FILE_PATH
+from src.paths import ENV_FILE_PATH
 from src.settings import AppSettings
 
 

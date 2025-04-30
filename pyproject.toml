@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "My first telegram bot"
 authors = ["robot-in-sky <d.rabotinskiy@gmail.com>"]
 readme = "README.md"
-packages = []
+packages = [
+    { include = "app", from = "src" },
+    { include = "migrations", from = "src" },
+    { include = "settings", from = "src" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -32,7 +36,7 @@ pytest-asyncio = "^0.23.7"
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-src = ["app"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -45,7 +49,6 @@ ignore = [# https://docs.astral.sh/ruff/rules
     "F403", # It is acceptable to import everything using * in certain cases.
     "G004", # It is convenient to use f-strings in logging.
     "TRY400", # It is acceptable to use logging.error in cases where logging the traceback is unnecessary.
-    "TD001", "TD002", "TD003", "TD004", "FIX002", # Disable rules for to-do in Zephyr project.
     "RUF001", # Embedded Cyrillic characters are allowed.
 ]
 fixable = ["ALL"]

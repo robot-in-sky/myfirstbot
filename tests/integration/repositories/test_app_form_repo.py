@@ -3,12 +3,13 @@ import uuid
 
 import pytest
 import pytest_asyncio
-from src.clients.database import DatabaseClient
-from src.entities.users.user import User, UserAdd
-from src.entities.visas import AppForm, AppFormAdd, AppFormQueryPaged, AppFormStatus, AppFormUpdate, Country
-from src.exceptions import ForeignKeyViolationError
-from src.orm_models import OrmBase
-from src.repositories import AppFormRepo, UserRepo
+
+from clients.database import DatabaseClient
+from core.entities.users.user import User, UserAdd
+from core.entities.visas import AppForm, AppFormAdd, AppFormQueryPaged, AppFormStatus, AppFormUpdate, Country
+from core.exceptions import ForeignKeyViolationError
+from core.orm_models import OrmBase
+from core.repositories import AppFormRepo, UserRepo
 
 logger = logging.getLogger(__name__)
 
