@@ -2,7 +2,8 @@
 <project version="4">
   <component name="RuffConfigService">
     <option name="globalRuffExecutablePath" value="C:\Python312\Scripts\ruff.exe" />
-    <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu\home\robot\projects\myfirstbot\.venv\bin\ruff" />
-    <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu\home\robot\projects\myfirstbot\.venv\bin\ruff-lsp" />
+    <option name="globalRuffLspExecutablePath" value="C:\Python312\Scripts\ruff-lsp.exe" />
+    <option name="projectRuffExecutablePath" value="\\wsl$\Ubuntu\home\robot\projects\recognizer\.venv\bin\ruff" />
+    <option name="projectRuffLspExecutablePath" value="\\wsl$\Ubuntu\home\robot\projects\recognizer\.venv\bin\ruff-lsp" />
   </component>
 </project>

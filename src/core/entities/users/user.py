@@ -12,7 +12,7 @@ class UserAdd(Base):
     user_name: str
     first_name: str | None = None
     last_name: str | None = None
-    chat_id: int | None = None
+    active: bool = True
 
 
 class User(Base):
@@ -21,7 +21,7 @@ class User(Base):
     user_name: str
     first_name: str | None = None
     last_name: str | None = None
-    chat_id: int | None = None
+    active: bool
     role: UserRole
     created_at: datetime
     updated_at: datetime
@@ -31,7 +31,7 @@ class UserUpdate(Base):
     user_name: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    chat_id: int | None = None
+    active: bool | None = None
 
 
 class UserQuery(Base):
@@ -50,7 +50,7 @@ class UserQueryPaged(UserQuery):
 USER_SEARCH_BY = [
     "user_name",
     "first_name",
-    "last_name"
+    "last_name",
 ]
 
 
@@ -60,5 +60,5 @@ __all__ = [
     "UserUpdate",
     "UserQuery",
     "UserQueryPaged",
-    "USER_SEARCH_BY"
+    "USER_SEARCH_BY",
 ]

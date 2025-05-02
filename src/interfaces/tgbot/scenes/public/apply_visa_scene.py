@@ -8,11 +8,11 @@ from aiogram.fsm.scene import Scene, on
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from uuid_extensions import uuid7
 
-from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from core.entities.users import User
 from core.entities.visas import AppFormAdd, AppFormUpdate, Country
 from core.entities.visas.passport import PassportDetails, PassportFiles
 from core.services.utils.translate import format_place_name
+from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from interfaces.tgbot.utils.helpers import maybe_stringify
 from interfaces.tgbot.views.visas.apply_visa import (
     CHECKED_TEXT,
@@ -46,7 +46,7 @@ class ApplyVisaScene(Scene, state="apply_visa"):
         data = await state.get_data()
         service = deps.get_my_app_forms_service(current_user)
         visa_service = deps.get_visa_service()
-        form_service = deps.get_forms_service()
+        survey_service = deps.get_survey_service()
 
         if data.get("visa.country") is None:
             countries = visa_service.get_countries()
@@ -60,8 +60,8 @@ class ApplyVisaScene(Scene, state="apply_visa"):
         elif data.get("visa.terms_accepted") is None:
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)
-            form = form_service.get_form(visa.form_id)
-            await show_visa_terms_step(visa, form, message=message)
+            survey = survey_service.get_survey(visa.survey_id)
+            await show_visa_terms_step(visa, survey, message=message)
 
         elif data.get("visa.app_form_id") is None:
             await message.edit_reply_markup(reply_markup=None)
@@ -89,7 +89,7 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             id_ = UUID(data["visa.app_form_id"])
             await service.update_form(id_, AppFormUpdate(data=data))
 
-        elif data.get("form.completed") is None:
+        elif data.get("survey.completed") is None:
             await asyncio.sleep(0.3)
             if data.get("visa.ocr_success") == "True":
                 await message.answer(OCR_SUCCESS_TEXT)
@@ -100,7 +100,7 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             await asyncio.sleep(0.3)
             visa_id = data["visa.visa_id"]
             visa = visa_service.get_visa(visa_id)
-            await self.wizard.goto("visa_form", form_id=visa.form_id)
+            await self.wizard.goto("survey", survey_id=visa.survey_id)
 
         else:
             id_ = UUID(data["visa.app_form_id"])
@@ -170,11 +170,11 @@ class ApplyVisaScene(Scene, state="apply_visa"):
         if message.photo and expecting:
             wait_message = await message.answer(WAITING_TEXT)
             photo = await bot.download(message.photo[-1])
-            data = bytes(photo.read())
+            photo_bytes = bytes(photo.read())
             # OCR start
             attachment_id = uuid7()
             attachment_service = deps.get_my_attachments_service(current_user)
-            await attachment_service.add_bytes(attachment_id, PassportFiles.SOURCE, data)
+            await attachment_service.add_bytes(attachment_id, PassportFiles.SOURCE, photo_bytes)
             # aio_pika.exceptions.MessageProcessError
             try:
                 result_dict = await deps.rpc.proxy.recognize_passport(id_=str(attachment_id))
@@ -213,20 +213,25 @@ class ApplyVisaScene(Scene, state="apply_visa"):
             birth_place = format_place_name(details.birth_place) if details.birth_place is not None else None
             details_dict = {
                 "visa.passport_expecting": False,
-                "form.data.__passport_details__.nationality": maybe_stringify(details.country),
-                "form.data.__passport_details__.passport_no": maybe_stringify(details.passport_no),
-                "form.data.__passport_details__.surname": maybe_stringify(details.surname),
-                "form.data.__passport_details__.given_name": maybe_stringify(details.given_name),
-                "form.data.__passport_details__.gender": maybe_stringify(details.gender),
-                "form.data.__passport_details__.birth_date": maybe_stringify(details.birth_date),
-                "form.data.__passport_details__.birth_country": maybe_stringify(details.country),
-                "form.data.__passport_details__.birth_place": birth_place,
-                "form.data.__passport_details__.passport_issue_place": birth_place,
-                "form.data.__passport_details__.passport_issue_date": maybe_stringify(details.issue_date),
-                "form.data.__passport_details__.passport_expiry_date": maybe_stringify(details.expiry_date),
+                "survey.data.__passport_details__.nationality": maybe_stringify(details.country),
+                "survey.data.__passport_details__.passport_no": maybe_stringify(details.passport_no),
+                "survey.data.__passport_details__.surname": maybe_stringify(details.surname),
+                "survey.data.__passport_details__.given_name": maybe_stringify(details.given_name),
+                "survey.data.__passport_details__.gender": maybe_stringify(details.gender),
+                "survey.data.__passport_details__.birth_date": maybe_stringify(details.birth_date),
+                "survey.data.__passport_details__.birth_country": maybe_stringify(details.country),
+                "survey.data.__passport_details__.birth_place": birth_place,
+                "survey.data.__passport_details__.passport_issue_place": birth_place,
+                "survey.data.__passport_details__.passport_issue_date": maybe_stringify(details.issue_date),
+                "survey.data.__passport_details__.passport_expiry_date": maybe_stringify(details.expiry_date),
             }
             details_dict["visa.ocr_success"] = None not in details_dict.values()
             details_dict = {k: str(v) for k, v in details_dict.items() if v is not None}
-            await state.update_data(details_dict)
+            data = await state.update_data(details_dict)
+            # Autosave
+            service = deps.get_my_app_forms_service(current_user)
+            id_ = UUID(data["visa.app_form_id"])
+            await service.update_form(id_, AppFormUpdate(data=data))
+
             await show_check_passport_step(
                 photo=BufferedInputFile(scanned, PassportFiles.SCANNED), message=message)

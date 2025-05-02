@@ -9,7 +9,7 @@ class Visa(Base):
     country: Country
     type: VisaType
     period: str
-    form_id: str
+    survey_id: str
     consular_fee: float
     price: float
     app_period: str

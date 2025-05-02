@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, Text, func
+from sqlalchemy import BigInteger, Boolean, DateTime, Enum, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -19,7 +19,7 @@ class OrmUser(OrmBase):
     user_name: Mapped[str] = mapped_column(Text)
     first_name: Mapped[str] = mapped_column(Text, nullable=True)
     last_name: Mapped[str] = mapped_column(Text, nullable=True)
-    chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped["UserRole"] = mapped_column(Enum(UserRole), default=UserRole.USER)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())

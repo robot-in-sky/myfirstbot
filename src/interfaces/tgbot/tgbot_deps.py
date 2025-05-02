@@ -10,9 +10,9 @@ from core.services import (
     AppFormManageService,
     AttachmentService,
     AuthService,
-    FormService,
     MyAppFormsService,
     MyAttachmentsService,
+    SurveyService,
     UserManageService,
     VisaService,
 )
@@ -33,8 +33,8 @@ class TgBotDependencies:
         return VisaService()
 
     @staticmethod
-    def get_forms_service() -> FormService:
-        return FormService()
+    def get_survey_service() -> SurveyService:
+        return SurveyService()
 
     def get_auth_service(self) -> AuthService:
         return AuthService(db=self.db)

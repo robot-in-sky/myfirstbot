@@ -5,7 +5,7 @@ from .section import Section
 
 
 @dataclass
-class Form:
+class Survey:
     id: str
     name: str
     sections: list[Section | Repeater]

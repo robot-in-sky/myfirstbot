@@ -1,11 +1,11 @@
-from core.entities.forms import Choice, Field, FieldType, Form, Repeater, Section
+from core.entities.survey import Choice, Field, FieldType, Repeater, Section, Survey
 
 from . import choices
 from .field_formatters import format_value
 from .field_validators import apply_validators, validate_choice_input, validate_date_input
 
 
-class FormService:
+class SurveyService:
     def __init__(self) -> None:
         self._choices = [
             Choice(id="yes_no",
@@ -280,8 +280,8 @@ class FormService:
                   input_text="<b>Адрес проживания</b>:\n"
                              "Введите адрес проживания. Можно на русском\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["ул.Красных Фонарей, 4-21",
-                            "с.Калиновка, ул.Азина, 77",
+                  examples=["ул. Красных Фонарей, 4-21",
+                            "с. Калиновка, ул. Азина, 77",
                             "Lenina st. 41, apt. 88"],
                   formatter="address_ru",
                   validators=["str35", "address"]),
@@ -397,8 +397,9 @@ class FormService:
             # Old Visa Details
 
             Field(id="old_visa_cond",
-                  name="Уже были в Индии?",
-                  input_text="Посещали Индию ранее?",
+                  name="Предыдущий визит",
+                  input_text="<b>Предыдущий визит</b>:\n"
+                             "Посещали Индию ранее?",
                   type=FieldType.CHOICE,
                   choice=self.get_choice("yes_no")),
 
@@ -530,7 +531,7 @@ class FormService:
                   input_text="<b>Контактное лицо</b>: Адрес\n"
                              "Укажите адрес. Можно указать любой адрес, это формальность\n\n"
                              "Текст будет автоматически преобразован в английский",
-                  examples=["г.Краснозаводск, ул.Инженерной Мысли, 33"],
+                  examples=["г. Краснозаводск, ул. Инженерной Мысли, 33"],
                   formatter="address_ru",
                   validators=["str200", "address"]),
 
@@ -672,9 +673,9 @@ class FormService:
                     ]),
         ]
 
-        self._forms = [
-            Form(id="ind_tour", name="Туристическая виза в Индию",
-                 sections=[
+        self._surveys = [
+            Survey(id="ind_tour", name="Туристическая виза в Индию",
+                   sections=[
                      self.get_section("__passport_details__"),
                      self.get_section("applicant_details"),
                      self.get_section("address_details"),
@@ -697,8 +698,8 @@ class FormService:
     def get_section(self, id_: str) -> Section | Repeater:
         return next(filter(lambda e: e.id == id_, self._sections))
 
-    def get_form(self, id_: str) -> Form:
-        return next(filter(lambda e: e.id == id_, self._forms))
+    def get_survey(self, id_: str) -> Survey:
+        return next(filter(lambda e: e.id == id_, self._surveys))
 
     @staticmethod
     def format_and_validate_input(field: Field, text: str) -> str:

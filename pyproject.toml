@@ -49,6 +49,7 @@ ignore = [# https://docs.astral.sh/ruff/rules
     "F403", # It is acceptable to import everything using * in certain cases.
     "G004", # It is convenient to use f-strings in logging.
     "TRY400", # It is acceptable to use logging.error in cases where logging the traceback is unnecessary.
+    "TD001", "TD002", "TD003", "TD004", "FIX002", # Disable rules for to-do in Zephyr project.
     "RUF001", # Embedded Cyrillic characters are allowed.
 ]
 fixable = ["ALL"]
@@ -73,7 +74,7 @@ multiline-quotes = "double"
 [tool.ruff.lint.isort]
 case-sensitive = true
 combine-as-imports = true
-known-first-party = ["app", "tests"]
+known-first-party = ["src", "tests"]
 
 [tool.ruff.lint.pep8-naming]
 classmethod-decorators = [

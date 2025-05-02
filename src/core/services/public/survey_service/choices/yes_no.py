@@ -1,4 +1,4 @@
-from core.entities.forms import YesNo
+from core.entities.survey import YesNo
 
 YES_NO = list(YesNo)
 

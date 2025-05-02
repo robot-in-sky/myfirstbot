@@ -6,23 +6,23 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
-from interfaces.tgbot.tgbot_deps import TgBotDependencies
-from core.entities.forms import FieldType, Repeater, YesNo
+from core.entities.survey import FieldType, Repeater, YesNo
 from core.entities.users import User
 from core.entities.visas import AppFormUpdate
 from core.exceptions import ValidationError
+from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from interfaces.tgbot.utils.helpers import remove_keys_by_prefix, sub_dict_by_prefix
 from interfaces.tgbot.views.buttons import ALL
-from interfaces.tgbot.views.forms.field import show_all_options, show_field_input
-from interfaces.tgbot.views.forms.repeater import (
+from interfaces.tgbot.views.surveys.field import show_all_options, show_field_input
+from interfaces.tgbot.views.surveys.repeater import (
     show_repeater,
     show_repeater_completed,
     show_repeater_description,
 )
-from interfaces.tgbot.views.forms.section import show_check_section
+from interfaces.tgbot.views.surveys.section import show_check_section
 
 
-class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
+class SurveyRepeaterScene(Scene, state="survey_repeater"):
 
     @on.message.enter()
     async def message_on_enter(self,  # noqa: PLR0913
@@ -36,17 +36,17 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
 
         if repeater_id is not None:
             # Set defaults
-            data["repeater.id"] = repeater_id
-            data["repeater.item.step"] = 0
+            data["survey_repeater.id"] = repeater_id
+            data["survey_repeater.item.step"] = 0
             await state.set_data(data)
 
-        repeater_id = data["repeater.id"]
-        form_service = deps.get_forms_service()
-        repeater = form_service.get_section(repeater_id)
+        repeater_id = data["survey_repeater.id"]
+        survey_service = deps.get_survey_service()
+        repeater = survey_service.get_section(repeater_id)
         if not isinstance(repeater, Repeater):
             return
 
-        step_key = f"form.data.{repeater_id}.step"
+        step_key = f"survey.data.{repeater_id}.step"
 
         if step_key not in data:
             field = repeater.condition_field
@@ -56,7 +56,7 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
         step = data[step_key]
 
         # Check modified or not
-        title_msg_id = data.get("form.section_title_id", -1)
+        title_msg_id = data.get("survey.section_title_id", -1)
         section_modified = message.message_id > title_msg_id
 
         # If condition value is "No"
@@ -67,7 +67,7 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
             return
 
         # Internal step
-        item_step_key = f"form.data.{repeater_id}.item_step"
+        item_step_key = f"survey.data.{repeater_id}.item_step"
         item_step = data.get(item_step_key, 0)
 
         if step == item_step == 0:
@@ -77,7 +77,7 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
         try:
             field = repeater.repeater_fields[item_step]
         except IndexError:
-            repeater_data = [sub_dict_by_prefix(data, prefix=f"form.data.{repeater_id}.{step_}.")
+            repeater_data = [sub_dict_by_prefix(data, prefix=f"survey.data.{repeater_id}.{step_}.")
                                  for step_ in range(step + 1)]
             if section_modified:
                 await show_check_section(message=message)
@@ -112,20 +112,20 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
         if isinstance(query.message, Message) and query.data.startswith("repeater:"):
                 _, action = query.data.split(":")
                 data = await state.get_data()
-                repeater_id = data["repeater.id"]
+                repeater_id = data["survey_repeater.id"]
                 match action:
 
                     case "add":
-                        step_key = f"form.data.{repeater_id}.step"
+                        step_key = f"survey.data.{repeater_id}.step"
                         data[step_key] = data[step_key] + 1
-                        item_step_key = f"form.data.{repeater_id}.item_step"
+                        item_step_key = f"survey.data.{repeater_id}.item_step"
                         data[item_step_key] = 0
                         await state.set_data(data)
                         await self.wizard.retake(replace=True)
 
                     case "reset":
                         # Reset data to default
-                        data = remove_keys_by_prefix(data, prefix=f"form.data.{repeater_id}.")
+                        data = remove_keys_by_prefix(data, prefix=f"survey.data.{repeater_id}.")
                         await state.set_data(data)
                         await self.wizard.retake(repeater_id=repeater_id, replace=True)
 
@@ -135,33 +135,33 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
                         await show_repeater_completed(query.message)
                         await asyncio.sleep(0.3)
                         # Switch form step
-                        data["form.form_step"] = data["form.form_step"] + 1
-                        data["form.section_step"] = 0
+                        data["survey.survey_step"] = data["survey.survey_step"] + 1
+                        data["survey.section_step"] = 0
                         await state.set_data(data)
                         # Autosave
                         service = deps.get_my_app_forms_service(current_user)
                         id_ = UUID(data["visa.app_form_id"])
                         await service.update_form(id_, AppFormUpdate(data=data))
                         # Go back to the form scene
-                        await self.wizard.goto("visa_form")
+                        await self.wizard.goto("survey")
 
 
     @on.message(F.text)
-    async def process_input(self,  # noqa: PLR0912
+    async def process_input(self,
                             message: Message,
                             state: FSMContext, *,
                             deps: TgBotDependencies) -> None:
 
         if message.text:
             data = await state.get_data()
-            repeater_id = data["repeater.id"]
-            form_service = deps.get_forms_service()
-            repeater = form_service.get_section(repeater_id)
+            repeater_id = data["survey_repeater.id"]
+            survey_service = deps.get_survey_service()
+            repeater = survey_service.get_section(repeater_id)
             if not isinstance(repeater, Repeater):
                 return
 
-            step_key = f"form.data.{repeater_id}.step"
-            item_step_key = f"form.data.{repeater_id}.item_step"
+            step_key = f"survey.data.{repeater_id}.step"
+            item_step_key = f"survey.data.{repeater_id}.item_step"
             item_step = data.get(item_step_key, 0)
 
             if step_key not in data:
@@ -177,9 +177,9 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
                 return
 
             try:
-                value = form_service.format_and_validate_input(field, message.text)
+                value = survey_service.format_and_validate_input(field, message.text)
             except ValidationError as error:
-                await message.answer(str(error))
+                await message.answer(f"❌ {error}")
                 return
 
             if step_key not in data:
@@ -189,7 +189,7 @@ class VisaFormRepeaterScene(Scene, state="visa_form_repeater"):
                     data[step_key] = -1
             else:
                 step = data[step_key]
-                data[f"form.data.{repeater_id}.{step}.{field.id}"] = value
+                data[f"survey.data.{repeater_id}.{step}.{field.id}"] = value
                 data[item_step_key] = item_step + 1
 
             await state.set_data(data)

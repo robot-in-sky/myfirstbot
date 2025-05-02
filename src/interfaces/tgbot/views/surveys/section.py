@@ -2,12 +2,12 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 
-from core.entities.forms import FieldType, Others, Section
+from core.entities.survey import FieldType, Others, Section
 from interfaces.tgbot.views import buttons
 
 from .field import render_value
 
-CHECK_SECTION_TEXT = "Проверьте данные"
+CHECK_SECTION_TEXT = "🔎 Проверьте данные"
 SECTION_COMPLETED_TEXT = "✅ Принято"
 SELECT_SECTION_FIELD_TEXT = "Какое поле хотите изменить?"
 

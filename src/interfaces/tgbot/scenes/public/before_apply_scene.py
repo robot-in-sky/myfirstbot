@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
-from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from core.entities.users import User
 from core.entities.visas import AppFormQuery, AppFormQueryPaged, AppFormStatus
+from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from interfaces.tgbot.views.visas.before_apply import show_use_completed_step, show_use_saved_step
 
 

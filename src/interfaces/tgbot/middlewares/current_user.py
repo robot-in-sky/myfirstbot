@@ -25,7 +25,7 @@ class CurrentUserMiddleware(BaseMiddleware):
                            user_name=tg_user.username,
                            first_name=tg_user.first_name,
                            last_name=tg_user.last_name,
-                           chat_id=tg_user.id)
+                           active=True)
             data["current_user"] = await auth.synchronize_user(user)
 
         return await handler(event, data)

@@ -3,9 +3,9 @@ from datetime import date, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError as _ValidationError
-from interfaces.tgbot.utils.helpers import get_key_by_value
 
 from core.exceptions import ValidationError
+from interfaces.tgbot.utils.helpers import get_key_by_value
 
 
 class ValidatorModel(BaseModel):

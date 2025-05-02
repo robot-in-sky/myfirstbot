@@ -19,20 +19,16 @@ class AuthService:
             user = await self._user_repo.add(data)
             logging.info(f"New user: @{user.user_name}")
 
-        elif (data.user_name != user.user_name or
-                data.first_name != user.first_name or
-                    data.last_name != user.last_name or
-                        data.chat_id and data.chat_id != user.chat_id):
+        elif ((data.user_name, data.first_name, data.last_name, data.active) !=
+                        (user.user_name, user.first_name, user.last_name, user.active)):
 
             user = await self._user_repo.update(
                                 user.id, UserUpdate(user_name=data.user_name,
                                                     first_name=data.first_name,
                                                     last_name=data.last_name,
-                                                    chat_id=data.chat_id)) or user
+                                                    active=data.active)) or user
 
-            logging.info(f"User updated: @{user.user_name}\n"
-                         f"TG DATA: first_name:{data.first_name} last_name:{data.last_name} chat_id:{data.chat_id}\n"
-                         f"SAVED USER: first_name:{user.first_name} last_name:{user.last_name} chat_id:{user.chat_id}")
+            logging.info(f"User updated: @{user.user_name}\n")
 
         """
         if (settings.default_admins and

@@ -2,8 +2,8 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 
-from core.entities.forms import YesNo
-from core.entities.forms.form import Repeater
+from core.entities.survey import YesNo
+from core.entities.survey.survey import Repeater
 from interfaces.tgbot.views import buttons
 
 from .field import render_value

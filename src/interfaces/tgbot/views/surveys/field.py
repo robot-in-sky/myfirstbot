@@ -4,7 +4,7 @@ from typing import Any
 
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from core.entities.forms import Field, FieldType
+from core.entities.survey import Field, FieldType
 from interfaces.tgbot.views.buttons import ALL
 
 STORE_DATE_FORMAT = "%Y-%m-%d"
@@ -55,7 +55,8 @@ async def show_field_input(field: Field,
 
     if value is not None:
         output_value = render_value(field, value)
-        text += f"\n\n{CURRENT_VALUE_TEXT}:\n{output_value}"
+        sep = "\n" if field.type == FieldType.STR else " "
+        text += f"\n\n<b>{CURRENT_VALUE_TEXT}</b>:{sep}{output_value}"
 
     keyboard = field_input_kb(field)
     if replace:

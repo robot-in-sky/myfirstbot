@@ -6,15 +6,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.scene import Scene, on
 from aiogram.types import CallbackQuery, Message
 
-from interfaces.tgbot.tgbot_deps import TgBotDependencies
-from core.entities.forms import FieldType, Others, Section, YesNo
+from core.entities.survey import FieldType, Others, Section, YesNo
 from core.entities.users import User
 from core.entities.visas import AppFormUpdate
 from core.exceptions import ValidationError
+from interfaces.tgbot.tgbot_deps import TgBotDependencies
 from interfaces.tgbot.utils.helpers import sub_dict_by_prefix
 from interfaces.tgbot.views.buttons import ALL
-from interfaces.tgbot.views.forms.field import show_all_options, show_field_input
-from interfaces.tgbot.views.forms.section import (
+from interfaces.tgbot.views.surveys.field import show_all_options, show_field_input
+from interfaces.tgbot.views.surveys.section import (
     show_check_section,
     show_section,
     show_section_completed,
@@ -22,7 +22,7 @@ from interfaces.tgbot.views.forms.section import (
 )
 
 
-class VisaFormSectionScene(Scene, state="visa_form_section"):
+class SurveySectionScene(Scene, state="survey_section"):
 
     @on.message.enter()
     async def message_on_enter(self,
@@ -34,32 +34,32 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
         data = await state.get_data()
         if section_id is not None:
             # Set defaults
-            data["section.section_id"] = section_id
-            data["section.field_id"] = None
+            data["survey_section.id"] = section_id
+            data["survey_section.field_id"] = None
             await state.set_data(data)
 
-        section_id = data["section.section_id"]
-        field_id = data["section.field_id"]
-        form_service = deps.get_forms_service()
+        section_id = data["survey_section.id"]
+        field_id = data["survey_section.field_id"]
+        form_service = deps.get_survey_service()
 
         if field_id is None:
             section = form_service.get_section(section_id)
             if isinstance(section, Section):
-                section_data = sub_dict_by_prefix(data, prefix=f"form.data.{section_id}.")
-                title_msg_id = data.get("form.section_title_id", -1)
+                section_data = sub_dict_by_prefix(data, prefix=f"survey.data.{section_id}.")
+                title_msg_id = data.get("survey.section_title_id", -1)
                 section_modified = message.message_id > title_msg_id
                 if section_modified:
                     await show_check_section(message=message)
                 await show_section(section, section_data, message=message)
         else:
             field = form_service.get_field(field_id)
-            value = data.get(f"form.data.{section_id}.{field_id}", None)
+            value = data.get(f"survey.data.{section_id}.{field_id}", None)
 
             if field.depends_on:
                 _field = form_service.get_field(field.depends_on)
-                _value = data.get(f"form.data.{section_id}.{_field.id}", None)
+                _value = data.get(f"survey.data.{section_id}.{_field.id}", None)
                 if _field.hidden or _value == YesNo.NO:
-                    data["section.field_id"] = _field.id
+                    data["survey_section.field_id"] = _field.id
                     await state.set_data(data)
                     await self.wizard.retake()
                     return
@@ -100,28 +100,28 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
                         await query.message.edit_reply_markup(reply_markup=None)
                         await show_section_completed(query.message)
                         await asyncio.sleep(0.3)
-                        data["section.section_id"] = None
+                        data["survey_section.id"] = None
                         # Switch form step
-                        data["form.form_step"] = data["form.form_step"] + 1
-                        data["form.section_step"] = 0
+                        data["survey.survey_step"] = data["survey.survey_step"] + 1
+                        data["survey.section_step"] = 0
                         await state.set_data(data)
                         # Autosave
                         service = deps.get_my_app_forms_service(current_user)
                         id_ = UUID(data["visa.app_form_id"])
                         await service.update_form(id_, AppFormUpdate(data=data))
                         # Go back to form scene
-                        await self.wizard.goto("visa_form")
+                        await self.wizard.goto("survey")
 
                     case "edit":
-                        section_id = data["section.section_id"]
-                        form_service = deps.get_forms_service()
+                        section_id = data["survey_section.id"]
+                        form_service = deps.get_survey_service()
                         section = form_service.get_section(section_id)
                         if isinstance(section, Section):
                             await show_section_fields(section, message=query.message)
 
             elif query.data.startswith("field:"):
                 _, field_id = query.data.split(":")
-                await state.update_data({"section.field_id": field_id})
+                await state.update_data({"survey_section.field_id": field_id})
                 await self.wizard.retake()
 
 
@@ -133,42 +133,42 @@ class VisaFormSectionScene(Scene, state="visa_form_section"):
 
         if message.text:
             data = await state.get_data()
-            section_id = data["section.section_id"]
-            field_id = data["section.field_id"]
-            form_service = deps.get_forms_service()
-            field = form_service.get_field(field_id)
+            section_id = data["survey_section.id"]
+            field_id = data["survey_section.field_id"]
+            survey_service = deps.get_survey_service()
+            field = survey_service.get_field(field_id)
 
             if field.type == FieldType.CHOICE and message.text == ALL:
                 await show_all_options(field, message=message)
                 return
 
             try:
-                value = form_service.format_and_validate_input(field, message.text)
+                value = survey_service.format_and_validate_input(field, message.text)
             except ValidationError as error:
-                await message.answer(str(error))
+                await message.answer(f"❌ {error}")
                 return
 
-            key = f"form.data.{section_id}.{field.id}"
+            key = f"survey.data.{section_id}.{field.id}"
             data[key] = value
-            data["section.field_id"] = None
+            data["survey_section.field_id"] = None
 
             if field.type == FieldType.CHOICE:
-                section = form_service.get_section(section_id)
+                section = survey_service.get_section(section_id)
                 if isinstance(section, Section):
                     dep_fields = False
                     for f in section.fields:
                         # Clear values of all dependable fields
                         if f.depends_on == field.id:
                             dep_fields = True
-                            _key = f"form.data.{section_id}.{f.id}"
+                            _key = f"survey.data.{section_id}.{f.id}"
                             if _key in data:
                                 del data[_key]
 
                     if dep_fields and (value == YesNo.YES or value in Others):
                         # Go to refill all empty fields
-                        data["form.section_step"] = 0
+                        data["survey.section_step"] = 0
                         await state.set_data(data)
-                        await self.wizard.goto("visa_form")
+                        await self.wizard.goto("survey")
                         return
 
             await state.set_data(data)

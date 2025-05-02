@@ -2,9 +2,9 @@ from collections.abc import Sequence
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile, Message
 
-from core.entities.forms import Form, Repeater, Section
+from core.entities.survey import Survey, Repeater, Section
 from core.entities.visas import Country, Visa, VisaType
-from core.services.public.form_service import COUNTRY_OUTPUT
+from core.services.public.survey_service import COUNTRY_OUTPUT
 from interfaces.tgbot.views.buttons import BACK, CONTINUE, TO_MENU
 
 VISA_COUNTRY_TEXT = ("<b>Виза какой страны вас интересует?</b>\n\n"
@@ -128,7 +128,7 @@ def visa_type_kb(visas: Sequence[Visa]) -> InlineKeyboardMarkup:
 
 
 # VISA TERMS
-async def show_visa_terms_step(visa: Visa, form: Form, *, message: Message) -> Message:
+async def show_visa_terms_step(visa: Visa, form: Survey, *, message: Message) -> Message:
     text = "<b>Оформление визы</b>\n\n".upper()
     text += (f"{visa_summary(visa)}"
              f"{form_summary(form)}\n"
@@ -146,7 +146,7 @@ def visa_summary(visa: Visa) -> str:
             f"<b>Срок обработки заявки</b>: {visa.proc_days_min}-{visa_period(f'{visa.proc_days_max}d')}\n")
 
 
-def form_summary(form: Form) -> str:
+def form_summary(form: Survey) -> str:
     field_count = sum(len(s.fields) for s in form.sections if isinstance(s, Section))
     field_count += sum(1 for s in form.sections if isinstance(s, Repeater))
     return f"<b>Вопросов в анкете</b>: {field_count}\n"
