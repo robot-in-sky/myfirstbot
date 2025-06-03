@@ -1,11 +1,10 @@
 import uuid
 from datetime import datetime
 
+from core.entities.users import UserRole
 from sqlalchemy import BigInteger, Boolean, DateTime, Enum, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-
-from core.entities.users import UserRole
 
 from .base import OrmBase
 

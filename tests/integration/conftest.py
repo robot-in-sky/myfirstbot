@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.clients.database import DatabaseClient
 from src.paths import ENV_FILE_PATH
 from src.settings import AppSettings
@@ -21,7 +22,6 @@ def db(settings: AppSettings) -> DatabaseClient:
 
 @pytest_asyncio.fixture(scope="function")
 async def session(db: DatabaseClient) -> AsyncSession:
-    await db.clear()
     async with db.get_session() as session:
         yield session
 

@@ -31,7 +31,7 @@ class UserUpdate(Base):
     user_name: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    active: bool | None = None
+    active: bool = True
 
 
 class UserQuery(Base):

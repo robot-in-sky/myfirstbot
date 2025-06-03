@@ -1,5 +1,5 @@
 from .amqp_settings import AMQPSettings
-from settings.base.app_settings_base import AppSettingsBase
+from .base.app_settings_base import AppSettingsBase
 from .database_settings import DatabaseSettings
 from .log_settings import LogSettings
 from .redis_settings import RedisSettings

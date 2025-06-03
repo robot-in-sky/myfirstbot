@@ -33,26 +33,22 @@ class TestUserRepo:
             user_name="Ivan Ivanov",
             first_name="Ivan",
             last_name="Ivanov",
-            chat_id=123456789,
         ),
         UserAdd(
             telegram_id=123456002,
             user_name="Ivan Petrov",
             first_name="Ivan",
             last_name="Petrov",
-            chat_id=123456788,
         ),
         UserAdd(
             telegram_id=123456003,
             user_name="racer777",
             first_name="Georgio",
-            chat_id=123456787,
         ),
         UserAdd(
             telegram_id=123456004,
             user_name="jess69",
             first_name="Sasha",
-            chat_id=123456786,
         ),
         UserAdd(
             telegram_id=123456005,
@@ -155,9 +151,6 @@ class TestUserRepo:
         (UserQueryPaged(sort_by="telegram_id"), (123456005, 123456001)),
         (UserQueryPaged(sort_by="telegram_id", sort="asc"), (123456001, 123456005)),
         (UserQueryPaged(sort_by="telegram_id", sort="desc"), (123456005, 123456001)),
-        (UserQueryPaged(sort_by="chat_id"), (None, 123456786)),
-        (UserQueryPaged(sort_by="chat_id", sort="asc"), (123456786, None)),
-        (UserQueryPaged(sort_by="chat_id", sort="desc"), (None, 123456786)),
         (UserQueryPaged(sort_by="user_name"), ("raj3456.bangalore", "Ivan Ivanov")),
         (UserQueryPaged(sort_by="user_name", sort="asc"), ("Ivan Ivanov", "raj3456.bangalore")),
         (UserQueryPaged(sort_by="user_name", sort="desc"), ("raj3456.bangalore", "Ivan Ivanov")),
@@ -176,7 +169,7 @@ class TestUserRepo:
             user_name="Foo Bar",
             first_name="Foo",
             last_name="Bar",
-            chat_id=888888888,
+            active=False,
         )
         result = await repo.update(id_, update)
         # Check result model fields
