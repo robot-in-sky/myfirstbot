@@ -102,6 +102,7 @@ services:
       S3__BUCKET_NAME: ${S3__BUCKET_NAME}
       S3__ACCESS_KEY: ${S3__ACCESS_KEY}
       S3__SECRET_KEY: ${S3__SECRET_KEY}
+      RUN_IN_EXECUTOR: ${RUN_IN_EXECUTOR}
       LOG__LEVEL: ${LOG__LEVEL:-INFO}
     depends_on:
       - rabbitmq

@@ -19,7 +19,3 @@ class AppSettings(AppSettingsBase):
     # Optional settings
     log: LogSettings = LogSettings()
     default_admins: set[int] | None = [999999999]  # noqa: RUF012
-
-
-if __name__ == "__main__":
-    AppSettings.save_dotenv_example()
